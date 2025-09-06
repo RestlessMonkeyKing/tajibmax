@@ -25,1744 +25,876 @@
             --success: #34C759;
             --warning: #FF9500;
             --danger: #FF3B30;
+            --story-border: linear-gradient(45deg, #FCAF45, #833AB4, #405DE6);
             --online: #34C759;
             --away: #FF9500;
             --busy: #FF3B30;
-            --offline: #8E8E93;
+            --offline: #A2AAAD;
         }
 
         body {
             background-color: var(--background);
-            color: var(--text-primary);
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Login Screen */
-        .login-screen {
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: linear-gradient(135deg, #833AB4 0%, #FD1D1D 50%, #FCB045 100%);
-            color: white;
-            text-align: center;
-            padding: 20px;
-            animation: fadeIn 0.8s ease-out;
+            color: var(--text-primary);
         }
 
-        .login-logo {
-            font-size: 3.5rem;
-            margin-bottom: 20px;
-            animation: bounce 1.5s infinite alternate;
-        }
-
-        .login-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .login-subtitle {
-            font-size: 1.2rem;
-            margin-bottom: 30px;
-            opacity: 0.9;
-        }
-
-        .login-btn {
-            background: white;
-            color: #405DE6;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 30px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
-        }
-
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25);
-            background: #f0f0f0;
-        }
-
-        /* Main App */
         .app-container {
-            display: none;
-            height: 100vh;
-            flex-direction: column;
-            animation: slideIn 0.5s ease-out;
+            display: flex;
+            width: 100%;
+            height: 100%;
+            max-width: 1400px;
+            max-height: 900px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            background-color: var(--card-bg);
         }
 
-        /* Header */
-        .app-header {
+        .sidebar, .main-content {
+            height: 100%;
+            overflow-y: auto;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .sidebar {
+            width: 350px;
+            min-width: 300px;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+                height: 100%;
+                max-height: unset;
+                border-radius: 0;
+            }
+            .sidebar {
+                width: 100%;
+                min-width: unset;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                position: absolute;
+                top: 0;
+                left: 0;
+                z-index: 20;
+                transform: translateX(0);
+            }
+            .main-content {
+                width: 100%;
+                position: absolute;
+                top: 0;
+                left: 0;
+                z-index: 10;
+                transform: translateX(100%);
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main-content.active {
+                transform: translateX(0);
+            }
+        }
+
+        .header {
+            padding: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 20px;
-            background-color: var(--card-bg);
             border-bottom: 1px solid var(--border);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
         }
 
-        .app-logo {
-            font-size: 1.8rem;
+        .header h1 {
+            font-size: 24px;
             font-weight: 700;
-            color: var(--primary);
-            animation: pulse 2s infinite;
         }
 
-        .user-profile {
+        .header .user-info {
             display: flex;
             align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            position: relative;
-            transition: transform 0.3s;
+        }
+        
+        .header .user-info span {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-right: 10px;
         }
 
-        .user-profile:hover {
-            transform: scale(1.05);
-        }
-
-        .avatar-container {
-            position: relative;
-            display: inline-block;
-        }
-
-        .user-avatar {
-            width: 36px;
-            height: 36px;
+        .header .user-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: var(--border);
             border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--border);
-            transition: border-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
         }
 
-        .avatar-container:hover .user-avatar {
+        .search-container {
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background-color: var(--background);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-container input:focus {
             border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
         }
 
-        .status-indicator {
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            padding: 15px 20px 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .contacts-list, .suggested-contacts, .online-users {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
+        }
+        
+        .contact-item, .suggested-contact-item, .online-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.2s ease;
+        }
+        
+        .contact-item:hover, .suggested-contact-item:hover {
+            background-color: var(--background);
+        }
+
+        .contact-item.active {
+            background-color: var(--background);
+        }
+
+        .contact-avatar, .suggested-contact-avatar, .online-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            position: relative;
+        }
+        
+        .suggested-contact-avatar {
+            width: 40px;
+            height: 40px;
+        }
+
+        .online-status {
             position: absolute;
             bottom: 0;
             right: 0;
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            border: 2px solid white;
-            transition: all 0.3s;
+            border: 2px solid var(--card-bg);
         }
 
-        .status-online {
-            background-color: var(--online);
-        }
+        .online-status.online { background-color: var(--online); }
+        .online-status.offline { background-color: var(--offline); }
 
-        .status-away {
-            background-color: var(--away);
+        .contact-info, .suggested-contact-info, .online-info {
+            flex-grow: 1;
+            margin-left: 15px;
         }
-
-        .status-busy {
-            background-color: var(--busy);
-        }
-
-        .status-offline {
-            background-color: var(--offline);
-        }
-
-        .user-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .user-name {
+        
+        .contact-name, .online-name {
+            font-size: 16px;
             font-weight: 600;
-            font-size: 0.9rem;
         }
 
-        .user-status {
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-        }
-
-        .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
-            width: 200px;
-            padding: 10px 0;
-            z-index: 100;
-            display: none;
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        .dropdown-item {
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .dropdown-item:hover {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        /* Main Content */
-        .app-content {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 350px;
-            background: var(--card-bg);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            transition: width 0.3s;
-        }
-
-        .search-container {
-            padding: 15px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .search-box {
-            display: flex;
-            align-items: center;
-            background: var(--background);
-            border-radius: 10px;
-            padding: 10px 15px;
-            transition: background 0.3s, box-shadow 0.3s;
-        }
-
-        .search-box:focus-within {
-            background: white;
-            box-shadow: 0 0 0 2px var(--primary);
-        }
-
-        .search-box input {
-            flex: 1;
-            border: none;
-            background: transparent;
-            padding: 5px;
-            outline: none;
-            font-size: 1rem;
-        }
-
-        .contacts-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px 0;
-        }
-
-        .contact {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            gap: 12px;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.2s;
-            animation: slideIn 0.5s ease-out;
-        }
-
-        .contact:hover {
-            background: rgba(0, 0, 0, 0.03);
-            transform: translateX(5px);
-        }
-
-        .contact-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            object-fit: cover;
-            position: relative;
-            border: 2px solid var(--border);
-            transition: border-color 0.3s;
-        }
-
-        .contact:hover .contact-avatar {
-            border-color: var(--primary);
-        }
-
-        .contact-info {
-            flex: 1;
-        }
-
-        .contact-name {
-            font-weight: 600;
-            margin-bottom: 4px;
-            font-size: 0.95rem;
-        }
-
-        .contact-lastmsg {
-            font-size: 0.85rem;
+        .contact-last-message {
+            font-size: 14px;
             color: var(--text-secondary);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 200px;
         }
-
-        .contact-meta {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
+        
+        .suggested-contact-item {
+            padding-top: 15px;
+            padding-bottom: 15px;
         }
-
-        .contact-time {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-bottom: 5px;
+        
+        .suggested-contact-item .contact-name {
+            font-size: 15px;
         }
-
-        .contact-badge {
-            background: var(--primary);
+        
+        .follow-btn {
+            background-color: var(--primary);
             color: white;
-            font-size: 0.75rem;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: pulse 1.5s infinite;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border: none;
+        }
+        
+        .follow-btn:hover {
+            background-color: var(--primary-dark);
         }
 
-        /* Chat Area */
-        .chat-area {
-            flex: 1;
+        .main-content {
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
-            background: linear-gradient(to bottom, #f5f7fa, #e4e8f0);
+            position: relative;
         }
-
+        
         .chat-header {
-            display: flex;
-            align-items: center;
             padding: 15px 20px;
-            background: var(--card-bg);
-            border-bottom: 1px solid var(--border);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        .chat-user {
             display: flex;
             align-items: center;
-            gap: 12px;
-            flex: 1;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background-color: var(--card-bg);
+            z-index: 10;
         }
-
-        .chat-actions {
-            display: flex;
-            gap: 15px;
-        }
-
-        .chat-action-btn {
-            background: none;
-            border: none;
-            font-size: 1.2rem;
-            color: var(--text-secondary);
+        
+        .chat-header .back-btn {
+            display: none;
+            font-size: 24px;
+            margin-right: 15px;
             cursor: pointer;
-            transition: color 0.3s, transform 0.3s;
+        }
+        
+        @media (max-width: 768px) {
+            .chat-header .back-btn {
+                display: block;
+            }
         }
 
-        .chat-action-btn:hover {
-            color: var(--primary);
-            transform: scale(1.1);
+        .chat-header .chat-name {
+            font-size: 18px;
+            font-weight: 600;
         }
 
         .messages-container {
-            flex: 1;
+            flex-grow: 1;
             padding: 20px;
             overflow-y: auto;
             display: flex;
-            flex-direction: column;
-            gap: 12px;
+            flex-direction: column-reverse;
         }
-
+        
         .message {
             max-width: 70%;
-            padding: 10px 14px;
+            margin-bottom: 15px;
+            padding: 10px 15px;
             border-radius: 18px;
             position: relative;
-            animation: fadeIn 0.5s ease-out;
-            font-size: 0.95rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .message.received {
-            background: linear-gradient(to bottom, #ffffff, #f8f9fa);
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-            animation: slideInLeft 0.3s ease-out;
-        }
-
-        .message.sent {
-            background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-            animation: slideInRight 0.3s ease-out;
+            word-wrap: break-word;
+            line-height: 1.4;
         }
 
         .message-time {
-            font-size: 0.65rem;
+            font-size: 10px;
+            color: rgba(0, 0, 0, 0.4);
             margin-top: 5px;
-            opacity: 0.7;
             text-align: right;
         }
 
-        .message-input-container {
-            display: flex;
-            align-items: center;
+        .message.from-me {
+            background-color: var(--primary);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.from-other {
+            background-color: var(--background);
+            color: var(--text-primary);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-input-container {
             padding: 15px 20px;
-            background: var(--card-bg);
             border-top: 1px solid var(--border);
-            gap: 12px;
+            display: flex;
+            align-items: center;
+            background-color: var(--card-bg);
+            flex-shrink: 0;
         }
 
-        .message-input {
-            flex: 1;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 10px 18px;
-            outline: none;
-            font-size: 0.95rem;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-
-        .message-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
-        }
-
-        .attachment-btn, .send-btn {
-            background: none;
+        .chat-input-container input {
+            flex-grow: 1;
+            padding: 10px 20px;
             border: none;
-            font-size: 1.3rem;
-            color: var(--primary);
-            cursor: pointer;
-            transition: color 0.3s, transform 0.3s;
+            background-color: var(--background);
+            border-radius: 20px;
+            outline: none;
+            font-size: 14px;
         }
-
-        .attachment-btn:hover, .send-btn:hover {
-            color: var(--primary-dark);
-            transform: scale(1.1);
-        }
-
-        /* Suggested Contacts */
-        .suggested-section {
-            padding: 15px;
-            border-top: 1px solid var(--border);
-            max-height: 300px;
-            overflow-y: auto;
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        .section-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .see-all {
-            font-size: 0.85rem;
-            color: var(--primary);
-            font-weight: normal;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-
-        .see-all:hover {
-            color: var(--primary-dark);
-        }
-
-        .suggested-contacts {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
-        }
-
-        .suggested-contact {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 10px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        .suggested-contact:hover {
-            background: #f0f0f0;
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .suggested-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-            position: relative;
-            border: 2px solid var(--border);
-            transition: border-color 0.3s;
-        }
-
-        .suggested-contact:hover .suggested-avatar {
-            border-color: var(--primary);
-        }
-
-        .suggested-name {
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-top: 8px;
-            text-align: center;
-        }
-
-        .suggested-status {
-            font-size: 0.7rem;
-            margin-top: 4px;
-            color: var(--text-secondary);
-        }
-
-        .follow-btn {
-            background: var(--primary);
+        
+        .chat-input-container button {
+            background-color: var(--primary);
             color: white;
             border: none;
-            border-radius: 15px;
-            padding: 5px 12px;
-            font-size: 0.8rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
             cursor: pointer;
-            margin-top: 8px;
-            transition: background 0.3s, transform 0.3s;
+            transition: background-color 0.2s ease;
         }
-
-        .follow-btn:hover {
-            background: var(--primary-dark);
-            transform: scale(1.05);
+        
+        .chat-input-container button:hover {
+            background-color: var(--primary-dark);
         }
-
-        .follow-btn.following {
-            background: var(--text-secondary);
-        }
-
-        /* Settings Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
+        
+        .no-chat-selected {
+            display: flex;
             justify-content: center;
             align-items: center;
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            width: 400px;
-            max-width: 90%;
-            max-height: 80%;
-            overflow-y: auto;
-            animation: scaleIn 0.3s ease-out;
-        }
-
-        .modal-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .modal-title i {
-            color: var(--primary);
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-
-        .close-modal:hover {
-            color: var(--primary);
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .setting-item {
-            padding: 15px 0;
-            border-bottom: 1px solid var(--border);
-            animation: slideIn 0.5s ease-out;
-        }
-
-        .setting-item:last-child {
-            border-bottom: none;
-        }
-
-        .setting-title {
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .setting-description {
-            font-size: 0.9rem;
+            flex-direction: column;
+            height: 100%;
+            font-size: 18px;
             color: var(--text-secondary);
-            margin-bottom: 12px;
+        }
+        
+        .no-chat-selected i {
+            font-size: 50px;
+            margin-bottom: 20px;
         }
 
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
+        .online-list-section {
+            display: none;
         }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 24px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: var(--primary);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-
-        /* Form Elements */
-        .form-group {
-            margin-bottom: 15px;
-            animation: slideIn 0.5s ease-out;
-        }
-
-        .form-group label {
+        
+        .online-list-section.active {
             display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
         }
 
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border);
+        .message-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background-color: var(--card-bg);
             border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
         }
 
-        .form-group input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+        .message-modal h3 {
+            font-size: 20px;
+            color: var(--text-primary);
         }
 
-        .btn-primary {
-            background: var(--primary);
-            color: white;
+        .message-modal p {
+            font-size: 16px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .message-modal button {
+            padding: 10px 20px;
             border: none;
-            padding: 10px 15px;
-            border-radius: 8px;
+            border-radius: 5px;
             cursor: pointer;
             font-weight: 600;
-            transition: background 0.3s, transform 0.3s;
         }
 
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: scale(1.05);
+        .message-modal .modal-close-btn {
+            background-color: var(--primary);
+            color: white;
         }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideIn {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        @keyframes slideInLeft {
-            from { transform: translateX(-20px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes slideInRight {
-            from { transform: translateX(20px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes scaleIn {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        @keyframes bounce {
-            from { transform: translateY(0); }
-            to { transform: translateY(-10px); }
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        /* Dark Mode */
-        body.dark-mode {
-            --background: #121212;
-            --card-bg: #1e1e1e;
-            --text-primary: #ffffff;
-            --text-secondary: #a0a0a0;
-            --border: #2d2d2d;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 80px;
-            }
-            
-            .contact-info, .contact-meta, .contact-name, .contact-lastmsg {
-                display: none;
-            }
-
-            .suggested-contacts {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .welcome-message {
-            text-align: center;
-            padding: 30px;
-            color: var(--text-secondary);
-            animation: fadeIn 1s ease-out;
-        }
-
-        .search-results {
-            padding: 10px;
-        }
-
-        .search-result-item {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            gap: 10px;
-            transition: background 0.3s;
-        }
-
-        .search-result-item:hover {
-            background: #f0f0f0;
-        }
-
-        .no-results {
-            text-align: center;
-            padding: 20px;
-            color: var(--text-secondary);
-        }
+        
     </style>
 </head>
 <body>
-    <!-- Login Screen -->
-    <div class="login-screen" id="loginScreen">
-        <div class="login-logo">
-            <i class="fab fa-instagram"></i>
-        </div>
-        <h1 class="login-title">TajibMax Messenger</h1>
-        <p class="login-subtitle">Connect with friends and the world around you</p>
-        <button class="login-btn" id="loginBtn">
-            <i class="fab fa-google"></i> Sign in with Google
-        </button>
-    </div>
-
-    <!-- Main App -->
-    <div class="app-container" id="appContainer">
-        <!-- Header -->
-        <div class="app-header">
-            <div class="app-logo">TajibMax</div>
-            <div class="user-profile" id="userProfile">
-                <div class="avatar-container">
-                    <img src="" class="user-avatar" id="userAvatar" alt="User Avatar">
-                    <span class="status-indicator status-online" id="userStatusIndicator"></span>
-                </div>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="header">
+                <h1>Chats</h1>
                 <div class="user-info">
-                    <div class="user-name" id="userName">User Name</div>
-                    <div class="user-status">Online</div>
+                    <span id="userIdDisplay"></span>
+                    <div class="user-avatar" id="myAvatar"></div>
                 </div>
-                <i class="fas fa-chevron-down"></i>
-                <div class="dropdown-menu" id="dropdownMenu">
-                    <div class="dropdown-item" id="profileBtn">
-                        <i class="fas fa-user"></i> Profile
-                    </div>
-                    <div class="dropdown-item" id="settingsBtn">
-                        <i class="fas fa-cog"></i> Settings
-                    </div>
-                    <div class="dropdown-item" id="appearanceBtn">
-                        <i class="fas fa-moon"></i> Appearance
-                    </div>
-                    <div class="dropdown-item" id="helpBtn">
-                        <i class="fas fa-question-circle"></i> Help
-                    </div>
-                    <div class="dropdown-item" id="logoutBtn">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </div>
-                </div>
+            </div>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search or add contact...">
+            </div>
+            
+            <div class="online-list-section">
+                <div class="section-title">Online Users</div>
+                <div class="online-users" id="onlineUsersList"></div>
+            </div>
+            
+            <div class="friends-list-section">
+                <div class="section-title">Friends</div>
+                <div class="contacts-list" id="contactsList"></div>
+            </div>
+            
+            <!-- Suggested Contacts Section -->
+            <div class="suggested-section" style="display: none;">
+                <div class="section-title">Suggested</div>
+                <div class="suggested-contacts" id="suggestedContacts"></div>
             </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="app-content">
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <div class="search-container">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search for users..." id="searchInput">
-                    </div>
-                </div>
-
-                <div class="contacts-container" id="contactsContainer">
-                    <!-- Contacts will be populated here -->
-                </div>
-
-                <div class="suggested-section">
-                    <div class="section-title">
-                        <span>Suggested Contacts</span>
-                        <span class="see-all" id="seeAllBtn">See All</span>
-                    </div>
-                    <div class="suggested-contacts" id="suggestedContacts">
-                        <!-- Suggested contacts will be populated here -->
-                    </div>
+        <!-- Main Chat Content -->
+        <div class="main-content">
+            <div class="chat-header" style="display: none;">
+                <i class="fas fa-arrow-left back-btn"></i>
+                <div class="contact-avatar" id="chatAvatar"></div>
+                <div class="contact-info">
+                    <div class="chat-name" id="chatName"></div>
                 </div>
             </div>
-
-            <!-- Chat Area -->
-            <div class="chat-area">
-                <div class="chat-header">
-                    <div class="chat-user">
-                        <div class="avatar-container">
-                            <img src="" class="user-avatar" id="chatAvatar" alt="Chat User">
-                            <span class="status-indicator status-online" id="chatStatusIndicator"></span>
-                        </div>
-                        <div class="user-info">
-                            <div class="user-name" id="chatUserName">Select a contact to start chatting</div>
-                            <div class="user-status" id="chatUserStatus">Online</div>
-                        </div>
-                    </div>
-                    <div class="chat-actions">
-                        <button class="chat-action-btn"><i class="fas fa-phone"></i></button>
-                        <button class="chat-action-btn"><i class="fas fa-video"></i></button>
-                        <button class="chat-action-btn"><i class="fas fa-info-circle"></i></button>
-                    </div>
+            
+            <div class="messages-container" id="messagesContainer">
+                <div class="no-chat-selected">
+                    <i class="fas fa-comment-dots"></i>
+                    <span>Select a chat to start messaging</span>
                 </div>
-
-                <div class="messages-container" id="messagesContainer">
-                    <div class="welcome-message">
-                        <p>Welcome to TajibMax Messenger! Select a contact to start chatting.</p>
-                    </div>
-                </div>
-
-                <div class="message-input-container">
-                    <button class="attachment-btn"><i class="fas fa-plus-circle"></i></button>
-                    <input type="text" class="message-input" id="messageInput" placeholder="Type a message...">
-                    <button class="send-btn" id="sendMessageBtn"><i class="fas fa-paper-plane"></i></button>
-                </div>
+            </div>
+            
+            <div class="chat-input-container" style="display: none;">
+                <input type="text" id="messageInput" placeholder="Type a message...">
+                <button id="sendMessageBtn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
             </div>
         </div>
     </div>
-
-    <!-- Profile Modal -->
-    <div class="modal" id="profileModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title"><i class="fas fa-user"></i> Your Profile</h2>
-                <button class="close-modal" id="closeProfile">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <div class="avatar-container" style="display: inline-block;">
-                        <img src="" id="profileAvatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 15px;">
-                        <span class="status-indicator status-online" id="profileStatusIndicator"></span>
-                    </div>
-                    <h2 id="profileName" style="margin-bottom: 5px;">User Name</h2>
-                    <p id="profileEmail" style="color: var(--text-secondary);">user@example.com</p>
-                </div>
-                
-                <div class="form-group">
-                    <label for="usernameInput">Username</label>
-                    <input type="text" id="usernameInput" placeholder="Enter new username">
-                </div>
-                
-                <button class="btn-primary" id="saveUsernameBtn">Save Changes</button>
-                
-                <div class="setting-item">
-                    <h3 class="setting-title">Status</h3>
-                    <p class="setting-description">Set your online status</p>
-                    <select id="statusSelect" style="padding: 8px; border-radius: 8px; border: 1px solid var(--border); width: 100%;">
-                        <option value="online">Online</option>
-                        <option value="away">Away</option>
-                        <option value="busy">Busy</option>
-                        <option value="offline">Offline</option>
-                    </select>
-                </div>
-            </div>
-        </div>
+    
+    <!-- Modal for custom alerts -->
+    <div class="message-modal" id="messageModal">
+      <h3 id="modalTitle"></h3>
+      <p id="modalMessage"></p>
+      <button class="modal-close-btn" id="modalCloseBtn">OK</button>
     </div>
 
-    <!-- Settings Modal -->
-    <div class="modal" id="settingsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title"><i class="fas fa-cog"></i> Settings</h2>
-                <button class="close-modal" id="closeSettings">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="setting-item">
-                    <h3 class="setting-title">Notifications</h3>
-                    <p class="setting-description">Enable or disable message notifications</p>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="notificationsToggle" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="setting-item">
-                    <h3 class="setting-title">Sound</h3>
-                    <p class="setting-description">Play sounds for new messages</p>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="soundToggle" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Appearance Modal -->
-    <div class="modal" id="appearanceModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title"><i class="fas fa-moon"></i> Appearance</h2>
-                <button class="close-modal" id="closeAppearance">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="setting-item">
-                    <h3 class="setting-title">Dark Mode</h3>
-                    <p class="setting-description">Switch to dark theme</p>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="darkModeToggle">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Help Modal -->
-    <div class="modal" id="helpModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title"><i class="fas fa-question-circle"></i> Help & Support</h2>
-                <button class="close-modal" id="closeHelp">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="setting-item">
-                    <h3 class="setting-title">Getting Started</h3>
-                    <p class="setting-description">To start messaging, select a contact from your contacts list or add someone new from the suggested contacts.</p>
-                </div>
-                <div class="setting-item">
-                    <h3 class="setting-title">Managing Contacts</h3>
-                    <p class="setting-description">Add new contacts by clicking the follow button on suggested users. They will be added to your contacts once they accept your request.</p>
-                </div>
-                <div class="setting-item">
-                    <h3 class="setting-title">Need More Help?</h3>
-                    <p class="setting-description">Contact our support team at support@tajibmax.com for assistance with any issues.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Firebase SDK -->
+    <!-- Firebase SDKs -->
     <script type="module">
-        // --- Firebase Imports ---
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
             getAuth, 
-            GoogleAuthProvider, 
-            signInWithPopup, 
-            onAuthStateChanged, 
-            signOut 
-        } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+            signInAnonymously, 
+            signInWithCustomToken, 
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, 
             doc, 
-            setDoc, 
             getDoc, 
-            getDocs, 
+            addDoc, 
+            setDoc, 
+            updateDoc, 
+            deleteDoc, 
+            onSnapshot, 
             collection, 
             query, 
             where, 
-            onSnapshot,
-            addDoc,
-            updateDoc,
-            arrayUnion,
             serverTimestamp,
-            orderBy
-        } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+            getDocs,
+            setLogLevel
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- Firebase Config ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyDNbhIX7lGndqaE8pGtYScy56gFNluLE8I",
-            authDomain: "tajib-max.firebaseapp.com",
-            projectId: "tajib-max",
-            storageBucket: "tajib-max.firebasestorage.app",
-            messagingSenderId: "165946585796",
-            appId: "1:165946585796:web:3c438ca3c59ca00f7fcf91",
-            measurementId: "G-PP0E1J03YS"
-        };
+        // IMPORTANT: Global variables for Firebase
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // --- Init Firebase ---
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        let app, db, auth, currentUser, activeChat = null;
+        let friends = [];
+        let allUsers = [];
+        let messagesUnsubscribe = null;
+        let friendsUnsubscribe = null;
+        let onlineUnsubscribe = null;
 
-        // --- DOM Elements ---
-        const loginScreen = document.getElementById('loginScreen');
-        const appContainer = document.getElementById('appContainer');
-        const loginBtn = document.getElementById('loginBtn');
-        const userProfile = document.getElementById('userProfile');
-        const userName = document.getElementById('userName');
-        const userAvatar = document.getElementById('userAvatar');
-        const userStatusIndicator = document.getElementById('userStatusIndicator');
-        const dropdownMenu = document.getElementById('dropdownMenu');
-        const profileBtn = document.getElementById('profileBtn');
-        const settingsBtn = document.getElementById('settingsBtn');
-        const appearanceBtn = document.getElementById('appearanceBtn');
-        const helpBtn = document.getElementById('helpBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const contactsContainer = document.getElementById('contactsContainer');
+        // UI Elements
+        const contactsList = document.getElementById('contactsList');
         const suggestedContacts = document.getElementById('suggestedContacts');
         const messagesContainer = document.getElementById('messagesContainer');
+        const chatHeader = document.querySelector('.chat-header');
+        const chatInputContainer = document.querySelector('.chat-input-container');
+        const chatNameEl = document.getElementById('chatName');
+        const chatAvatarEl = document.getElementById('chatAvatar');
         const messageInput = document.getElementById('messageInput');
         const sendMessageBtn = document.getElementById('sendMessageBtn');
-        const chatUserName = document.getElementById('chatUserName');
-        const chatAvatar = document.getElementById('chatAvatar');
-        const chatStatusIndicator = document.getElementById('chatStatusIndicator');
-        const chatUserStatus = document.getElementById('chatUserStatus');
-        const settingsModal = document.getElementById('settingsModal');
-        const closeSettings = document.getElementById('closeSettings');
-        const appearanceModal = document.getElementById('appearanceModal');
-        const closeAppearance = document.getElementById('closeAppearance');
-        const profileModal = document.getElementById('profileModal');
-        const closeProfile = document.getElementById('closeProfile');
-        const profileName = document.getElementById('profileName');
-        const profileAvatar = document.getElementById('profileAvatar');
-        const profileStatusIndicator = document.getElementById('profileStatusIndicator');
-        const profileEmail = document.getElementById('profileEmail');
-        const helpModal = document.getElementById('helpModal');
-        const closeHelp = document.getElementById('closeHelp');
-        const notificationsToggle = document.getElementById('notificationsToggle');
-        const soundToggle = document.getElementById('soundToggle');
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        const statusSelect = document.getElementById('statusSelect');
-        const seeAllBtn = document.getElementById('seeAllBtn');
+        const noChatSelected = document.querySelector('.no-chat-selected');
         const searchInput = document.getElementById('searchInput');
-        const usernameInput = document.getElementById('usernameInput');
-        const saveUsernameBtn = document.getElementById('saveUsernameBtn');
-
-        // App state
-        let currentUser = null;
-        let activeChat = null;
-        let unsubscribeChat = null;
-        let contacts = [];
-        let suggestedUsers = [];
-        let allUsers = [];
-        let userStatusListeners = {};
-
-        // --- Login Flow ---
-        loginBtn.onclick = async () => {
-            try {
-                const provider = new GoogleAuthProvider();
-                await signInWithPopup(auth, provider);
-            } catch (err) {
-                console.error("Login error:", err.code, err.message);
-                alert("Login failed: " + err.message);
-            }
-        };
-
-        // --- Logout ---
-        logoutBtn.addEventListener('click', async () => {
-            try {
-                // Clean up status listeners
-                Object.keys(userStatusListeners).forEach(uid => {
-                    userStatusListeners[uid]();
-                });
-                userStatusListeners = {};
-                
-                await signOut(auth);
-            } catch (err) {
-                console.error("Logout error:", err);
-            }
-        });
-
-        // --- User profile dropdown ---
-        userProfile.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
-        });
-
-        // Close dropdown when clicking elsewhere
-        document.addEventListener('click', () => {
-            dropdownMenu.style.display = 'none';
-        });
-
-        // --- Modal controls ---
-        settingsBtn.addEventListener('click', () => {
-            settingsModal.style.display = 'flex';
-        });
-
-        closeSettings.addEventListener('click', () => {
-            settingsModal.style.display = 'none';
-        });
-
-        appearanceBtn.addEventListener('click', () => {
-            appearanceModal.style.display = 'flex';
-        });
-
-        closeAppearance.addEventListener('click', () => {
-            appearanceModal.style.display = 'none';
-        });
-
-        profileBtn.addEventListener('click', () => {
-            profileModal.style.display = 'flex';
-            // Populate the username field with current username
-            usernameInput.value = currentUser.displayName || '';
-        });
-
-        closeProfile.addEventListener('click', () => {
-            profileModal.style.display = 'none';
-        });
-
-        helpBtn.addEventListener('click', () => {
-            helpModal.style.display = 'flex';
-        });
-
-        closeHelp.addEventListener('click', () => {
-            helpModal.style.display = 'none';
-        });
-
-        // Close modal when clicking outside
-        window.addEventListener('click', (e) => {
-            if (e.target === settingsModal) {
-                settingsModal.style.display = 'none';
-            }
-            if (e.target === appearanceModal) {
-                appearanceModal.style.display = 'none';
-            }
-            if (e.target === profileModal) {
-                profileModal.style.display = 'none';
-            }
-            if (e.target === helpModal) {
-                helpModal.style.display = 'none';
-            }
-        });
-
-        // --- Settings toggles ---
-        notificationsToggle.addEventListener('change', () => {
-            // Save notification preference
-            console.log("Notifications:", notificationsToggle.checked);
-            // You would typically save this to Firebase or local storage
-        });
-
-        soundToggle.addEventListener('change', () => {
-            // Save sound preference
-            console.log("Sound:", soundToggle.checked);
-            // You would typically save this to Firebase or local storage
-        });
-
-        // --- Dark mode toggle ---
-        darkModeToggle.addEventListener('change', () => {
-            document.body.classList.toggle('dark-mode');
-            // Save theme preference to local storage
-            localStorage.setItem('darkMode', darkModeToggle.checked);
-        });
-
-        // Load dark mode preference
-        if (localStorage.getItem('darkMode') === 'true') {
-            document.body.classList.add('dark-mode');
-            darkModeToggle.checked = true;
+        const sidebarEl = document.querySelector('.sidebar');
+        const mainContentEl = document.querySelector('.main-content');
+        const backBtn = document.querySelector('.back-btn');
+        const suggestedSection = document.querySelector('.suggested-section');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const onlineUsersList = document.getElementById('onlineUsersList');
+        const onlineListSection = document.querySelector('.online-list-section');
+        const myAvatar = document.getElementById('myAvatar');
+        const messageModal = document.getElementById('messageModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        
+        // Show the custom modal instead of an alert
+        function showModal(title, message) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            messageModal.style.display = 'flex';
         }
+        modalCloseBtn.addEventListener('click', () => {
+            messageModal.style.display = 'none';
+        });
 
-        // --- Status change ---
-        statusSelect.addEventListener('change', async () => {
-            if (currentUser) {
-                try {
-                    const status = statusSelect.value;
-                    await updateDoc(doc(db, "users", currentUser.uid), {
-                        status: status,
-                        lastSeen: serverTimestamp()
-                    });
-                    
-                    // Update status indicator
-                    updateStatusIndicator(userStatusIndicator, status);
-                    updateStatusIndicator(profileStatusIndicator, status);
-                } catch (err) {
-                    console.error("Error updating status:", err);
+        // Initialize Firebase
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            setLogLevel('debug');
+
+            // Handle authentication
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUser = user;
+                    // Check if user document exists, create if not
+                    const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid);
+                    const userDocSnap = await getDoc(userDocRef);
+
+                    if (!userDocSnap.exists()) {
+                        await setDoc(userDocRef, {
+                            name: `User-${Math.random().toString(36).substring(2, 8)}`,
+                            status: 'online',
+                            uid: currentUser.uid
+                        });
+                    } else {
+                        // Update status to online
+                        await updateDoc(userDocRef, {
+                            status: 'online'
+                        });
+                    }
+
+                    // Display user ID for debugging/sharing
+                    userIdDisplay.textContent = currentUser.uid;
+                    myAvatar.textContent = (userDocSnap.data()?.name || 'Me').charAt(0).toUpperCase();
+
+                    // Load all users and then friends and suggested contacts
+                    await loadAllUsers();
+                    loadFriends();
+                    loadSuggestedUsers();
+                    loadOnlineUsers();
+
+                } else {
+                    // Sign in with the provided custom token or anonymously
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
                 }
-            }
-        });
-
-        // Update status indicator based on status
-        function updateStatusIndicator(indicator, status) {
-            indicator.className = 'status-indicator';
-            switch(status) {
-                case 'online':
-                    indicator.classList.add('status-online');
-                    break;
-                case 'away':
-                    indicator.classList.add('status-away');
-                    break;
-                case 'busy':
-                    indicator.classList.add('status-busy');
-                    break;
-                case 'offline':
-                    indicator.classList.add('status-offline');
-                    break;
-                default:
-                    indicator.classList.add('status-offline');
-            }
-        }
-
-        // --- Save Username ---
-        saveUsernameBtn.addEventListener('click', async () => {
-            const newUsername = usernameInput.value.trim();
-            if (!newUsername) {
-                alert("Please enter a username");
-                return;
-            }
-
-            if (currentUser) {
-                try {
-                    await updateDoc(doc(db, "users", currentUser.uid), {
-                        name: newUsername
-                    });
-                    
-                    // Update UI
-                    userName.textContent = newUsername;
-                    profileName.textContent = newUsername;
-                    
-                    alert("Username updated successfully!");
-                } catch (err) {
-                    console.error("Error updating username:", err);
-                    alert("Failed to update username");
+            });
+            
+            window.addEventListener('beforeunload', async () => {
+                if (currentUser) {
+                    try {
+                        const userDocRef = doc(db, 'artifacts', appId, 'users', currentUser.uid);
+                        await updateDoc(userDocRef, {
+                            status: 'offline'
+                        });
+                    } catch (err) {
+                        console.error("Error setting user offline:", err);
+                    }
                 }
-            }
-        });
+            });
 
-        // --- See All suggested contacts ---
-        seeAllBtn.addEventListener('click', () => {
-            loadSuggestedUsers(true);
-        });
-
-        // --- Search functionality ---
-        searchInput.addEventListener('input', debounce(async (e) => {
-            const searchTerm = e.target.value.trim().toLowerCase();
-            
-            if (!searchTerm) {
-                loadSuggestedUsers();
-                return;
-            }
-
-            try {
-                // Clear previous results
-                suggestedContacts.innerHTML = '';
-                
-                // Filter users based on search term
-                const filteredUsers = allUsers.filter(user => 
-                    user.name.toLowerCase().includes(searchTerm) || 
-                    (user.email && user.email.toLowerCase().includes(searchTerm))
-                );
-
-                if (filteredUsers.length === 0) {
-                    suggestedContacts.innerHTML = '<div class="no-results">No users found</div>';
-                    return;
-                }
-
-                // Display search results
-                filteredUsers.forEach(user => {
-                    if (user.uid === currentUser.uid) return;
-                    
-                    const userElement = document.createElement('div');
-                    userElement.className = 'suggested-contact';
-                    
-                    // Check if this user is already a friend
-                    const isFriend = currentUser.friends && currentUser.friends.includes(user.uid);
-                    
-                    userElement.innerHTML = `
-                        <div class="avatar-container">
-                            <img src="${user.photoURL}" class="suggested-avatar" alt="${user.name}">
-                            <span class="status-indicator ${getStatusClass(user.status)}"></span>
-                        </div>
-                        <div class="suggested-name">${user.name}</div>
-                        <div class="suggested-status">${user.status || 'offline'}</div>
-                        <button class="follow-btn ${isFriend ? 'following' : ''}" data-uid="${user.uid}">
-                            ${isFriend ? 'Following' : 'Follow'}
-                        </button>
-                    `;
-                    
-                    userElement.querySelector('.follow-btn').addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        if (isFriend) {
-                            // Already following, open chat instead
-                            openChat(user.uid, user.name, user.photoURL, user.status);
-                        } else {
-                            sendFriendRequest(user.uid);
-                        }
-                    });
-                    
-                    userElement.addEventListener('click', () => openChat(user.uid, user.name, user.photoURL, user.status));
-                    suggestedContacts.appendChild(userElement);
-                });
-            } catch (err) {
-                console.error("Search error:", err);
-            }
-        }, 300));
-
-        // Helper function to get status class
-        function getStatusClass(status) {
-            switch(status) {
-                case 'online': return 'status-online';
-                case 'away': return 'status-away';
-                case 'busy': return 'status-busy';
-                default: return 'status-offline';
-            }
+        } catch (err) {
+            console.error("Firebase initialization error:", err);
+            showModal("Error", "Failed to initialize the app. Please check the console for details.");
         }
-
-        // Debounce function for search
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        // --- Auth State Change ---
-        onAuthStateChanged(auth, async user => {
-            if (!user) {
-                // Show login, hide main UI
-                loginScreen.style.display = 'flex';
-                appContainer.style.display = 'none';
-                return;
-            }
-            
-            currentUser = user;
-            
-            // Hide login, show main UI
-            loginScreen.style.display = 'none';
-            appContainer.style.display = 'flex';
-            
-            // Update user info in header
-            userName.textContent = user.displayName;
-            userAvatar.src = user.photoURL;
-            
-            // Update profile modal
-            profileName.textContent = user.displayName;
-            profileAvatar.src = user.photoURL;
-            profileEmail.textContent = user.email;
-
-            // Save/update user in Firestore
-            await setDoc(doc(db, "users", user.uid), {
-                uid: user.uid,
-                name: user.displayName,
-                email: user.email,
-                photoURL: user.photoURL,
-                status: "online",
-                friends: [],
-                lastSeen: serverTimestamp()
-            }, { merge: true });
-
-            // Load user data from Firestore
-            const userDoc = await getDoc(doc(db, "users", user.uid));
-            if (userDoc.exists()) {
-                currentUser = { ...currentUser, ...userDoc.data() };
-                // Set the status select to current status
-                statusSelect.value = currentUser.status || 'online';
-                updateStatusIndicator(userStatusIndicator, currentUser.status);
-                updateStatusIndicator(profileStatusIndicator, currentUser.status);
-            }
-
-            // Load contacts and suggested users
-            loadContacts();
-            loadAllUsers();
-            loadSuggestedUsers();
-            listenForFriendRequests();
-            listenForNewUsers();
-        });
-
-        // --- Load All Users from Firebase ---
+        
         async function loadAllUsers() {
             try {
-                const querySnapshot = await getDocs(collection(db, "users"));
-                allUsers = [];
-                
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    allUsers.push(data);
-                });
-                
-                console.log("Loaded all users:", allUsers.length);
+                const usersColRef = collection(db, 'artifacts', appId, 'users');
+                const usersSnapshot = await getDocs(usersColRef);
+                allUsers = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                console.log("All users loaded:", allUsers);
             } catch (err) {
                 console.error("Error loading all users:", err);
             }
         }
+        
+        async function loadOnlineUsers() {
+            if (!currentUser) return;
+            onlineUnsubscribe = onSnapshot(collection(db, 'artifacts', appId, 'users'), (snapshot) => {
+                onlineUsersList.innerHTML = '';
+                const onlineUsers = snapshot.docs.filter(doc => doc.data().status === 'online' && doc.id !== currentUser.uid);
+                
+                if (onlineUsers.length > 0) {
+                    onlineListSection.style.display = 'block';
+                } else {
+                    onlineListSection.style.display = 'none';
+                }
+                
+                onlineUsers.forEach(userDoc => {
+                    const user = userDoc.data();
+                    const li = document.createElement('div');
+                    li.classList.add('online-item');
+                    li.innerHTML = `
+                        <div class="online-avatar">
+                            ${(user.name || 'U').charAt(0).toUpperCase()}
+                            <div class="online-status online"></div>
+                        </div>
+                        <div class="online-info">
+                            <div class="online-name">${user.name || 'Unnamed'}</div>
+                        </div>
+                    `;
+                    li.addEventListener('click', () => {
+                        setActiveChat(user.uid, user.name || 'Unnamed');
+                    });
+                    onlineUsersList.appendChild(li);
+                });
+            }, (err) => {
+                console.error("Error fetching online users:", err);
+                showModal("Error", "Failed to fetch online users.");
+            });
+        }
+        
+        async function loadFriends() {
+            if (!currentUser) return;
+            if (friendsUnsubscribe) friendsUnsubscribe();
 
-        // --- Load Contacts (friends) ---
-        async function loadContacts() {
-            const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-            const friends = userDoc.data()?.friends || [];
-            contactsContainer.innerHTML = '';
+            const friendsRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'friends');
+            friendsUnsubscribe = onSnapshot(friendsRef, async (snapshot) => {
+                contactsList.innerHTML = '';
+                friends = snapshot.docs.map(doc => doc.id);
+                console.log("Current friends:", friends);
 
-            if (friends.length === 0) {
-                contactsContainer.innerHTML = '<p style="padding: 20px; text-align: center; color: var(--text-secondary);">No contacts yet. Add friends from the suggested list.</p>';
+                for (const friendId of friends) {
+                    const friendDocRef = doc(db, 'artifacts', appId, 'users', friendId);
+                    const friendDocSnap = await getDoc(friendDocRef);
+                    if (friendDocSnap.exists()) {
+                        const friendData = friendDocSnap.data();
+                        const li = document.createElement('div');
+                        li.classList.add('contact-item');
+                        li.dataset.uid = friendId;
+                        li.innerHTML = `
+                            <div class="contact-avatar">
+                                ${(friendData.name || 'U').charAt(0).toUpperCase()}
+                                <div class="online-status ${friendData.status === 'online' ? 'online' : 'offline'}"></div>
+                            </div>
+                            <div class="contact-info">
+                                <div class="contact-name">${friendData.name || 'Unnamed'}</div>
+                                <div class="contact-last-message"></div>
+                            </div>
+                        `;
+                        li.addEventListener('click', () => {
+                            setActiveChat(friendId, friendData.name || 'Unnamed');
+                        });
+                        contactsList.appendChild(li);
+                    }
+                }
+                // After loading friends, update the suggested contacts
+                loadSuggestedUsers();
+            }, (err) => {
+                console.error("Error fetching friends:", err);
+                showModal("Error", "Failed to load friends.");
+            });
+        }
+
+        function loadSuggestedUsers(searchTerm = '') {
+            suggestedContacts.innerHTML = '';
+            suggestedSection.style.display = 'none';
+
+            if (!currentUser || friends.length === 0 && allUsers.length === 0) {
+                 // No users to suggest yet
+                 return;
+            }
+
+            const currentUserId = currentUser.uid;
+            const friendsUids = new Set(friends);
+
+            // Filter all users to find suggestions
+            const suggestions = allUsers.filter(user => {
+                const isMe = user.id === currentUserId;
+                const isFriend = friendsUids.has(user.id);
+                const matchesSearch = searchTerm ? (user.name || '').toLowerCase().includes(searchTerm.toLowerCase()) : true;
+                return !isMe && !isFriend && matchesSearch;
+            });
+            
+            if (suggestions.length === 0) {
+                if (searchTerm) {
+                    suggestedContacts.innerHTML = `<p style="padding: 10px 20px; text-align: center; color: var(--text-secondary);">No results found.</p>`;
+                    suggestedSection.style.display = 'block';
+                }
                 return;
             }
 
-            for (let uid of friends) {
-                const friendDoc = await getDoc(doc(db, "users", uid));
-                if (!friendDoc.exists()) continue;
-                
-                const data = friendDoc.data();
-                const contactElement = document.createElement('div');
-                contactElement.className = 'contact';
-                contactElement.dataset.uid = data.uid;
-                
-                contactElement.innerHTML = `
-                    <div class="avatar-container">
-                        <img src="${data.photoURL}" class="contact-avatar" alt="${data.name}">
-                        <span class="status-indicator ${getStatusClass(data.status)}"></span>
+            suggestedSection.style.display = 'block';
+            suggestions.forEach(user => {
+                const li = document.createElement('div');
+                li.classList.add('suggested-contact-item');
+                li.innerHTML = `
+                    <div class="suggested-contact-avatar">
+                        ${(user.name || 'U').charAt(0).toUpperCase()}
                     </div>
-                    <div class="contact-info">
-                        <div class="contact-name">${data.name}</div>
-                        <div class="contact-lastmsg">Click to start chatting</div>
+                    <div class="suggested-contact-info">
+                        <div class="contact-name">${user.name || 'Unnamed'}</div>
                     </div>
-                    <div class="contact-meta">
-                        <div class="contact-time">${data.status || 'offline'}</div>
-                    </div>
+                    <button class="follow-btn" data-uid="${user.id}">Add</button>
                 `;
-                
-                contactElement.addEventListener('click', () => openChat(data.uid, data.name, data.photoURL, data.status));
-                contactsContainer.appendChild(contactElement);
-                contacts.push(data);
-                
-                // Listen for status changes for this contact
-                setupStatusListener(data.uid);
-            }
-        }
-
-        // Setup listener for user status changes
-        function setupStatusListener(uid) {
-            // Remove existing listener if any
-            if (userStatusListeners[uid]) {
-                userStatusListeners[uid]();
-            }
-            
-            // Create new listener
-            const userRef = doc(db, "users", uid);
-            userStatusListeners[uid] = onSnapshot(userRef, (doc) => {
-                if (doc.exists()) {
-                    const data = doc.data();
-                    const status = data.status || 'offline';
-                    
-                    // Update status indicator in contacts
-                    const contactElement = document.querySelector(`.contact[data-uid="${uid}"]`);
-                    if (contactElement) {
-                        const indicator = contactElement.querySelector('.status-indicator');
-                        if (indicator) {
-                            updateStatusIndicator(indicator, status);
-                        }
-                        
-                        const statusText = contactElement.querySelector('.contact-time');
-                        if (statusText) {
-                            statusText.textContent = status;
-                        }
-                    }
-                    
-                    // Update status indicator in suggested contacts if visible
-                    const suggestedElement = document.querySelector(`.suggested-contact button[data-uid="${uid}"]`)?.closest('.suggested-contact');
-                    if (suggestedElement) {
-                        const indicator = suggestedElement.querySelector('.status-indicator');
-                        if (indicator) {
-                            updateStatusIndicator(indicator, status);
-                        }
-                        
-                        const statusText = suggestedElement.querySelector('.suggested-status');
-                        if (statusText) {
-                            statusText.textContent = status;
-                        }
-                    }
-                    
-                    // Update status in active chat if this is the current chat user
-                    if (activeChat === uid) {
-                        updateStatusIndicator(chatStatusIndicator, status);
-                        chatUserStatus.textContent = status;
-                    }
-                }
+                li.querySelector('.follow-btn').addEventListener('click', (e) => {
+                    addFriend(e.target.dataset.uid, user.name);
+                });
+                suggestedContacts.appendChild(li);
             });
         }
-
-        // --- Load Suggested Users ---
-        async function loadSuggestedUsers(showAll = false) {
+        
+        async function addFriend(friendUid, friendName) {
+            if (!currentUser) return;
             try {
-                const querySnapshot = await getDocs(collection(db, "users"));
-                suggestedContacts.innerHTML = '';
-                suggestedUsers = [];
+                const friendsRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'friends');
+                await setDoc(doc(friendsRef, friendUid), {
+                    name: friendName,
+                    addedAt: serverTimestamp()
+                });
                 
-                const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-                const friends = userDoc.data()?.friends || [];
-                
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    // Skip current user
-                    if (data.uid === currentUser.uid) return;
-                    
-                    // Check if already a friend
-                    if (friends.includes(data.uid)) return;
-                    
-                    suggestedUsers.push(data);
-                    
-                    const userElement = document.createElement('div');
-                    userElement.className = 'suggested-contact';
-                    userElement.innerHTML = `
-                        <div class="avatar-container">
-                            <img src="${data.photoURL}" class="suggested-avatar" alt="${data.name}">
-                            <span class="status-indicator ${getStatusClass(data.status)}"></span>
-                        </div>
-                        <div class="suggested-name">${data.name}</div>
-                        <div class="suggested-status">${data.status || 'offline'}</div>
-                        <button class="follow-btn" data-uid="${data.uid}">Follow</button>
-                    `;
-                    
-                    userElement.querySelector('.follow-btn').addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        sendFriendRequest(data.uid);
-                    });
-                    
-                    userElement.addEventListener('click', () => openChat(data.uid, data.name, data.photoURL, data.status));
-                    suggestedContacts.appendChild(userElement);
-                    
-                    // Listen for status changes for this user
-                    setupStatusListener(data.uid);
+                const friendFriendsRef = collection(db, 'artifacts', appId, 'users', friendUid, 'friends');
+                await setDoc(doc(friendFriendsRef, currentUser.uid), {
+                    name: (await getDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid))).data().name,
+                    addedAt: serverTimestamp()
                 });
 
-                if (suggestedUsers.length === 0) {
-                    suggestedContacts.innerHTML = '<div class="no-results">No suggested contacts found</div>';
-                }
+                console.log("Friend added successfully!");
+                showModal("Success", "Friend added successfully!");
+                loadSuggestedUsers(); // Reload suggestions
             } catch (err) {
-                console.error("Error loading suggested users:", err);
-                suggestedContacts.innerHTML = '<div class="no-results">Error loading suggested contacts</div>';
+                console.error("Error adding friend:", err);
+                showModal("Error", "Failed to add friend.");
             }
         }
 
-        // --- Send Friend Request ---
-        async function sendFriendRequest(toUid) {
-            try {
-                // Check for existing requests
-                const q = query(
-                    collection(db, "friendRequests"),
-                    where("from", "==", currentUser.uid),
-                    where("to", "==", toUid),
-                    where("status", "in", ["pending", "accepted"])
-                );
-                
-                const snapshot = await getDocs(q);
-                if (!snapshot.empty) {
-                    alert("Request already sent or already friends!");
-                    return;
-                }
-
-                // Create new request
-                await addDoc(collection(db, "friendRequests"), {
-                    from: currentUser.uid,
-                    to: toUid,
-                    status: "pending",
-                    createdAt: serverTimestamp()
-                });
-                
-                alert("Friend request sent!");
-                loadSuggestedUsers(); // Refresh list
-            } catch (err) {
-                console.error("Error sending request:", err);
-                alert("Failed to send friend request");
-            }
-        }
-
-        // --- Listen for Incoming Friend Requests ---
-        function listenForFriendRequests() {
-            const q = query(
-                collection(db, "friendRequests"),
-                where("to", "==", currentUser.uid),
-                where("status", "==", "pending")
-            );
-            
-            onSnapshot(q, snapshot => {
-                snapshot.forEach(async docSnap => {
-                    const req = docSnap.data();
-                    
-                    // Auto-accept friend requests for simplicity
-                    try {
-                        await updateDoc(doc(db, "friendRequests", docSnap.id), { status: "accepted" });
-                        await updateDoc(doc(db, "users", currentUser.uid), { 
-                            friends: arrayUnion(req.from) 
-                        });
-                        await updateDoc(doc(db, "users", req.from), { 
-                            friends: arrayUnion(currentUser.uid) 
-                        });
-                        
-                        // Refresh contacts list
-                        loadContacts();
-                        loadSuggestedUsers();
-                    } catch (err) {
-                        console.error("Error accepting request:", err);
-                    }
-                });
-            });
-        }
-
-        // --- Listen for New Users ---
-        function listenForNewUsers() {
-            const q = query(collection(db, "users"));
-            onSnapshot(q, (snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === "added") {
-                        loadAllUsers();
-                        loadSuggestedUsers();
-                    }
-                });
-            });
-        }
-
-        // --- Open Chat with Friend ---
-        function openChat(uid, name, avatar, status) {
+        function setActiveChat(uid, name) {
             activeChat = uid;
-            chatUserName.textContent = name;
-            chatAvatar.src = avatar;
-            updateStatusIndicator(chatStatusIndicator, status);
-            chatUserStatus.textContent = status;
-            messagesContainer.innerHTML = '';
+            
+            // UI updates
+            noChatSelected.style.display = 'none';
+            chatHeader.style.display = 'flex';
+            chatInputContainer.style.display = 'flex';
+            chatNameEl.textContent = name;
+            chatAvatarEl.textContent = name.charAt(0).toUpperCase();
+            
+            // Highlight active contact
+            document.querySelectorAll('.contact-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const activeContactEl = document.querySelector(`.contact-item[data-uid="${uid}"]`);
+            if (activeContactEl) {
+                activeContactEl.classList.add('active');
+            }
+            
+            // Hide sidebar on mobile
+            if (window.innerWidth <= 768) {
+                sidebarEl.classList.remove('active');
+                mainContentEl.classList.add('active');
+            }
+            
+            // Load messages for the new chat
+            loadMessages();
+        }
+        
+        // --- Search functionality ---
+        let searchTimeout = null;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            const searchTerm = e.target.value;
+            
+            if (searchTerm.length > 0) {
+                searchTimeout = setTimeout(() => {
+                    loadSuggestedUsers(searchTerm);
+                    suggestedSection.style.display = 'block';
+                    document.querySelector('.friends-list-section').style.display = 'none';
+                    document.querySelector('.online-list-section').style.display = 'none';
+                }, 300);
+            } else {
+                suggestedSection.style.display = 'none';
+                document.querySelector('.friends-list-section').style.display = 'block';
+                document.querySelector('.online-list-section').style.display = 'block';
+            }
+        });
+        
+        // Back button on mobile
+        backBtn.addEventListener('click', () => {
+            mainContentEl.classList.remove('active');
+            sidebarEl.classList.add('active');
+        });
 
-            // Stop previous listener if any
-            if (unsubscribeChat) unsubscribeChat();
+        // --- Message display and sending ---
+        async function loadMessages() {
+            if (!activeChat) return;
 
-            const q = query(
-                collection(db, "messages"),
-                where("participants", "array-contains", currentUser.uid),
-                orderBy("createdAt", "asc")
+            // Unsubscribe from previous chat's messages
+            if (messagesUnsubscribe) messagesUnsubscribe();
+
+            const messagesColRef = collection(db, 'artifacts', appId, 'messages');
+            const messagesQuery = query(messagesColRef, 
+                where('participants', 'array-contains-any', [currentUser.uid, activeChat])
             );
             
-            unsubscribeChat = onSnapshot(q, snapshot => {
+            messagesUnsubscribe = onSnapshot(messagesQuery, (snapshot) => {
                 messagesContainer.innerHTML = '';
-                let hasMessages = false;
-                
-                snapshot.forEach(docSnap => {
-                    const msg = docSnap.data();
-                    // Only show messages between these two users
-                    if (
-                        (msg.from === currentUser.uid && msg.to === uid) ||
-                        (msg.from === uid && msg.to === currentUser.uid)
-                    ) {
-                        addMessageToChat(msg, msg.from === currentUser.uid);
-                        hasMessages = true;
-                    }
-                });
-                
-                if (!hasMessages) {
-                    messagesContainer.innerHTML = `
-                        <div class="welcome-message">
-                            <p>Start a conversation with ${name}</p>
-                        </div>
-                    `;
-                }
-                
-                // Scroll to bottom of messages
+                const messages = snapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter(msg => 
+                        (msg.from === currentUser.uid && msg.to === activeChat) || 
+                        (msg.from === activeChat && msg.to === currentUser.uid)
+                    )
+                    .sort((a, b) => a.createdAt - b.createdAt);
+                    
+                messages.forEach(displayMessage);
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, (err) => {
+                console.error("Error fetching messages:", err);
+                showModal("Error", "Failed to load messages.");
             });
         }
-
-        // --- Add message to chat UI ---
-        function addMessageToChat(message, isSent) {
+        
+        function displayMessage(message) {
             const messageEl = document.createElement('div');
             messageEl.classList.add('message');
-            messageEl.classList.add(isSent ? 'sent' : 'received');
+            messageEl.classList.add(message.from === currentUser.uid ? 'from-me' : 'from-other');
             
             // Format timestamp
             let timeText = '';
@@ -1792,7 +924,7 @@
             if (!messageText || !activeChat) return;
             
             try {
-                await addDoc(collection(db, "messages"), {
+                await addDoc(collection(db, 'artifacts', appId, 'messages'), {
                     from: currentUser.uid,
                     to: activeChat,
                     participants: [currentUser.uid, activeChat],
@@ -1802,7 +934,7 @@
                 messageInput.value = '';
             } catch (err) {
                 console.error("Error sending message:", err);
-                alert("Failed to send message");
+                showModal("Error", "Failed to send message.");
             }
         }
     </script>
