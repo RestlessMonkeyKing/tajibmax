@@ -1,101 +1,428 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Firebase Chat</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TajibMax Social Chat</title>
   <style>
-    body { font-family: sans-serif; max-width: 500px; margin: auto; }
-    #messages { border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 5px; }
-    .msg { margin: 5px 0; }
-    .me { text-align: right; color: blue; }
+    :root {
+      --bg: #f9f9f9;
+      --card: #ffffff;
+      --accent: #0077ff;
+      --accent-hover: #005fcc;
+      --text: #333;
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    h1, h2 {
+      margin: 0 0 10px;
+      font-weight: 600;
+    }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      margin: 10px 0;
+      width: 100%;
+      max-width: 500px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+    button:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+    input {
+      padding: 8px;
+      border-radius: var(--radius);
+      border: 1px solid #ccc;
+      width: 100%;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    #chatBox {
+      height: 250px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: var(--radius);
+      margin-top: 10px;
+      background: #fafafa;
+    }
+    .msg {
+      margin: 5px 0;
+      padding: 6px 10px;
+      border-radius: var(--radius);
+      background: #eee;
+      animation: fadeIn 0.3s ease;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+    .me {
+      background: var(--accent);
+      color: white;
+      margin-left: auto;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .user-list, .request-list, .friend-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .user-item, .request-item, .friend-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      background: #f1f1f1;
+      border-radius: var(--radius);
+      transition: background 0.3s ease;
+    }
+    .user-item:hover, .request-item:hover, .friend-item:hover {
+      background: #e7e7e7;
+    }
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    .flex {
+      display: flex;
+      align-items: center;
+    }
+    #loginSection {
+      margin-top: 50px;
+      text-align: center;
+      animation: fadeIn 0.5s ease;
+    }
+    #main {
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
   </style>
 </head>
 <body>
-  <h2>Firebase Chat</h2>
-  <button id="login">Sign in with Google</button>
-  <div id="chat" style="display:none;">
-    <div id="messages"></div>
-    <input id="msgInput" placeholder="Type a message">
-    <button id="sendBtn">Send</button>
+  <h1>TajibMax Social Chat</h1>
+
+  <!-- Login Section -->
+  <div id="loginSection">
+    <p>Sign in to start chatting with friends</p>
+    <button id="loginBtn">Sign in with Google</button>
   </div>
 
-  <script type="module">
-    // Firebase SDK imports
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+  <!-- Main App -->
+  <div id="main">
+    <!-- User Info -->
+    <div class="card">
+      <div class="flex">
+        <img id="userAvatar" class="avatar" src="" alt="avatar">
+        <strong id="username"></strong>
+      </div>
+    </div>
 
-    // Your Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyDNbhIX7lGndqaE8pGtYScy56gFNluLE8I",
-      authDomain: "tajib-max.firebaseapp.com",
-      projectId: "tajib-max",
-      storageBucket: "tajib-max.firebasestorage.app",
-      messagingSenderId: "165946585796",
-      appId: "1:165946585796:web:3c438ca3c59ca00f7fcf91",
-      measurementId: "G-PP0E1J03YS"
-    };
+    <!-- All Users -->
+    <div class="card">
+      <h2>All Users</h2>
+      <div id="allUsers" class="user-list"></div>
+    </div>
 
-    // Init Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    <!-- Friend Requests -->
+    <div class="card">
+      <h2>Friend Requests</h2>
+      <div id="requests" class="request-list"></div>
+    </div>
 
-    // DOM elements
-    const loginBtn = document.getElementById('login');
-    const chatDiv = document.getElementById('chat');
-    const messagesDiv = document.getElementById('messages');
-    const msgInput = document.getElementById('msgInput');
-    const sendBtn = document.getElementById('sendBtn');
+    <!-- Friends -->
+    <div class="card">
+      <h2>Your Friends</h2>
+      <div id="friends" class="friend-list"></div>
+    </div>
 
-    let currentUser = null;
+    <!-- Chat -->
+    <div class="card" id="chatCard" style="display:none;">
+      <h2>Chat with <span id="chatWith"></span></h2>
+      <div id="chatBox"></div>
+      <input id="msgInput" placeholder="Type a message..." />
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
+<script type="module">
+  // --- Firebase Imports ---
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+  import { 
+    getFirestore, doc, setDoc, getDoc, getDocs, collection 
+  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-    // Login
-    loginBtn.onclick = async () => {
+  // --- Firebase Config ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyDNbhIX7lGndqaE8pGtYScy56gFNluLE8I",
+    authDomain: "tajib-max.firebaseapp.com",
+    projectId: "tajib-max",
+    storageBucket: "tajib-max.firebasestorage.app",
+    messagingSenderId: "165946585796",
+    appId: "1:165946585796:web:3c438ca3c59ca00f7fcf91",
+    measurementId: "G-PP0E1J03YS"
+  };
+
+  // --- Init Firebase ---
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // --- DOM Elements ---
+  const loginSection = document.getElementById('loginSection');
+  const loginBtn = document.getElementById('loginBtn');
+  const main = document.getElementById('main');
+  const username = document.getElementById('username');
+  const userAvatar = document.getElementById('userAvatar');
+  const allUsersDiv = document.getElementById('allUsers');
+
+  let currentUser = null;
+
+  // --- Login Flow ---
+  loginBtn.onclick = async () => {
+    try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-    };
-
-    // Auth state change
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        currentUser = user;
-        loginBtn.style.display = 'none';
-        chatDiv.style.display = 'block';
-        loadMessages();
-      }
-    });
-
-    // Load messages in real time
-    function loadMessages() {
-      const q = query(collection(db, "messages"), orderBy("createdAt"));
-      onSnapshot(q, snapshot => {
-        messagesDiv.innerHTML = '';
-        snapshot.forEach(doc => {
-          const msg = doc.data();
-          const div = document.createElement('div');
-          div.className = 'msg' + (msg.uid === currentUser.uid ? ' me' : '');
-          div.textContent = `${msg.name}: ${msg.text}`;
-          messagesDiv.appendChild(div);
-        });
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      });
+    } catch (err) {
+      console.error("Login error:", err.code, err.message);
+      alert("Login failed: " + err.message);
     }
+  };
 
-    // Send message
-    sendBtn.onclick = async () => {
-      if (msgInput.value.trim()) {
-        await addDoc(collection(db, "messages"), {
-          text: msgInput.value,
-          uid: currentUser.uid,
-          name: currentUser.displayName,
-          createdAt: serverTimestamp()
-        });
-        msgInput.value = '';
-      }
-    };
-  </script>
+  // --- Auth State Change ---
+  onAuthStateChanged(auth, async user => {
+    if (!user) return;
+    currentUser = user;
+
+    // Hide login, show main UI
+    loginSection.style.display = 'none';
+    main.style.display = 'block';
+    username.textContent = user.displayName;
+    userAvatar.src = user.photoURL;
+
+    // Save/update user in Firestore
+    await setDoc(doc(db, "users", user.uid), {
+      uid: user.uid,
+      name: user.displayName,
+      photoURL: user.photoURL,
+      friends: []
+    }, { merge: true });
+
+    // Load all users
+    loadAllUsers();
+  });
+
+  // --- Load All Users ---
+  async function loadAllUsers() {
+    const snapshot = await getDocs(collection(db, "users"));
+    allUsersDiv.innerHTML = '';
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data.uid === currentUser.uid) return; // skip self
+
+      const userItem = document.createElement('div');
+      userItem.className = 'user-item';
+
+      const left = document.createElement('div');
+      left.className = 'flex';
+      const img = document.createElement('img');
+      img.src = data.photoURL || '';
+      img.className = 'avatar';
+      const name = document.createElement('span');
+      name.textContent = data.name;
+      left.appendChild(img);
+      left.appendChild(name);
+
+      const btn = document.createElement('button');
+      btn.textContent = 'Add Friend';
+      btn.onclick = () => sendFriendRequest(data.uid);
+
+      userItem.appendChild(left);
+      userItem.appendChild(btn);
+      allUsersDiv.appendChild(userItem);
+    });
+  }
+
+  // --- Placeholder for sendFriendRequest (will be in Part 3) ---
+  async function sendFriendRequest(toUid) {
+    console.log("Friend request to:", toUid);
+  }
+</script>
+  // --- Extra Firestore imports for Part 3 ---
+  import { 
+    addDoc, updateDoc, arrayUnion, query, where, onSnapshot, serverTimestamp 
+  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+  const requestsDiv = document.getElementById('requests');
+  const friendsDiv = document.getElementById('friends');
+  const chatCard = document.getElementById('chatCard');
+  const chatWith = document.getElementById('chatWith');
+  const chatBox = document.getElementById('chatBox');
+  const msgInput = document.getElementById('msgInput');
+  const sendBtn = document.getElementById('sendBtn');
+
+  let activeChatUid = null;
+  let unsubscribeChat = null;
+
+  // --- Send Friend Request ---
+  async function sendFriendRequest(toUid) {
+    try {
+      await addDoc(collection(db, "friendRequests"), {
+        from: currentUser.uid,
+        to: toUid,
+        status: "pending",
+        createdAt: serverTimestamp()
+      });
+      alert("Friend request sent!");
+    } catch (err) {
+      console.error("Error sending request:", err);
+    }
+  }
+
+  // --- Load Incoming Friend Requests ---
+  async function loadRequests() {
+    const q = query(
+      collection(db, "friendRequests"),
+      where("to", "==", currentUser.uid),
+      where("status", "==", "pending")
+    );
+    onSnapshot(q, snapshot => {
+      requestsDiv.innerHTML = '';
+      snapshot.forEach(docSnap => {
+        const req = docSnap.data();
+        const item = document.createElement('div');
+        item.className = 'request-item';
+        item.innerHTML = `
+          <span>From: ${req.from}</span>
+          <button onclick="acceptRequest('${docSnap.id}', '${req.from}')">Accept</button>
+        `;
+        requestsDiv.appendChild(item);
+      });
+    });
+  }
+
+  // --- Accept Friend Request ---
+  window.acceptRequest = async (reqId, fromUid) => {
+    try {
+      await updateDoc(doc(db, "friendRequests", reqId), { status: "accepted" });
+      await updateDoc(doc(db, "users", currentUser.uid), { friends: arrayUnion(fromUid) });
+      await updateDoc(doc(db, "users", fromUid), { friends: arrayUnion(currentUser.uid) });
+      alert("Friend added!");
+    } catch (err) {
+      console.error("Error accepting request:", err);
+    }
+  };
+
+  // --- Load Friends List ---
+  async function loadFriends() {
+    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+    const friends = userDoc.data().friends || [];
+    friendsDiv.innerHTML = '';
+    for (let uid of friends) {
+      const friendDoc = await getDoc(doc(db, "users", uid));
+      if (!friendDoc.exists()) continue;
+      const data = friendDoc.data();
+      const item = document.createElement('div');
+      item.className = 'friend-item';
+      item.innerHTML = `
+        <div class="flex">
+          <img src="${data.photoURL}" class="avatar">
+          <span>${data.name}</span>
+        </div>
+        <button onclick="openChat('${uid}', '${data.name}')">Chat</button>
+      `;
+      friendsDiv.appendChild(item);
+    }
+  }
+
+  // --- Open Chat with Friend ---
+  window.openChat = (uid, name) => {
+    activeChatUid = uid;
+    chatWith.textContent = name;
+    chatCard.style.display = 'block';
+    chatBox.innerHTML = '';
+
+    // Stop previous listener if any
+    if (unsubscribeChat) unsubscribeChat();
+
+    const q = query(
+      collection(db, "messages"),
+      where("participants", "array-contains", currentUser.uid)
+    );
+    unsubscribeChat = onSnapshot(q, snapshot => {
+      chatBox.innerHTML = '';
+      snapshot.forEach(docSnap => {
+        const msg = docSnap.data();
+        // Only show messages between these two users
+        if (
+          (msg.from === currentUser.uid && msg.to === uid) ||
+          (msg.from === uid && msg.to === currentUser.uid)
+        ) {
+          const div = document.createElement('div');
+          div.className = 'msg' + (msg.from === currentUser.uid ? ' me' : '');
+          div.textContent = msg.text;
+          chatBox.appendChild(div);
+        }
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+  };
+
+  // --- Send Message ---
+  sendBtn.onclick = async () => {
+    if (!msgInput.value.trim() || !activeChatUid) return;
+    try {
+      await addDoc(collection(db, "messages"), {
+        from: currentUser.uid,
+        to: activeChatUid,
+        participants: [currentUser.uid, activeChatUid],
+        text: msgInput.value,
+        createdAt: serverTimestamp()
+      });
+      msgInput.value = '';
+    } catch (err) {
+      console.error("Error sending message:", err);
+    }
+  };
+
+  // --- Kick off requests & friends listeners after login ---
+  onAuthStateChanged(auth, user => {
+    if (user) {
+      loadRequests();
+      loadFriends();
+    }
+  });
+</script>
 </body>
 </html>
