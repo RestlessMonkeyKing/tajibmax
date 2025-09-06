@@ -281,7 +281,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="white"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="rgba(0,0,0,0.03)" stroke-width="1"/></svg>');
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 极 100 100"><rect width="100" height="100" fill="white"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="rgba(0,0,0,0.03)" stroke-width="1"/></svg>');
         }
 
         .chat-header {
@@ -380,6 +380,8 @@
         .suggested-section {
             padding: 15px;
             border-top: 1px solid var(--border);
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         .section-title {
@@ -402,8 +404,6 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            max-height: 200px;
-            overflow-y: auto;
         }
 
         .suggested-contact {
@@ -431,21 +431,21 @@
         .suggested-name {
             font-size: 0.9rem;
             font-weight: 500;
+            flex: 1;
         }
 
-        .add-contact {
+        .follow-btn {
             background: var(--primary);
             color: white;
             border: none;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            border-radius: 15px;
+            padding: 5px 12px;
             font-size: 0.8rem;
             cursor: pointer;
-            margin-left: auto;
+        }
+
+        .follow-btn.following {
+            background: var(--text-secondary);
         }
 
         /* Settings Modal */
@@ -482,6 +482,13 @@
         .modal-title {
             font-size: 1.2rem;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-title i {
+            color: var(--primary);
         }
 
         .close-modal {
@@ -575,6 +582,39 @@
             --border: #2d2d2d;
         }
 
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
@@ -607,6 +647,12 @@
 
         .search-result-item:hover {
             background: #f0f0f0;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
         }
     </style>
 </head>
@@ -672,7 +718,8 @@
 
                 <div class="suggested-section">
                     <div class="section-title">
-                        Suggested Contacts <span class="see-all" id="seeAllBtn">See All</span>
+                        <span>Suggested Contacts</span>
+                        <span class="see-all" id="seeAllBtn">See All</span>
                     </div>
                     <div class="suggested-contacts" id="suggestedContacts">
                         <!-- Suggested contacts will be populated here -->
@@ -712,11 +759,46 @@
         </div>
     </div>
 
+    <!-- Profile Modal -->
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title"><i class="fas fa-user"></i> Your Profile</h2>
+                <button class="close-modal" id="closeProfile">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <img src="" id="profileAvatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 15px;">
+                    <h2 id="profileName" style="margin-bottom: 5px;">User Name</h2>
+                    <p id="profileEmail" style="color: var(--text-secondary);">user@example.com</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="usernameInput">Username</label>
+                    <input type="text" id="usernameInput" placeholder="Enter new username">
+                </div>
+                
+                <button class="btn-primary" id="saveUsernameBtn">Save Changes</button>
+                
+                <div class="setting-item">
+                    <h3 class="setting-title">Status</h3>
+                    <p class="setting-description">Set your online status</p>
+                    <select id="statusSelect" style="padding: 8px; border-radius: 8px; border: 1px solid var(--border); width: 100%;">
+                        <option value="online">Online</option>
+                        <option value="away">Away</option>
+                        <option value="busy">Busy</option>
+                        <option value="offline">Offline</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Settings Modal -->
     <div class="modal" id="settingsModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">Settings</h2>
+                <h2 class="modal-title"><i class="fas fa-cog"></i> Settings</h2>
                 <button class="close-modal" id="closeSettings">&times;</button>
             </div>
             <div class="modal-body">
@@ -744,7 +826,7 @@
     <div class="modal" id="appearanceModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">Appearance</h2>
+                <h2 class="modal-title"><i class="fas fa-moon"></i> Appearance</h2>
                 <button class="close-modal" id="closeAppearance">&times;</button>
             </div>
             <div class="modal-body">
@@ -760,38 +842,11 @@
         </div>
     </div>
 
-    <!-- Profile Modal -->
-    <div class="modal" id="profileModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Your Profile</h2>
-                <button class="close-modal" id="closeProfile">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <img src="" id="profileAvatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 15px;">
-                    <h2 id="profileName" style="margin-bottom: 5px;">User Name</h2>
-                    <p id="profileEmail" style="color: var(--text-secondary);">user@example.com</p>
-                </div>
-                <div class="setting-item">
-                    <h3 class="setting-title">Status</h3>
-                    <p class="setting-description">Set your online status</p>
-                    <select id="statusSelect" style="padding: 8px; border-radius: 8px; border: 1px solid var(--border); width: 100%;">
-                        <option value="online">Online</option>
-                        <option value="away">Away</option>
-                        <option value="busy">Busy</option>
-                        <option value="offline">Offline</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Help Modal -->
     <div class="modal" id="helpModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">Help & Support</h2>
+                <h2 class="modal-title"><i class="fas fa-question-circle"></i> Help & Support</h2>
                 <button class="close-modal" id="closeHelp">&times;</button>
             </div>
             <div class="modal-body">
@@ -801,7 +856,7 @@
                 </div>
                 <div class="setting-item">
                     <h3 class="setting-title">Managing Contacts</h3>
-                    <p class="setting-description">Add new contacts by clicking the + button on suggested users. They will be added to your contacts once they accept your request.</p>
+                    <p class="setting-description">Add new contacts by clicking the follow button on suggested users. They will be added to your contacts once they accept your request.</p>
                 </div>
                 <div class="setting-item">
                     <h3 class="setting-title">Need More Help?</h3>
@@ -894,6 +949,8 @@
         const statusSelect = document.getElementById('statusSelect');
         const seeAllBtn = document.getElementById('seeAllBtn');
         const searchInput = document.getElementById('searchInput');
+        const usernameInput = document.getElementById('usernameInput');
+        const saveUsernameBtn = document.getElementById('saveUsernameBtn');
 
         // App state
         let currentUser = null;
@@ -953,6 +1010,8 @@
 
         profileBtn.addEventListener('click', () => {
             profileModal.style.display = 'flex';
+            // Populate the username field with current username
+            usernameInput.value = currentUser.displayName || '';
         });
 
         closeProfile.addEventListener('click', () => {
@@ -1023,6 +1082,32 @@
             }
         });
 
+        // --- Save Username ---
+        saveUsernameBtn.addEventListener('click', async () => {
+            const newUsername = usernameInput.value.trim();
+            if (!newUsername) {
+                alert("Please enter a username");
+                return;
+            }
+
+            if (currentUser) {
+                try {
+                    await updateDoc(doc(db, "users", currentUser.uid), {
+                        name: newUsername
+                    });
+                    
+                    // Update UI
+                    userName.textContent = newUsername;
+                    profileName.textContent = newUsername;
+                    
+                    alert("Username updated successfully!");
+                } catch (err) {
+                    console.error("Error updating username:", err);
+                    alert("Failed to update username");
+                }
+            }
+        });
+
         // --- See All suggested contacts ---
         seeAllBtn.addEventListener('click', () => {
             loadSuggestedUsers(true);
@@ -1044,7 +1129,7 @@
                 // Filter users based on search term
                 const filteredUsers = allUsers.filter(user => 
                     user.name.toLowerCase().includes(searchTerm) || 
-                    user.email.toLowerCase().includes(searchTerm)
+                    (user.email && user.email.toLowerCase().includes(searchTerm))
                 );
 
                 if (filteredUsers.length === 0) {
@@ -1058,15 +1143,26 @@
                     
                     const userElement = document.createElement('div');
                     userElement.className = 'suggested-contact';
+                    
+                    // Check if this user is already a friend
+                    const isFriend = currentUser.friends && currentUser.friends.includes(user.uid);
+                    
                     userElement.innerHTML = `
                         <img src="${user.photoURL}" class="suggested-avatar" alt="${user.name}">
                         <div class="suggested-name">${user.name}</div>
-                        <button class="add-contact" data-uid="${user.uid}">+</button>
+                        <button class="follow-btn ${isFriend ? 'following' : ''}" data-uid="${user.uid}">
+                            ${isFriend ? 'Following' : 'Follow'}
+                        </button>
                     `;
                     
-                    userElement.querySelector('.add-contact').addEventListener('click', (e) => {
+                    userElement.querySelector('.follow-btn').addEventListener('click', (e) => {
                         e.stopPropagation();
-                        sendFriendRequest(user.uid);
+                        if (isFriend) {
+                            // Already following, open chat instead
+                            openChat(user.uid, user.name, user.photoURL, user.status);
+                        } else {
+                            sendFriendRequest(user.uid);
+                        }
                     });
                     
                     userElement.addEventListener('click', () => openChat(user.uid, user.name, user.photoURL, user.status));
@@ -1124,6 +1220,12 @@
                 friends: [],
                 lastSeen: serverTimestamp()
             }, { merge: true });
+
+            // Load user data from Firestore
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (userDoc.exists()) {
+                currentUser = { ...currentUser, ...userDoc.data() };
+            }
 
             // Load contacts and suggested users
             loadContacts();
@@ -1192,34 +1294,34 @@
                 suggestedContacts.innerHTML = '';
                 suggestedUsers = [];
                 
+                const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+                const friends = userDoc.data()?.friends || [];
+                
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    // Skip current user and existing friends
+                    // Skip current user
                     if (data.uid === currentUser.uid) return;
                     
                     // Check if already a friend
-                    const userDoc =  getDoc(doc(db, "users", currentUser.uid));
-                    userDoc.then(userData => {
-                        if (userData.data()?.friends && userData.data().friends.includes(data.uid)) return;
-                        
-                        suggestedUsers.push(data);
-                        
-                        const userElement = document.createElement('div');
-                        userElement.className = 'suggested-contact';
-                        userElement.innerHTML = `
-                            <img src="${data.photoURL}" class="suggested-avatar" alt="${data.name}">
-                            <div class="suggested-name">${data.name}</div>
-                            <button class="add-contact" data-uid="${data.uid}">+</button>
-                        `;
-                        
-                        userElement.querySelector('.add-contact').addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            sendFriendRequest(data.uid);
-                        });
-                        
-                        userElement.addEventListener('click', () => openChat(data.uid, data.name, data.photoURL, data.status));
-                        suggestedContacts.appendChild(userElement);
+                    if (friends.includes(data.uid)) return;
+                    
+                    suggestedUsers.push(data);
+                    
+                    const userElement = document.createElement('div');
+                    userElement.className = 'suggested-contact';
+                    userElement.innerHTML = `
+                        <img src="${data.photoURL}" class="suggested-avatar" alt="${data.name}">
+                        <div class="suggested-name">${data.name}</div>
+                        <button class="follow-btn" data-uid="${data.uid}">Follow</button>
+                    `;
+                    
+                    userElement.querySelector('.follow-btn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        sendFriendRequest(data.uid);
                     });
+                    
+                    userElement.addEventListener('click', () => openChat(data.uid, data.name, data.photoURL, data.status));
+                    suggestedContacts.appendChild(userElement);
                 });
 
                 if (!showAll && suggestedUsers.length > 5) {
@@ -1227,6 +1329,10 @@
                     for (let i = 5; i < items.length; i++) {
                         items[i].style.display = 'none';
                     }
+                }
+                
+                if (suggestedUsers.length === 0) {
+                    suggestedContacts.innerHTML = '<div class="no-results">No suggested contacts found</div>';
                 }
             } catch (err) {
                 console.error("Error loading suggested users:", err);
