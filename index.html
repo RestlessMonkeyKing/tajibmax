@@ -400,22 +400,28 @@
 
         .suggested-contacts {
             display: flex;
-            overflow-x: auto;
-            gap: 12px;
-            padding: 5px 0;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
         }
 
         .suggested-contact {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 6px;
+            padding: 8px;
+            border-radius: 8px;
             cursor: pointer;
+            gap: 10px;
+        }
+
+        .suggested-contact:hover {
+            background: #f0f0f0;
         }
 
         .suggested-avatar {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             object-fit: cover;
             position: relative;
@@ -423,7 +429,7 @@
         }
 
         .suggested-name {
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             font-weight: 500;
         }
 
@@ -437,11 +443,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            position: absolute;
-            bottom: 0;
-            right: 0;
             font-size: 0.8rem;
             cursor: pointer;
+            margin-left: auto;
         }
 
         /* Settings Modal */
@@ -587,6 +591,23 @@
             padding: 30px;
             color: var(--text-secondary);
         }
+
+        .search-results {
+            padding: 10px;
+        }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            gap: 10px;
+        }
+
+        .search-result-item:hover {
+            background: #f0f0f0;
+        }
     </style>
 </head>
 <body>
@@ -641,7 +662,7 @@
                 <div class="search-container">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search messages or users" id="searchInput">
+                        <input type="text" placeholder="Search for users..." id="searchInput">
                     </div>
                 </div>
 
@@ -872,6 +893,7 @@
         const darkModeToggle = document.getElementById('darkModeToggle');
         const statusSelect = document.getElementById('statusSelect');
         const seeAllBtn = document.getElementById('seeAllBtn');
+        const searchInput = document.getElementById('searchInput');
 
         // App state
         let currentUser = null;
@@ -879,6 +901,7 @@
         let unsubscribeChat = null;
         let contacts = [];
         let suggestedUsers = [];
+        let allUsers = [];
 
         // --- Login Flow ---
         loginBtn.onclick = async () => {
@@ -1005,6 +1028,68 @@
             loadSuggestedUsers(true);
         });
 
+        // --- Search functionality ---
+        searchInput.addEventListener('input', debounce(async (e) => {
+            const searchTerm = e.target.value.trim().toLowerCase();
+            
+            if (!searchTerm) {
+                loadSuggestedUsers();
+                return;
+            }
+
+            try {
+                // Clear previous results
+                suggestedContacts.innerHTML = '';
+                
+                // Filter users based on search term
+                const filteredUsers = allUsers.filter(user => 
+                    user.name.toLowerCase().includes(searchTerm) || 
+                    user.email.toLowerCase().includes(searchTerm)
+                );
+
+                if (filteredUsers.length === 0) {
+                    suggestedContacts.innerHTML = '<div class="no-results">No users found</div>';
+                    return;
+                }
+
+                // Display search results
+                filteredUsers.forEach(user => {
+                    if (user.uid === currentUser.uid) return;
+                    
+                    const userElement = document.createElement('div');
+                    userElement.className = 'suggested-contact';
+                    userElement.innerHTML = `
+                        <img src="${user.photoURL}" class="suggested-avatar" alt="${user.name}">
+                        <div class="suggested-name">${user.name}</div>
+                        <button class="add-contact" data-uid="${user.uid}">+</button>
+                    `;
+                    
+                    userElement.querySelector('.add-contact').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        sendFriendRequest(user.uid);
+                    });
+                    
+                    userElement.addEventListener('click', () => openChat(user.uid, user.name, user.photoURL, user.status));
+                    suggestedContacts.appendChild(userElement);
+                });
+            } catch (err) {
+                console.error("Search error:", err);
+            }
+        }, 300));
+
+        // Debounce function for search
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
         // --- Auth State Change ---
         onAuthStateChanged(auth, async user => {
             if (!user) {
@@ -1042,9 +1127,28 @@
 
             // Load contacts and suggested users
             loadContacts();
+            loadAllUsers();
             loadSuggestedUsers();
             listenForFriendRequests();
+            listenForNewUsers();
         });
+
+        // --- Load All Users from Firebase ---
+        async function loadAllUsers() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                allUsers = [];
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    allUsers.push(data);
+                });
+                
+                console.log("Loaded all users:", allUsers.length);
+            } catch (err) {
+                console.error("Error loading all users:", err);
+            }
+        }
 
         // --- Load Contacts (friends) ---
         async function loadContacts() {
@@ -1083,56 +1187,80 @@
 
         // --- Load Suggested Users ---
         async function loadSuggestedUsers(showAll = false) {
-            const querySnapshot = await getDocs(collection(db, "users"));
-            suggestedContacts.innerHTML = '';
-            suggestedUsers = [];
-            
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                // Skip current user
-                if (data.uid === currentUser.uid) return;
+            try {
+                const querySnapshot = await getDocs(collection(db, "users"));
+                suggestedContacts.innerHTML = '';
+                suggestedUsers = [];
                 
-                // Check if already a friend
-                if (currentUser && currentUser.friends && currentUser.friends.includes(data.uid)) return;
-                
-                suggestedUsers.push(data);
-                
-                const userElement = document.createElement('div');
-                userElement.className = 'suggested-contact';
-                userElement.innerHTML = `
-                    <div class="suggested-avatar">
-                        <img src="${data.photoURL}" alt="${data.name}">
-                        <button class="add-contact" data-uid="${data.uid}">+</button>
-                    </div>
-                    <div class="suggested-name">${data.name}</div>
-                `;
-                userElement.querySelector('.add-contact').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    sendFriendRequest(data.uid);
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    // Skip current user and existing friends
+                    if (data.uid === currentUser.uid) return;
+                    
+                    // Check if already a friend
+                    const userDoc =  getDoc(doc(db, "users", currentUser.uid));
+                    userDoc.then(userData => {
+                        if (userData.data()?.friends && userData.data().friends.includes(data.uid)) return;
+                        
+                        suggestedUsers.push(data);
+                        
+                        const userElement = document.createElement('div');
+                        userElement.className = 'suggested-contact';
+                        userElement.innerHTML = `
+                            <img src="${data.photoURL}" class="suggested-avatar" alt="${data.name}">
+                            <div class="suggested-name">${data.name}</div>
+                            <button class="add-contact" data-uid="${data.uid}">+</button>
+                        `;
+                        
+                        userElement.querySelector('.add-contact').addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            sendFriendRequest(data.uid);
+                        });
+                        
+                        userElement.addEventListener('click', () => openChat(data.uid, data.name, data.photoURL, data.status));
+                        suggestedContacts.appendChild(userElement);
+                    });
                 });
-                userElement.addEventListener('click', () => openChat(data.uid, data.name, data.photoURL, data.status));
-                suggestedContacts.appendChild(userElement);
-            });
 
-            // If not showing all, limit to 5
-            if (!showAll && suggestedUsers.length > 5) {
-                const items = suggestedContacts.querySelectorAll('.suggested-contact');
-                for (let i = 5; i < items.length; i++) {
-                    items[i].style.display = 'none';
+                if (!showAll && suggestedUsers.length > 5) {
+                    const items = suggestedContacts.querySelectorAll('.suggested-contact');
+                    for (let i = 5; i < items.length; i++) {
+                        items[i].style.display = 'none';
+                    }
                 }
+            } catch (err) {
+                console.error("Error loading suggested users:", err);
+                suggestedContacts.innerHTML = '<div class="no-results">Error loading suggested contacts</div>';
             }
         }
 
         // --- Send Friend Request ---
         async function sendFriendRequest(toUid) {
             try {
+                // Check for existing requests
+                const q = query(
+                    collection(db, "friendRequests"),
+                    where("from", "==", currentUser.uid),
+                    where("to", "==", toUid),
+                    where("status", "in", ["pending", "accepted"])
+                );
+                
+                const snapshot = await getDocs(q);
+                if (!snapshot.empty) {
+                    alert("Request already sent or already friends!");
+                    return;
+                }
+
+                // Create new request
                 await addDoc(collection(db, "friendRequests"), {
                     from: currentUser.uid,
                     to: toUid,
                     status: "pending",
                     createdAt: serverTimestamp()
                 });
+                
                 alert("Friend request sent!");
+                loadSuggestedUsers(); // Refresh list
             } catch (err) {
                 console.error("Error sending request:", err);
                 alert("Failed to send friend request");
@@ -1166,6 +1294,19 @@
                         loadSuggestedUsers();
                     } catch (err) {
                         console.error("Error accepting request:", err);
+                    }
+                });
+            });
+        }
+
+        // --- Listen for New Users ---
+        function listenForNewUsers() {
+            const q = query(collection(db, "users"));
+            onSnapshot(q, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        loadAllUsers();
+                        loadSuggestedUsers();
                     }
                 });
             });
