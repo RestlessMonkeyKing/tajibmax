@@ -26,6 +26,10 @@
             --warning: #FF9500;
             --danger: #FF3B30;
             --story-border: linear-gradient(45deg, #FCAF45, #833AB4, #405DE6);
+            --online: #34C759;
+            --away: #FF9500;
+            --busy: #FF3B30;
+            --offline: #8E8E93;
         }
 
         body {
@@ -117,12 +121,43 @@
             position: relative;
         }
 
+        .avatar-container {
+            position: relative;
+            display: inline-block;
+        }
+
         .user-avatar {
             width: 36px;
             height: 36px;
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid var(--border);
+        }
+
+        .status-indicator {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .status-online {
+            background-color: var(--online);
+        }
+
+        .status-away {
+            background-color: var(--away);
+        }
+
+        .status-busy {
+            background-color: var(--busy);
+        }
+
+        .status-offline {
+            background-color: var(--offline);
         }
 
         .user-info {
@@ -281,7 +316,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 极 100 100"><rect width="100" height="100" fill="white"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="rgba(0,0,0,0.03)" stroke-width="1"/></svg>');
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="white"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="rgba(0,0,0,0.03)" stroke-width="1"/></svg>');
         }
 
         .chat-header {
@@ -675,7 +710,10 @@
         <div class="app-header">
             <div class="app-logo">TajibMax</div>
             <div class="user-profile" id="userProfile">
-                <img src="" class="user-avatar" id="userAvatar" alt="User Avatar">
+                <div class="avatar-container">
+                    <img src="" class="user-avatar" id="userAvatar" alt="User Avatar">
+                    <span class="status-indicator status-online" id="userStatusIndicator"></span>
+                </div>
                 <div class="user-info">
                     <div class="user-name" id="userName">User Name</div>
                     <div class="user-status">Online</div>
@@ -731,7 +769,10 @@
             <div class="chat-area">
                 <div class="chat-header">
                     <div class="chat-user">
-                        <img src="" class="user-avatar" id="chatAvatar" alt="Chat User">
+                        <div class="avatar-container">
+                            <img src="" class="user-avatar" id="chatAvatar" alt="Chat User">
+                            <span class="status-indicator status-online" id="chatStatusIndicator"></span>
+                        </div>
                         <div class="user-info">
                             <div class="user-name" id="chatUserName">Select a contact to start chatting</div>
                             <div class="user-status" id="chatUserStatus">Online</div>
@@ -768,7 +809,10 @@
             </div>
             <div class="modal-body">
                 <div style="text-align: center; margin-bottom: 20px;">
-                    <img src="" id="profileAvatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 15px;">
+                    <div class="avatar-container" style="display: inline-block;">
+                        <img src="" id="profileAvatar" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 15px;">
+                        <span class="status-indicator status-online" id="profileStatusIndicator"></span>
+                    </div>
                     <h2 id="profileName" style="margin-bottom: 5px;">User Name</h2>
                     <p id="profileEmail" style="color: var(--text-secondary);">user@example.com</p>
                 </div>
@@ -891,8 +935,7 @@
             updateDoc,
             arrayUnion,
             serverTimestamp,
-            orderBy,
-            Timestamp
+            orderBy
         } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         // --- Firebase Config ---
@@ -918,6 +961,7 @@
         const userProfile = document.getElementById('userProfile');
         const userName = document.getElementById('userName');
         const userAvatar = document.getElementById('userAvatar');
+        const userStatusIndicator = document.getElementById('userStatusIndicator');
         const dropdownMenu = document.getElementById('dropdownMenu');
         const profileBtn = document.getElementById('profileBtn');
         const settingsBtn = document.getElementById('settingsBtn');
@@ -931,6 +975,7 @@
         const sendMessageBtn = document.getElementById('sendMessageBtn');
         const chatUserName = document.getElementById('chatUserName');
         const chatAvatar = document.getElementById('chatAvatar');
+        const chatStatusIndicator = document.getElementById('chatStatusIndicator');
         const chatUserStatus = document.getElementById('chatUserStatus');
         const settingsModal = document.getElementById('settingsModal');
         const closeSettings = document.getElementById('closeSettings');
@@ -940,6 +985,7 @@
         const closeProfile = document.getElementById('closeProfile');
         const profileName = document.getElementById('profileName');
         const profileAvatar = document.getElementById('profileAvatar');
+        const profileStatusIndicator = document.getElementById('profileStatusIndicator');
         const profileEmail = document.getElementById('profileEmail');
         const helpModal = document.getElementById('helpModal');
         const closeHelp = document.getElementById('closeHelp');
@@ -959,6 +1005,7 @@
         let contacts = [];
         let suggestedUsers = [];
         let allUsers = [];
+        let userStatusListeners = {};
 
         // --- Login Flow ---
         loginBtn.onclick = async () => {
@@ -974,6 +1021,12 @@
         // --- Logout ---
         logoutBtn.addEventListener('click', async () => {
             try {
+                // Clean up status listeners
+                Object.keys(userStatusListeners).forEach(uid => {
+                    userStatusListeners[uid]();
+                });
+                userStatusListeners = {};
+                
                 await signOut(auth);
             } catch (err) {
                 console.error("Logout error:", err);
@@ -1072,15 +1125,41 @@
         statusSelect.addEventListener('change', async () => {
             if (currentUser) {
                 try {
+                    const status = statusSelect.value;
                     await updateDoc(doc(db, "users", currentUser.uid), {
-                        status: statusSelect.value,
+                        status: status,
                         lastSeen: serverTimestamp()
                     });
+                    
+                    // Update status indicator
+                    updateStatusIndicator(userStatusIndicator, status);
+                    updateStatusIndicator(profileStatusIndicator, status);
                 } catch (err) {
                     console.error("Error updating status:", err);
                 }
             }
         });
+
+        // Update status indicator based on status
+        function updateStatusIndicator(indicator, status) {
+            indicator.className = 'status-indicator';
+            switch(status) {
+                case 'online':
+                    indicator.classList.add('status-online');
+                    break;
+                case 'away':
+                    indicator.classList.add('status-away');
+                    break;
+                case 'busy':
+                    indicator.classList.add('status-busy');
+                    break;
+                case 'offline':
+                    indicator.classList.add('status-offline');
+                    break;
+                default:
+                    indicator.classList.add('status-offline');
+            }
+        }
 
         // --- Save Username ---
         saveUsernameBtn.addEventListener('click', async () => {
@@ -1148,7 +1227,10 @@
                     const isFriend = currentUser.friends && currentUser.friends.includes(user.uid);
                     
                     userElement.innerHTML = `
-                        <img src="${user.photoURL}" class="suggested-avatar" alt="${user.name}">
+                        <div class="avatar-container">
+                            <img src="${user.photoURL}" class="suggested-avatar" alt="${user.name}">
+                            <span class="status-indicator ${getStatusClass(user.status)}"></span>
+                        </div>
                         <div class="suggested-name">${user.name}</div>
                         <button class="follow-btn ${isFriend ? 'following' : ''}" data-uid="${user.uid}">
                             ${isFriend ? 'Following' : 'Follow'}
@@ -1172,6 +1254,16 @@
                 console.error("Search error:", err);
             }
         }, 300));
+
+        // Helper function to get status class
+        function getStatusClass(status) {
+            switch(status) {
+                case 'online': return 'status-online';
+                case 'away': return 'status-away';
+                case 'busy': return 'status-busy';
+                default: return 'status-offline';
+            }
+        }
 
         // Debounce function for search
         function debounce(func, wait) {
@@ -1225,6 +1317,10 @@
             const userDoc = await getDoc(doc(db, "users", user.uid));
             if (userDoc.exists()) {
                 currentUser = { ...currentUser, ...userDoc.data() };
+                // Set the status select to current status
+                statusSelect.value = currentUser.status || 'online';
+                updateStatusIndicator(userStatusIndicator, currentUser.status);
+                updateStatusIndicator(profileStatusIndicator, currentUser.status);
             }
 
             // Load contacts and suggested users
@@ -1271,8 +1367,12 @@
                 const contactElement = document.createElement('div');
                 contactElement.className = 'contact';
                 contactElement.dataset.uid = data.uid;
+                
                 contactElement.innerHTML = `
-                    <img src="${data.photoURL}" class="contact-avatar" alt="${data.name}">
+                    <div class="avatar-container">
+                        <img src="${data.photoURL}" class="contact-avatar" alt="${data.name}">
+                        <span class="status-indicator ${getStatusClass(data.status)}"></span>
+                    </div>
                     <div class="contact-info">
                         <div class="contact-name">${data.name}</div>
                         <div class="contact-lastmsg">Click to start chatting</div>
@@ -1281,10 +1381,60 @@
                         <div class="contact-time">${data.status || 'offline'}</div>
                     </div>
                 `;
+                
                 contactElement.addEventListener('click', () => openChat(data.uid, data.name, data.photoURL, data.status));
                 contactsContainer.appendChild(contactElement);
                 contacts.push(data);
+                
+                // Listen for status changes for this contact
+                setupStatusListener(data.uid);
             }
+        }
+
+        // Setup listener for user status changes
+        function setupStatusListener(uid) {
+            // Remove existing listener if any
+            if (userStatusListeners[uid]) {
+                userStatusListeners[uid]();
+            }
+            
+            // Create new listener
+            const userRef = doc(db, "users", uid);
+            userStatusListeners[uid] = onSnapshot(userRef, (doc) => {
+                if (doc.exists()) {
+                    const data = doc.data();
+                    const status = data.status || 'offline';
+                    
+                    // Update status indicator in contacts
+                    const contactElement = document.querySelector(`.contact[data-uid="${uid}"]`);
+                    if (contactElement) {
+                        const indicator = contactElement.querySelector('.status-indicator');
+                        if (indicator) {
+                            updateStatusIndicator(indicator, status);
+                        }
+                        
+                        const statusText = contactElement.querySelector('.contact-time');
+                        if (statusText) {
+                            statusText.textContent = status;
+                        }
+                    }
+                    
+                    // Update status indicator in suggested contacts if visible
+                    const suggestedElement = document.querySelector(`.suggested-contact button[data-uid="${uid}"]`)?.closest('.suggested-contact');
+                    if (suggestedElement) {
+                        const indicator = suggestedElement.querySelector('.status-indicator');
+                        if (indicator) {
+                            updateStatusIndicator(indicator, status);
+                        }
+                    }
+                    
+                    // Update status in active chat if this is the current chat user
+                    if (activeChat === uid) {
+                        updateStatusIndicator(chatStatusIndicator, status);
+                        chatUserStatus.textContent = status;
+                    }
+                }
+            });
         }
 
         // --- Load Suggested Users ---
@@ -1310,7 +1460,10 @@
                     const userElement = document.createElement('div');
                     userElement.className = 'suggested-contact';
                     userElement.innerHTML = `
-                        <img src="${data.photoURL}" class="suggested-avatar" alt="${data.name}">
+                        <div class="avatar-container">
+                            <img src="${data.photoURL}" class="suggested-avatar" alt="${data.name}">
+                            <span class="status-indicator ${getStatusClass(data.status)}"></span>
+                        </div>
                         <div class="suggested-name">${data.name}</div>
                         <button class="follow-btn" data-uid="${data.uid}">Follow</button>
                     `;
@@ -1322,6 +1475,9 @@
                     
                     userElement.addEventListener('click', () => openChat(data.uid, data.name, data.photoURL, data.status));
                     suggestedContacts.appendChild(userElement);
+                    
+                    // Listen for status changes for this user
+                    setupStatusListener(data.uid);
                 });
 
                 if (!showAll && suggestedUsers.length > 5) {
@@ -1423,7 +1579,8 @@
             activeChat = uid;
             chatUserName.textContent = name;
             chatAvatar.src = avatar;
-            chatUserStatus.textContent = status || 'online';
+            updateStatusIndicator(chatStatusIndicator, status);
+            chatUserStatus.textContent = status;
             messagesContainer.innerHTML = '';
 
             // Stop previous listener if any
