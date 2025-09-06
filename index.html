@@ -205,26 +205,6 @@
             font-size: 1rem;
         }
 
-        .tabs {
-            display: flex;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: 15px;
-            cursor: pointer;
-            font-weight: 600;
-            color: var(--text-secondary);
-            transition: color 0.2s;
-        }
-
-        .tab.active {
-            color: var(--primary);
-            border-bottom: 2px solid var(--primary);
-        }
-
         .contacts-container {
             flex: 1;
             overflow-y: auto;
@@ -251,26 +231,6 @@
             object-fit: cover;
             position: relative;
             border: 2px solid var(--border);
-        }
-
-        .contact-avatar::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            top: 0;
-            left: 0;
-            padding: 2px;
-            background: var(--story-border);
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask-composite: xor;
-            mask-composite: exclude;
-            opacity: 0;
-        }
-
-        .contact.has-story .contact-avatar::after {
-            opacity: 1;
         }
 
         .contact-info {
@@ -435,6 +395,7 @@
             font-size: 0.85rem;
             color: var(--primary);
             font-weight: normal;
+            cursor: pointer;
         }
 
         .suggested-contacts {
@@ -461,21 +422,6 @@
             border: 2px solid var(--border);
         }
 
-        .suggested-avatar::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            top: 0;
-            left: 0;
-            padding: 2px;
-            background: var(--story-border);
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask-composite: xor;
-            mask-composite: exclude;
-        }
-
         .suggested-name {
             font-size: 0.8rem;
             font-weight: 500;
@@ -495,6 +441,7 @@
             bottom: 0;
             right: 0;
             font-size: 0.8rem;
+            cursor: pointer;
         }
 
         /* Settings Modal */
@@ -615,6 +562,15 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Dark Mode */
+        body.dark-mode {
+            --background: #121212;
+            --card-bg: #1e1e1e;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --border: #2d2d2d;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
@@ -624,10 +580,12 @@
             .contact-info, .contact-meta, .contact-name, .contact-lastmsg {
                 display: none;
             }
-            
-            .tab span {
-                display: none;
-            }
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-secondary);
         }
     </style>
 </head>
@@ -687,19 +645,13 @@
                     </div>
                 </div>
 
-                <div class="tabs">
-                    <div class="tab active"><i class="fas fa-comment"></i> <span>Messages</span></div>
-                    <div class="tab"><i class="fas fa-user-friends"></i> <span>Contacts</span></div>
-                    <div class="tab"><i class="fas fa-bell"></i> <span>Notifications</span></div>
-                </div>
-
                 <div class="contacts-container" id="contactsContainer">
                     <!-- Contacts will be populated here -->
                 </div>
 
                 <div class="suggested-section">
                     <div class="section-title">
-                        Suggested Contacts <span class="see-all">See All</span>
+                        Suggested Contacts <span class="see-all" id="seeAllBtn">See All</span>
                     </div>
                     <div class="suggested-contacts" id="suggestedContacts">
                         <!-- Suggested contacts will be populated here -->
@@ -725,7 +677,6 @@
                 </div>
 
                 <div class="messages-container" id="messagesContainer">
-                    <!-- Messages will be populated here -->
                     <div class="welcome-message">
                         <p>Welcome to TajibMax Messenger! Select a contact to start chatting.</p>
                     </div>
@@ -752,7 +703,7 @@
                     <h3 class="setting-title">Notifications</h3>
                     <p class="setting-description">Enable or disable message notifications</p>
                     <label class="toggle-switch">
-                        <input type="checkbox" checked>
+                        <input type="checkbox" id="notificationsToggle" checked>
                         <span class="slider"></span>
                     </label>
                 </div>
@@ -760,10 +711,22 @@
                     <h3 class="setting-title">Sound</h3>
                     <p class="setting-description">Play sounds for new messages</p>
                     <label class="toggle-switch">
-                        <input type="checkbox" checked>
+                        <input type="checkbox" id="soundToggle" checked>
                         <span class="slider"></span>
                     </label>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appearance Modal -->
+    <div class="modal" id="appearanceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Appearance</h2>
+                <button class="close-modal" id="closeAppearance">&times;</button>
+            </div>
+            <div class="modal-body">
                 <div class="setting-item">
                     <h3 class="setting-title">Dark Mode</h3>
                     <p class="setting-description">Switch to dark theme</p>
@@ -803,7 +766,31 @@
         </div>
     </div>
 
-    <!-- Firebase App (initialized with config) -->
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Help & Support</h2>
+                <button class="close-modal" id="closeHelp">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <h3 class="setting-title">Getting Started</h3>
+                    <p class="setting-description">To start messaging, select a contact from your contacts list or add someone new from the suggested contacts.</p>
+                </div>
+                <div class="setting-item">
+                    <h3 class="setting-title">Managing Contacts</h3>
+                    <p class="setting-description">Add new contacts by clicking the + button on suggested users. They will be added to your contacts once they accept your request.</p>
+                </div>
+                <div class="setting-item">
+                    <h3 class="setting-title">Need More Help?</h3>
+                    <p class="setting-description">Contact our support team at support@tajibmax.com for assistance with any issues.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
     <script type="module">
         // --- Firebase Imports ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
@@ -856,11 +843,11 @@
         const userName = document.getElementById('userName');
         const userAvatar = document.getElementById('userAvatar');
         const dropdownMenu = document.getElementById('dropdownMenu');
-        const logoutBtn = document.getElementById('logoutBtn');
         const profileBtn = document.getElementById('profileBtn');
         const settingsBtn = document.getElementById('settingsBtn');
         const appearanceBtn = document.getElementById('appearanceBtn');
         const helpBtn = document.getElementById('helpBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
         const contactsContainer = document.getElementById('contactsContainer');
         const suggestedContacts = document.getElementById('suggestedContacts');
         const messagesContainer = document.getElementById('messagesContainer');
@@ -868,15 +855,23 @@
         const sendMessageBtn = document.getElementById('sendMessageBtn');
         const chatUserName = document.getElementById('chatUserName');
         const chatAvatar = document.getElementById('chatAvatar');
+        const chatUserStatus = document.getElementById('chatUserStatus');
         const settingsModal = document.getElementById('settingsModal');
         const closeSettings = document.getElementById('closeSettings');
+        const appearanceModal = document.getElementById('appearanceModal');
+        const closeAppearance = document.getElementById('closeAppearance');
         const profileModal = document.getElementById('profileModal');
         const closeProfile = document.getElementById('closeProfile');
         const profileName = document.getElementById('profileName');
         const profileAvatar = document.getElementById('profileAvatar');
         const profileEmail = document.getElementById('profileEmail');
+        const helpModal = document.getElementById('helpModal');
+        const closeHelp = document.getElementById('closeHelp');
+        const notificationsToggle = document.getElementById('notificationsToggle');
+        const soundToggle = document.getElementById('soundToggle');
         const darkModeToggle = document.getElementById('darkModeToggle');
         const statusSelect = document.getElementById('statusSelect');
+        const seeAllBtn = document.getElementById('seeAllBtn');
 
         // App state
         let currentUser = null;
@@ -925,6 +920,14 @@
             settingsModal.style.display = 'none';
         });
 
+        appearanceBtn.addEventListener('click', () => {
+            appearanceModal.style.display = 'flex';
+        });
+
+        closeAppearance.addEventListener('click', () => {
+            appearanceModal.style.display = 'none';
+        });
+
         profileBtn.addEventListener('click', () => {
             profileModal.style.display = 'flex';
         });
@@ -933,26 +936,73 @@
             profileModal.style.display = 'none';
         });
 
+        helpBtn.addEventListener('click', () => {
+            helpModal.style.display = 'flex';
+        });
+
+        closeHelp.addEventListener('click', () => {
+            helpModal.style.display = 'none';
+        });
+
         // Close modal when clicking outside
         window.addEventListener('click', (e) => {
             if (e.target === settingsModal) {
                 settingsModal.style.display = 'none';
             }
+            if (e.target === appearanceModal) {
+                appearanceModal.style.display = 'none';
+            }
             if (e.target === profileModal) {
                 profileModal.style.display = 'none';
             }
+            if (e.target === helpModal) {
+                helpModal.style.display = 'none';
+            }
+        });
+
+        // --- Settings toggles ---
+        notificationsToggle.addEventListener('change', () => {
+            // Save notification preference
+            console.log("Notifications:", notificationsToggle.checked);
+            // You would typically save this to Firebase or local storage
+        });
+
+        soundToggle.addEventListener('change', () => {
+            // Save sound preference
+            console.log("Sound:", soundToggle.checked);
+            // You would typically save this to Firebase or local storage
         });
 
         // --- Dark mode toggle ---
         darkModeToggle.addEventListener('change', () => {
             document.body.classList.toggle('dark-mode');
-            // You would typically save this preference to local storage or user profile
+            // Save theme preference to local storage
+            localStorage.setItem('darkMode', darkModeToggle.checked);
         });
 
+        // Load dark mode preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.checked = true;
+        }
+
         // --- Status change ---
-        statusSelect.addEventListener('change', () => {
-            // Update user status in Firebase
-            console.log("Status changed to:", statusSelect.value);
+        statusSelect.addEventListener('change', async () => {
+            if (currentUser) {
+                try {
+                    await updateDoc(doc(db, "users", currentUser.uid), {
+                        status: statusSelect.value,
+                        lastSeen: serverTimestamp()
+                    });
+                } catch (err) {
+                    console.error("Error updating status:", err);
+                }
+            }
+        });
+
+        // --- See All suggested contacts ---
+        seeAllBtn.addEventListener('click', () => {
+            loadSuggestedUsers(true);
         });
 
         // --- Auth State Change ---
@@ -1019,30 +1069,31 @@
                     <img src="${data.photoURL}" class="contact-avatar" alt="${data.name}">
                     <div class="contact-info">
                         <div class="contact-name">${data.name}</div>
-                        <div class="contact-lastmsg">Last message will appear here</div>
+                        <div class="contact-lastmsg">Click to start chatting</div>
                     </div>
                     <div class="contact-meta">
-                        <div class="contact-time">12:30 PM</div>
-                        <div class="contact-badge">3</div>
+                        <div class="contact-time">${data.status || 'offline'}</div>
                     </div>
                 `;
-                contactElement.addEventListener('click', () => openChat(data.uid, data.name, data.photoURL));
+                contactElement.addEventListener('click', () => openChat(data.uid, data.name, data.photoURL, data.status));
                 contactsContainer.appendChild(contactElement);
                 contacts.push(data);
             }
         }
 
         // --- Load Suggested Users ---
-        async function loadSuggestedUsers() {
+        async function loadSuggestedUsers(showAll = false) {
             const querySnapshot = await getDocs(collection(db, "users"));
             suggestedContacts.innerHTML = '';
             suggestedUsers = [];
             
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
-                // Skip current user and existing friends
-                if (data.uid === currentUser.uid || 
-                    (currentUser && currentUser.friends && currentUser.friends.includes(data.uid))) return;
+                // Skip current user
+                if (data.uid === currentUser.uid) return;
+                
+                // Check if already a friend
+                if (currentUser && currentUser.friends && currentUser.friends.includes(data.uid)) return;
                 
                 suggestedUsers.push(data);
                 
@@ -1051,13 +1102,25 @@
                 userElement.innerHTML = `
                     <div class="suggested-avatar">
                         <img src="${data.photoURL}" alt="${data.name}">
-                        <button class="add-contact">+</button>
+                        <button class="add-contact" data-uid="${data.uid}">+</button>
                     </div>
                     <div class="suggested-name">${data.name}</div>
                 `;
-                userElement.addEventListener('click', () => sendFriendRequest(data.uid));
+                userElement.querySelector('.add-contact').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    sendFriendRequest(data.uid);
+                });
+                userElement.addEventListener('click', () => openChat(data.uid, data.name, data.photoURL, data.status));
                 suggestedContacts.appendChild(userElement);
             });
+
+            // If not showing all, limit to 5
+            if (!showAll && suggestedUsers.length > 5) {
+                const items = suggestedContacts.querySelectorAll('.suggested-contact');
+                for (let i = 5; i < items.length; i++) {
+                    items[i].style.display = 'none';
+                }
+            }
         }
 
         // --- Send Friend Request ---
@@ -1109,10 +1172,11 @@
         }
 
         // --- Open Chat with Friend ---
-        function openChat(uid, name, avatar) {
+        function openChat(uid, name, avatar, status) {
             activeChat = uid;
             chatUserName.textContent = name;
             chatAvatar.src = avatar;
+            chatUserStatus.textContent = status || 'online';
             messagesContainer.innerHTML = '';
 
             // Stop previous listener if any
@@ -1126,6 +1190,8 @@
             
             unsubscribeChat = onSnapshot(q, snapshot => {
                 messagesContainer.innerHTML = '';
+                let hasMessages = false;
+                
                 snapshot.forEach(docSnap => {
                     const msg = docSnap.data();
                     // Only show messages between these two users
@@ -1134,8 +1200,17 @@
                         (msg.from === uid && msg.to === currentUser.uid)
                     ) {
                         addMessageToChat(msg, msg.from === currentUser.uid);
+                        hasMessages = true;
                     }
                 });
+                
+                if (!hasMessages) {
+                    messagesContainer.innerHTML = `
+                        <div class="welcome-message">
+                            <p>Start a conversation with ${name}</p>
+                        </div>
+                    `;
+                }
                 
                 // Scroll to bottom of messages
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -1184,55 +1259,9 @@
                     createdAt: serverTimestamp()
                 });
                 messageInput.value = '';
-                
-                // Simulate reply after a short delay
-                setTimeout(() => {
-                    simulateReply();
-                }, 1000 + Math.random() * 2000);
             } catch (err) {
                 console.error("Error sending message:", err);
                 alert("Failed to send message");
-            }
-        }
-
-        // --- Simulate reply from other user ---
-        async function simulateReply() {
-            if (!activeChat) return;
-            
-            try {
-                // Get the active chat user's data
-                const userDoc = await getDoc(doc(db, "users", activeChat));
-                if (!userDoc.exists()) return;
-                
-                const userData = userDoc.data();
-                
-                // Only simulate reply if this is not the current user
-                if (userData.uid !== currentUser.uid) {
-                    const replies = [
-                        "Hey there! How's it going?",
-                        "That's interesting! Tell me more.",
-                        "I've been thinking about that too.",
-                        "Thanks for sharing that with me.",
-                        "I appreciate your perspective.",
-                        "Let's catch up soon!",
-                        "What are your plans for the weekend?",
-                        "I saw that too, it was amazing!",
-                        "I'll get back to you on that.",
-                        "Sounds good to me!"
-                    ];
-                    
-                    const replyMessage = replies[Math.floor(Math.random() * replies.length)];
-                    
-                    await addDoc(collection(db, "messages"), {
-                        from: activeChat,
-                        to: currentUser.uid,
-                        participants: [currentUser.uid, activeChat],
-                        text: replyMessage,
-                        createdAt: serverTimestamp()
-                    });
-                }
-            } catch (err) {
-                console.error("Error simulating reply:", err);
             }
         }
     </script>
