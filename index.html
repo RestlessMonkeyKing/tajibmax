@@ -532,6 +532,34 @@
             line-height: 1.5;
         }
 
+        /* Search Results */
+        .search-results-container {
+            position: absolute;
+            top: 100%;
+            left: 15px;
+            right: 15px;
+            background: var(--card-bg);
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-result-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
         /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -601,6 +629,9 @@
                         <i class="fas fa-search"></i>
                         <input type="text" placeholder="Search for users..." id="searchInput">
                     </div>
+                    <div class="search-results-container" id="searchResultsContainer">
+                        <!-- Search results will appear here -->
+                    </div>
                 </div>
 
                 <div class="contacts-container" id="contactsContainer">
@@ -611,10 +642,10 @@
 
                 <div class="suggested-section">
                     <div class="section-title">
-                        <span>Suggested Contacts</span>
+                        <span>All Users</span>
                     </div>
                     <div class="suggested-contacts" id="suggestedContacts">
-                        <!-- Suggested contacts will be populated here -->
+                        <!-- All users will be populated here -->
                     </div>
                 </div>
             </div>
@@ -626,7 +657,7 @@
                         <i class="fas fa-comments"></i>
                     </div>
                     <h2 class="welcome-title">Welcome to TajibMax Messenger</h2>
-                    <p class="welcome-subtitle">Select a contact from the list to start chatting or discover new people in the suggested contacts section.</p>
+                    <p class="welcome-subtitle">Select a contact from the list to start chatting or discover new people in the users section.</p>
                 </div>
 
                 <div class="chat-header" id="chatHeader" style="display: none;">
@@ -684,8 +715,7 @@
             addDoc,
             updateDoc,
             serverTimestamp,
-            orderBy,
-            Timestamp
+            orderBy
         } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         // Firebase configuration
@@ -725,6 +755,7 @@
         const welcomeMessage = document.getElementById('welcomeMessage');
         const chatHeader = document.getElementById('chatHeader');
         const messageInputContainer = document.getElementById('messageInputContainer');
+        const searchResultsContainer = document.getElementById('searchResultsContainer');
 
         // App state
         let currentUser = null;
@@ -785,6 +816,13 @@
             sendMessageBtn.addEventListener('click', sendMessage);
             messageInput.addEventListener('keydown', handleMessageInputKeydown);
             searchInput.addEventListener('input', debounce(searchUsers, 300));
+            
+            // Close search results when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !searchResultsContainer.contains(e.target)) {
+                    searchResultsContainer.style.display = 'none';
+                }
+            });
         }
 
         // Sign in with Google
@@ -1018,7 +1056,7 @@
             const searchTerm = searchInput.value.toLowerCase().trim();
             
             if (!searchTerm) {
-                renderSuggestedContacts();
+                searchResultsContainer.style.display = 'none';
                 return;
             }
             
@@ -1027,33 +1065,40 @@
                 (user.email && user.email.toLowerCase().includes(searchTerm))
             );
             
-            suggestedContacts.innerHTML = '';
+            searchResultsContainer.innerHTML = '';
             
             if (filteredUsers.length === 0) {
-                suggestedContacts.innerHTML = '<div class="no-contacts">No users found</div>';
+                searchResultsContainer.innerHTML = '<div class="no-contacts">No users found</div>';
+                searchResultsContainer.style.display = 'block';
                 return;
             }
             
             filteredUsers.forEach(user => {
-                const contactElement = document.createElement('div');
-                contactElement.className = 'suggested-contact';
-                contactElement.innerHTML = `
+                const resultElement = document.createElement('div');
+                resultElement.className = 'search-result-item';
+                resultElement.innerHTML = `
                     <img src="${user.photoURL}" class="suggested-avatar" alt="${user.name}">
                     <div class="suggested-name">${user.name}</div>
                     <button class="follow-btn">Message</button>
                 `;
                 
-                contactElement.querySelector('button').addEventListener('click', (e) => {
+                resultElement.querySelector('button').addEventListener('click', (e) => {
                     e.stopPropagation();
                     openChat(user.uid, user.name, user.photoURL, user.status);
+                    searchResultsContainer.style.display = 'none';
+                    searchInput.value = '';
                 });
                 
-                contactElement.addEventListener('click', () => {
+                resultElement.addEventListener('click', () => {
                     openChat(user.uid, user.name, user.photoURL, user.status);
+                    searchResultsContainer.style.display = 'none';
+                    searchInput.value = '';
                 });
                 
-                suggestedContacts.appendChild(contactElement);
+                searchResultsContainer.appendChild(resultElement);
             });
+            
+            searchResultsContainer.style.display = 'block';
         }
 
         // Debounce function for search
