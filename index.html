@@ -558,6 +558,7 @@
             font-size: 4rem;
             color: var(--primary);
             margin-bottom: 20px;
+            opacity: 0.7;
         }
 
         .welcome-title {
@@ -570,6 +571,7 @@
             font-size: 1rem;
             max-width: 400px;
             line-height: 1.5;
+            opacity: 0.8;
         }
 
         /* Animations */
@@ -631,7 +633,7 @@
             <i class="fas fa-comments"></i>
         </div>
         <h1 class="login-title">TajibMax Messenger</h1>
-        <p class="login-subtitle">Connect with friends and the world around you with our secure and fast messaging platform</p>
+        <p class="login-subtitle">Connect with friends and the world around you with our secure messaging platform</p>
         <button class="login-btn" id="loginBtn">
             <i class="fab fa-google"></i> Sign in with Google
         </button>
@@ -672,7 +674,7 @@
 
                 <div class="contacts-container" id="contactsContainer">
                     <div class="no-contacts">
-                        <p>No conversations yet. Start chatting with someone!</p>
+                        <p>No conversations yet. Follow users to start chatting!</p>
                     </div>
                 </div>
 
@@ -693,7 +695,7 @@
                         <i class="fas fa-comments"></i>
                     </div>
                     <h2 class="welcome-title">Welcome to TajibMax Messenger</h2>
-                    <p class="welcome-subtitle">Select a contact from the list to start chatting or discover new people in the users section.</p>
+                    <p class="welcome-subtitle">Search for users to follow and start chatting, or select a user from your contacts.</p>
                 </div>
 
                 <div class="chat-header" id="chatHeader" style="display: none;">
@@ -730,50 +732,18 @@
     <!-- Toast Notification -->
     <div class="toast" id="toast"></div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        // Import Firebase functions
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { 
-            getAuth, 
-            GoogleAuthProvider, 
-            signInWithPopup, 
-            onAuthStateChanged, 
-            signOut 
-        } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { 
-            getFirestore, 
-            doc, 
-            setDoc, 
-            getDoc, 
-            getDocs, 
-            collection, 
-            query, 
-            where, 
-            onSnapshot,
-            addDoc,
-            updateDoc,
-            serverTimestamp,
-            orderBy,
-            arrayUnion,
-            arrayRemove
-        } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDNbhIX7lGndqaE8pGtYScy56gFNluLE8I",
-            authDomain: "tajib-max.firebaseapp.com",
-            projectId: "tajib-max",
-            storageBucket: "tajib-max.firebasestorage.app",
-            messagingSenderId: "165946585796",
-            appId: "1:165946585796:web:3c438ca3c59ca00f7fcf91",
-            measurementId: "G-PP0E1J03YS"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    <script>
+        // Mock user data for demonstration
+        const mockUsers = [
+            { id: '1', name: 'Emma Johnson', email: 'emma@example.com', avatar: 'https://randomuser.me/api/portraits/women/32.jpg', status: 'online' },
+            { id: '2', name: 'James Smith', email: 'james@example.com', avatar: 'https://randomuser.me/api/portraits/men/22.jpg', status: 'online' },
+            { id: '3', name: 'Sophia Williams', email: 'sophia@example.com', avatar: 'https://randomuser.me/api/portraits/women/44.jpg', status: 'away' },
+            { id: '4', name: 'Liam Brown', email: 'liam@example.com', avatar: 'https://randomuser.me/api/portraits/men/57.jpg', status: 'online' },
+            { id: '5', name: 'Olivia Davis', email: 'olivia@example.com', avatar: 'https://randomuser.me/api/portraits/women/68.jpg', status: 'busy' },
+            { id: '6', name: 'Noah Miller', email: 'noah@example.com', avatar: 'https://randomuser.me/api/portraits/men/77.jpg', status: 'offline' },
+            { id: '7', name: 'Ava Wilson', email: 'ava@example.com', avatar: 'https://randomuser.me/api/portraits/women/79.jpg', status: 'online' },
+            { id: '8', name: 'William Taylor', email: 'william@example.com', avatar: 'https://randomuser.me/api/portraits/men/81.jpg', status: 'away' }
+        ];
 
         // DOM Elements
         const loginScreen = document.getElementById('loginScreen');
@@ -803,75 +773,26 @@
         let currentUser = null;
         let activeChat = null;
         let users = [];
-        let conversations = [];
-        let messagesListener = null;
-        let usersListener = null;
         let following = [];
+        let messages = [];
 
         // Initialize the app
         function init() {
-            // Auth state observer
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    // User is signed in
-                    currentUser = user;
-                    
-                    // Update UI with user info
-                    userName.textContent = user.displayName;
-                    userAvatar.src = user.photoURL;
-                    
-                    // Hide login, show app
-                    loginScreen.style.display = 'none';
-                    appContainer.style.display = 'flex';
-                    
-                    // Save/update user in Firestore
-                    await setDoc(doc(db, "users", user.uid), {
-                        uid: user.uid,
-                        name: user.displayName,
-                        email: user.email,
-                        photoURL: user.photoURL,
-                        status: "online",
-                        lastSeen: serverTimestamp(),
-                        searchName: user.displayName.toLowerCase(), // For case-insensitive search
-                        followers: [],
-                        following: []
-                    }, { merge: true });
-
-                    // Load user data from Firestore
-                    const userDoc = await getDoc(doc(db, "users", user.uid));
-                    if (userDoc.exists()) {
-                        currentUser = { ...currentUser, ...userDoc.data() };
-                        following = currentUser.following || [];
-                    }
-
-                    // Load users and conversations
-                    loadUsers();
-                    loadConversations();
-                    
-                    // Set up real-time listener for users
-                    usersListener = onSnapshot(collection(db, "users"), (snapshot) => {
-                        loadUsers();
-                    });
-
-                    // Set up listener for follow updates
-                    setupFollowListener();
-                } else {
-                    // User is signed out
-                    loginScreen.style.display = 'flex';
-                    appContainer.style.display = 'none';
-                    
-                    // Clean up listeners
-                    if (messagesListener) {
-                        messagesListener();
-                    }
-                    if (usersListener) {
-                        usersListener();
-                    }
-                }
-            });
-
+            // Check if user is already logged in (for demo purposes)
+            const demoUser = {
+                uid: 'demo-user',
+                displayName: 'Demo User',
+                photoURL: 'https://randomuser.me/api/portraits/men/1.jpg',
+                email: 'demo@example.com'
+            };
+            
+            // Simulate login for demo
+            setTimeout(() => {
+                loginUser(demoUser);
+            }, 500);
+            
             // Event listeners
-            loginBtn.addEventListener('click', signInWithGoogle);
+            loginBtn.addEventListener('click', simulateLogin);
             sendMessageBtn.addEventListener('click', sendMessage);
             messageInput.addEventListener('keydown', handleMessageInputKeydown);
             searchInput.addEventListener('input', debounce(searchUsers, 300));
@@ -884,6 +805,37 @@
             });
         }
 
+        // Simulate login for demo
+        function simulateLogin() {
+            const demoUser = {
+                uid: 'demo-user',
+                displayName: 'Demo User',
+                photoURL: 'https://randomuser.me/api/portraits/men/1.jpg',
+                email: 'demo@example.com'
+            };
+            
+            loginUser(demoUser);
+        }
+
+        // Login user
+        function loginUser(user) {
+            currentUser = user;
+            
+            // Update UI with user info
+            userName.textContent = user.displayName;
+            userAvatar.src = user.photoURL;
+            
+            // Hide login, show app
+            loginScreen.style.display = 'none';
+            appContainer.style.display = 'flex';
+            
+            // Load users and conversations
+            loadUsers();
+            loadConversations();
+            
+            showToast('Successfully logged in!');
+        }
+
         // Show toast notification
         function showToast(message, duration = 3000) {
             toast.textContent = message;
@@ -894,63 +846,18 @@
             }, duration);
         }
 
-        // Sign in with Google
-        async function signInWithGoogle() {
-            try {
-                const provider = new GoogleAuthProvider();
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                console.error("Error signing in with Google", error);
-                showToast("Error signing in: " + error.message);
-            }
-        }
-
         // Load all users (for suggested contacts)
-        async function loadUsers() {
-            try {
-                const querySnapshot = await getDocs(collection(db, "users"));
-                users = [];
-                
-                querySnapshot.forEach((doc) => {
-                    const userData = doc.data();
-                    if (userData.uid !== currentUser.uid) {
-                        users.push(userData);
-                    }
-                });
-                
-                renderSuggestedContacts();
-            } catch (error) {
-                console.error("Error loading users", error);
-            }
-        }
-
-        // Setup listener for follow updates
-        async function setupFollowListener() {
-            const userRef = doc(db, "users", currentUser.uid);
-            onSnapshot(userRef, (doc) => {
-                if (doc.exists()) {
-                    const userData = doc.data();
-                    following = userData.following || [];
-                    renderSuggestedContacts();
-                    renderConversations();
-                }
-            });
+        function loadUsers() {
+            // For demo, use mock users
+            users = mockUsers;
+            
+            renderSuggestedContacts();
         }
 
         // Load user conversations
-        async function loadConversations() {
-            try {
-                // Get the updated user data to refresh following list
-                const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-                if (userDoc.exists()) {
-                    currentUser = { ...currentUser, ...userDoc.data() };
-                    following = currentUser.following || [];
-                }
-                
-                renderConversations();
-            } catch (error) {
-                console.error("Error loading conversations", error);
-            }
+        function loadConversations() {
+            // For demo, use the first 4 users as conversations
+            renderConversations();
         }
 
         // Render suggested contacts
@@ -963,25 +870,25 @@
             }
             
             users.forEach(user => {
-                const isFollowing = following.includes(user.uid);
+                const isFollowing = following.includes(user.id);
                 
                 const contactElement = document.createElement('div');
                 contactElement.className = 'suggested-contact';
                 contactElement.innerHTML = `
-                    <img src="${user.photoURL}" class="suggested-avatar" alt="${user.name}">
+                    <img src="${user.avatar}" class="suggested-avatar" alt="${user.name}">
                     <div class="suggested-name">${user.name}</div>
-                    <button class="follow-btn ${isFollowing ? 'following' : ''}" data-uid="${user.uid}">
+                    <button class="follow-btn ${isFollowing ? 'following' : ''}" data-uid="${user.id}">
                         ${isFollowing ? 'Following' : 'Follow'}
                     </button>
                 `;
                 
                 contactElement.querySelector('.follow-btn').addEventListener('click', (e) => {
                     e.stopPropagation();
-                    toggleFollow(user.uid);
+                    toggleFollow(user.id);
                 });
                 
                 contactElement.addEventListener('click', () => {
-                    openChat(user.uid, user.name, user.photoURL, user.status);
+                    openChat(user.id, user.name, user.avatar, user.status);
                 });
                 
                 suggestedContacts.appendChild(contactElement);
@@ -989,44 +896,20 @@
         }
 
         // Toggle follow status
-        async function toggleFollow(userId) {
-            try {
-                const userRef = doc(db, "users", currentUser.uid);
-                const targetUserRef = doc(db, "users", userId);
-                
-                if (following.includes(userId)) {
-                    // Unfollow user
-                    await updateDoc(userRef, {
-                        following: arrayRemove(userId)
-                    });
-                    
-                    await updateDoc(targetUserRef, {
-                        followers: arrayRemove(currentUser.uid)
-                    });
-                    
-                    showToast("Unfollowed user");
-                } else {
-                    // Follow user
-                    await updateDoc(userRef, {
-                        following: arrayUnion(userId)
-                    });
-                    
-                    await updateDoc(targetUserRef, {
-                        followers: arrayUnion(currentUser.uid)
-                    });
-                    
-                    showToast("Following user");
-                }
-                
-                // Refresh the following list
-                const userDoc = await getDoc(userRef);
-                if (userDoc.exists()) {
-                    following = userDoc.data().following || [];
-                }
-            } catch (error) {
-                console.error("Error toggling follow status", error);
-                showToast("Error updating follow status");
+        function toggleFollow(userId) {
+            if (following.includes(userId)) {
+                // Unfollow user
+                following = following.filter(id => id !== userId);
+                showToast("Unfollowed user");
+            } else {
+                // Follow user
+                following.push(userId);
+                showToast("Following user");
             }
+            
+            // Update UI
+            renderSuggestedContacts();
+            renderConversations();
         }
 
         // Render conversations
@@ -1034,25 +917,20 @@
             contactsContainer.innerHTML = '';
             
             if (following.length === 0) {
-                contactsContainer.innerHTML = '<div class="no-contacts">No conversations yet. Follow users to start chatting.</div>';
+                contactsContainer.innerHTML = '<div class="no-contacts">No conversations yet. Follow users to start chatting!</div>';
                 return;
             }
             
             // Filter users to only those we're following
-            const followedUsers = users.filter(user => following.includes(user.uid));
-            
-            if (followedUsers.length === 0) {
-                contactsContainer.innerHTML = '<div class="no-contacts">No conversations yet. Follow users to start chatting.</div>';
-                return;
-            }
+            const followedUsers = users.filter(user => following.includes(user.id));
             
             followedUsers.forEach(user => {
                 const contactElement = document.createElement('div');
                 contactElement.className = 'contact';
-                contactElement.dataset.uid = user.uid;
+                contactElement.dataset.uid = user.id;
                 
                 contactElement.innerHTML = `
-                    <img src="${user.photoURL}" class="contact-avatar" alt="${user.name}">
+                    <img src="${user.avatar}" class="contact-avatar" alt="${user.name}">
                     <div class="contact-info">
                         <div class="contact-name">${user.name}</div>
                         <div class="contact-lastmsg">Click to start chatting</div>
@@ -1063,7 +941,7 @@
                 `;
                 
                 contactElement.addEventListener('click', () => {
-                    openChat(user.uid, user.name, user.photoURL, user.status);
+                    openChat(user.id, user.name, user.avatar, user.status);
                     
                     // Highlight active conversation
                     document.querySelectorAll('.contact').forEach(c => c.classList.remove('active'));
@@ -1092,44 +970,23 @@
             // Clear messages
             messagesContainer.innerHTML = '';
             
-            // Set up real-time listener for messages
-            if (messagesListener) {
-                messagesListener();
-            }
+            // Load messages for this chat
+            loadMessages(userId);
+        }
+
+        // Load messages for a chat
+        function loadMessages(userId) {
+            // For demo, generate some random messages
+            messages = [
+                { id: '1', senderId: userId, text: 'Hey there! How are you doing?', timestamp: new Date(Date.now() - 3600000) },
+                { id: '2', senderId: currentUser.uid, text: "I'm good, thanks! How about you?", timestamp: new Date(Date.now() - 3500000) },
+                { id: '3', senderId: userId, text: "I'm doing great! Just working on some projects.", timestamp: new Date(Date.now() - 3400000) },
+                { id: '4', senderId: userId, text: "What have you been up to lately?", timestamp: new Date(Date.now() - 3300000) }
+            ];
             
-            const messagesQuery = query(
-                collection(db, "messages"),
-                where("participants", "array-contains", currentUser.uid),
-                orderBy("timestamp", "asc")
-            );
-            
-            messagesListener = onSnapshot(messagesQuery, (snapshot) => {
-                messagesContainer.innerHTML = '';
-                let hasMessages = false;
-                
-                snapshot.forEach((doc) => {
-                    const message = doc.data();
-                    
-                    // Only show messages between these two users
-                    if (
-                        (message.senderId === currentUser.uid && message.receiverId === userId) ||
-                        (message.senderId === userId && message.receiverId === currentUser.uid)
-                    ) {
-                        addMessageToChat(message, message.senderId === currentUser.uid);
-                        hasMessages = true;
-                    }
-                });
-                
-                if (!hasMessages) {
-                    messagesContainer.innerHTML = `
-                        <div style="text-align: center; padding: 20px; color: var(--text-secondary);">
-                            <p>No messages yet. Start the conversation!</p>
-                        </div>
-                    `;
-                }
-                
-                // Scroll to bottom
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            // Display messages
+            messages.forEach(message => {
+                addMessageToChat(message, message.senderId === currentUser.uid);
             });
         }
 
@@ -1140,11 +997,7 @@
             messageElement.classList.add(isSent ? 'sent' : 'received');
             
             // Format timestamp
-            let timeText = 'Now';
-            if (message.timestamp) {
-                const date = message.timestamp.toDate();
-                timeText = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            }
+            const timeText = message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             
             messageElement.innerHTML = `
                 ${message.text}
@@ -1158,27 +1011,51 @@
         }
 
         // Send message
-        async function sendMessage() {
+        function sendMessage() {
             const messageText = messageInput.innerText.trim();
             
             if (!messageText || !activeChat) return;
             
-            try {
-                // Add message to Firestore
-                await addDoc(collection(db, "messages"), {
-                    senderId: currentUser.uid,
-                    receiverId: activeChat,
-                    participants: [currentUser.uid, activeChat],
-                    text: messageText,
-                    timestamp: serverTimestamp()
-                });
-                
-                // Clear input
-                messageInput.innerText = '';
-            } catch (error) {
-                console.error("Error sending message", error);
-                showToast("Failed to send message");
-            }
+            // Create message object
+            const message = {
+                id: Date.now().toString(),
+                senderId: currentUser.uid,
+                text: messageText,
+                timestamp: new Date()
+            };
+            
+            // Add to messages
+            messages.push(message);
+            
+            // Add to UI
+            addMessageToChat(message, true);
+            
+            // Clear input
+            messageInput.innerText = '';
+            
+            // Simulate reply after a short delay
+            setTimeout(() => {
+                const repliedUser = users.find(user => user.id === activeChat);
+                if (repliedUser) {
+                    const replies = [
+                        "That's interesting!",
+                        "I see what you mean.",
+                        "Tell me more about that.",
+                        "I've been thinking about that too.",
+                        "Thanks for sharing!"
+                    ];
+                    
+                    const reply = {
+                        id: Date.now().toString(),
+                        senderId: activeChat,
+                        text: replies[Math.floor(Math.random() * replies.length)],
+                        timestamp: new Date()
+                    };
+                    
+                    messages.push(reply);
+                    addMessageToChat(reply, false);
+                }
+            }, 1000);
         }
 
         // Handle message input keydown (Enter to send)
@@ -1199,7 +1076,7 @@
             }
             
             const filteredUsers = users.filter(user => 
-                user.searchName.includes(searchTerm) || 
+                user.name.toLowerCase().includes(searchTerm) || 
                 (user.email && user.email.toLowerCase().includes(searchTerm))
             );
             
@@ -1212,27 +1089,27 @@
             }
             
             filteredUsers.forEach(user => {
-                const isFollowing = following.includes(user.uid);
+                const isFollowing = following.includes(user.id);
                 
                 const resultElement = document.createElement('div');
                 resultElement.className = 'search-result-item';
                 resultElement.innerHTML = `
-                    <img src="${user.photoURL}" class="suggested-avatar" alt="${user.name}">
+                    <img src="${user.avatar}" class="suggested-avatar" alt="${user.name}">
                     <div class="suggested-name">${user.name}</div>
-                    <button class="follow-btn ${isFollowing ? 'following' : ''}" data-uid="${user.uid}">
+                    <button class="follow-btn ${isFollowing ? 'following' : ''}" data-uid="${user.id}">
                         ${isFollowing ? 'Following' : 'Follow'}
                     </button>
                 `;
                 
                 resultElement.querySelector('.follow-btn').addEventListener('click', (e) => {
                     e.stopPropagation();
-                    toggleFollow(user.uid);
+                    toggleFollow(user.id);
                     searchResultsContainer.style.display = 'none';
                     searchInput.value = '';
                 });
                 
                 resultElement.addEventListener('click', () => {
-                    openChat(user.uid, user.name, user.photoURL, user.status);
+                    openChat(user.id, user.name, user.avatar, user.status);
                     searchResultsContainer.style.display = 'none';
                     searchInput.value = '';
                 });
