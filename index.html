@@ -27,6 +27,10 @@
             --offline: #8a8d91;
             --message-sent: #0084ff;
             --message-received: #e4e6eb;
+            --follow-btn: #0084ff;
+            --follow-btn-hover: #0066cc;
+            --unfollow-btn: #e4e6eb;
+            --unfollow-btn-hover: #d8dadf;
         }
 
         body {
@@ -224,6 +228,33 @@
             font-size: 1rem;
         }
 
+        .search-results-container {
+            position: absolute;
+            top: 100%;
+            left: 15px;
+            right: 15px;
+            background: var(--card-bg);
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-result-item:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
         .contacts-container {
             flex: 1;
             overflow-y: auto;
@@ -361,7 +392,7 @@
         }
 
         .follow-btn {
-            background: var(--primary);
+            background: var(--follow-btn);
             color: white;
             border: none;
             border-radius: 15px;
@@ -371,8 +402,17 @@
             transition: background 0.2s;
         }
 
+        .follow-btn:hover {
+            background: var(--follow-btn-hover);
+        }
+
         .follow-btn.following {
-            background: var(--text-secondary);
+            background: var(--unfollow-btn);
+            color: var(--text-primary);
+        }
+
+        .follow-btn.following:hover {
+            background: var(--unfollow-btn-hover);
         }
 
         /* Chat Area */
@@ -532,34 +572,6 @@
             line-height: 1.5;
         }
 
-        /* Search Results */
-        .search-results-container {
-            position: absolute;
-            top: 100%;
-            left: 15px;
-            right: 15px;
-            background: var(--card-bg);
-            border-radius: 0 0 12px 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            max-height: 300px;
-            overflow-y: auto;
-            z-index: 100;
-            display: none;
-        }
-
-        .search-result-item {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            gap: 12px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .search-result-item:hover {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
         /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -581,10 +593,34 @@
             }
         }
 
-        .no-contacts {
+        .no-contacts, .no-results {
             text-align: center;
-            padding: 30px;
+            padding: 20px;
             color: var(--text-secondary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .toast.show {
+            opacity: 1;
         }
     </style>
 </head>
@@ -691,6 +727,9 @@
         </div>
     </div>
 
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
     <!-- Firebase SDK -->
     <script type="module">
         // Import Firebase functions
@@ -715,7 +754,9 @@
             addDoc,
             updateDoc,
             serverTimestamp,
-            orderBy
+            orderBy,
+            arrayUnion,
+            arrayRemove
         } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         // Firebase configuration
@@ -756,6 +797,7 @@
         const chatHeader = document.getElementById('chatHeader');
         const messageInputContainer = document.getElementById('messageInputContainer');
         const searchResultsContainer = document.getElementById('searchResultsContainer');
+        const toast = document.getElementById('toast');
 
         // App state
         let currentUser = null;
@@ -763,6 +805,8 @@
         let users = [];
         let conversations = [];
         let messagesListener = null;
+        let usersListener = null;
+        let following = [];
 
         // Initialize the app
         function init() {
@@ -787,18 +831,30 @@
                         email: user.email,
                         photoURL: user.photoURL,
                         status: "online",
-                        lastSeen: serverTimestamp()
+                        lastSeen: serverTimestamp(),
+                        searchName: user.displayName.toLowerCase(), // For case-insensitive search
+                        followers: [],
+                        following: []
                     }, { merge: true });
-                    
+
+                    // Load user data from Firestore
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        currentUser = { ...currentUser, ...userDoc.data() };
+                        following = currentUser.following || [];
+                    }
+
                     // Load users and conversations
                     loadUsers();
                     loadConversations();
                     
                     // Set up real-time listener for users
-                    const usersQuery = query(collection(db, "users"));
-                    onSnapshot(usersQuery, (snapshot) => {
+                    usersListener = onSnapshot(collection(db, "users"), (snapshot) => {
                         loadUsers();
                     });
+
+                    // Set up listener for follow updates
+                    setupFollowListener();
                 } else {
                     // User is signed out
                     loginScreen.style.display = 'flex';
@@ -807,6 +863,9 @@
                     // Clean up listeners
                     if (messagesListener) {
                         messagesListener();
+                    }
+                    if (usersListener) {
+                        usersListener();
                     }
                 }
             });
@@ -825,6 +884,16 @@
             });
         }
 
+        // Show toast notification
+        function showToast(message, duration = 3000) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
+
         // Sign in with Google
         async function signInWithGoogle() {
             try {
@@ -832,7 +901,7 @@
                 await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error("Error signing in with Google", error);
-                alert("Error signing in: " + error.message);
+                showToast("Error signing in: " + error.message);
             }
         }
 
@@ -855,11 +924,29 @@
             }
         }
 
+        // Setup listener for follow updates
+        async function setupFollowListener() {
+            const userRef = doc(db, "users", currentUser.uid);
+            onSnapshot(userRef, (doc) => {
+                if (doc.exists()) {
+                    const userData = doc.data();
+                    following = userData.following || [];
+                    renderSuggestedContacts();
+                    renderConversations();
+                }
+            });
+        }
+
         // Load user conversations
         async function loadConversations() {
             try {
-                // In a real app, you would query conversations where the current user is a participant
-                // For simplicity, we'll just use all users as potential conversations
+                // Get the updated user data to refresh following list
+                const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+                if (userDoc.exists()) {
+                    currentUser = { ...currentUser, ...userDoc.data() };
+                    following = currentUser.following || [];
+                }
+                
                 renderConversations();
             } catch (error) {
                 console.error("Error loading conversations", error);
@@ -876,17 +963,21 @@
             }
             
             users.forEach(user => {
+                const isFollowing = following.includes(user.uid);
+                
                 const contactElement = document.createElement('div');
                 contactElement.className = 'suggested-contact';
                 contactElement.innerHTML = `
                     <img src="${user.photoURL}" class="suggested-avatar" alt="${user.name}">
                     <div class="suggested-name">${user.name}</div>
-                    <button class="follow-btn">Message</button>
+                    <button class="follow-btn ${isFollowing ? 'following' : ''}" data-uid="${user.uid}">
+                        ${isFollowing ? 'Following' : 'Follow'}
+                    </button>
                 `;
                 
-                contactElement.querySelector('button').addEventListener('click', (e) => {
+                contactElement.querySelector('.follow-btn').addEventListener('click', (e) => {
                     e.stopPropagation();
-                    openChat(user.uid, user.name, user.photoURL, user.status);
+                    toggleFollow(user.uid);
                 });
                 
                 contactElement.addEventListener('click', () => {
@@ -897,18 +988,65 @@
             });
         }
 
+        // Toggle follow status
+        async function toggleFollow(userId) {
+            try {
+                const userRef = doc(db, "users", currentUser.uid);
+                const targetUserRef = doc(db, "users", userId);
+                
+                if (following.includes(userId)) {
+                    // Unfollow user
+                    await updateDoc(userRef, {
+                        following: arrayRemove(userId)
+                    });
+                    
+                    await updateDoc(targetUserRef, {
+                        followers: arrayRemove(currentUser.uid)
+                    });
+                    
+                    showToast("Unfollowed user");
+                } else {
+                    // Follow user
+                    await updateDoc(userRef, {
+                        following: arrayUnion(userId)
+                    });
+                    
+                    await updateDoc(targetUserRef, {
+                        followers: arrayUnion(currentUser.uid)
+                    });
+                    
+                    showToast("Following user");
+                }
+                
+                // Refresh the following list
+                const userDoc = await getDoc(userRef);
+                if (userDoc.exists()) {
+                    following = userDoc.data().following || [];
+                }
+            } catch (error) {
+                console.error("Error toggling follow status", error);
+                showToast("Error updating follow status");
+            }
+        }
+
         // Render conversations
         function renderConversations() {
             contactsContainer.innerHTML = '';
             
-            if (users.length === 0) {
-                contactsContainer.innerHTML = '<div class="no-contacts">No conversations yet</div>';
+            if (following.length === 0) {
+                contactsContainer.innerHTML = '<div class="no-contacts">No conversations yet. Follow users to start chatting.</div>';
                 return;
             }
             
-            // For demo purposes, we're using all users as conversations
-            // In a real app, you would only show users you've actually messaged
-            users.forEach(user => {
+            // Filter users to only those we're following
+            const followedUsers = users.filter(user => following.includes(user.uid));
+            
+            if (followedUsers.length === 0) {
+                contactsContainer.innerHTML = '<div class="no-contacts">No conversations yet. Follow users to start chatting.</div>';
+                return;
+            }
+            
+            followedUsers.forEach(user => {
                 const contactElement = document.createElement('div');
                 contactElement.className = 'contact';
                 contactElement.dataset.uid = user.uid;
@@ -920,7 +1058,7 @@
                         <div class="contact-lastmsg">Click to start chatting</div>
                     </div>
                     <div class="contact-meta">
-                        <div class="contact-time">Just now</div>
+                        <div class="contact-time">${user.status || 'offline'}</div>
                     </div>
                 `;
                 
@@ -1039,7 +1177,7 @@
                 messageInput.innerText = '';
             } catch (error) {
                 console.error("Error sending message", error);
-                alert("Failed to send message: " + error.message);
+                showToast("Failed to send message");
             }
         }
 
@@ -1061,30 +1199,34 @@
             }
             
             const filteredUsers = users.filter(user => 
-                user.name.toLowerCase().includes(searchTerm) || 
+                user.searchName.includes(searchTerm) || 
                 (user.email && user.email.toLowerCase().includes(searchTerm))
             );
             
             searchResultsContainer.innerHTML = '';
             
             if (filteredUsers.length === 0) {
-                searchResultsContainer.innerHTML = '<div class="no-contacts">No users found</div>';
+                searchResultsContainer.innerHTML = '<div class="no-results">No users found</div>';
                 searchResultsContainer.style.display = 'block';
                 return;
             }
             
             filteredUsers.forEach(user => {
+                const isFollowing = following.includes(user.uid);
+                
                 const resultElement = document.createElement('div');
                 resultElement.className = 'search-result-item';
                 resultElement.innerHTML = `
                     <img src="${user.photoURL}" class="suggested-avatar" alt="${user.name}">
                     <div class="suggested-name">${user.name}</div>
-                    <button class="follow-btn">Message</button>
+                    <button class="follow-btn ${isFollowing ? 'following' : ''}" data-uid="${user.uid}">
+                        ${isFollowing ? 'Following' : 'Follow'}
+                    </button>
                 `;
                 
-                resultElement.querySelector('button').addEventListener('click', (e) => {
+                resultElement.querySelector('.follow-btn').addEventListener('click', (e) => {
                     e.stopPropagation();
-                    openChat(user.uid, user.name, user.photoURL, user.status);
+                    toggleFollow(user.uid);
                     searchResultsContainer.style.display = 'none';
                     searchInput.value = '';
                 });
