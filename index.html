@@ -3,70 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tajib Max - Messaging App</title>
+    <title>Tajib Max - Welcome</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f0f2f5;
-            color: #333;
-        }
-        #app-container {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             display: flex;
-            flex-direction: column;
-            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
-        #auth-container, #main-app {
+        #auth-container {
             background: white;
-            padding: 25px;
+            padding: 2.5rem;
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
         }
         #main-app {
             display: none; /* Hidden until logged in */
-        }
-        h1, h2 {
-            color: #2c3e50;
-            margin-top: 0;
+            width: 100%;
+            max-width: 1200px;
         }
         .app-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
-            margin-bottom: 20px;
+            margin-bottom: 2rem;
         }
-        input, button {
-            padding: 12px 15px;
-            margin: 8px 0;
-            border-radius: 8px;
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        p {
+            color: #7f8c8d;
+            margin-bottom: 2rem;
+        }
+        /* Style for the custom provider buttons */
+        .provider-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 12px 16px;
+            margin: 10px 0;
             border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: white;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .provider-btn:hover {
+            background-color: #f8f9fa;
+            border-color: #ccc;
+        }
+        .provider-btn img {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+        .btn-google {
+            /* Google brand colors can be added if desired */
+        }
+        .btn-apple {
+            /* Apple brand style */
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 1.5rem 0;
+            color: #95a5a6;
+            font-size: 14px;
+        }
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        .divider::before {
+            margin-right: .5em;
+        }
+        .divider::after {
+            margin-left: .5em;
+        }
+        .email-form {
+            display: flex;
+            flex-direction: column;
+        }
+        .email-form input {
+            padding: 14px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             font-size: 16px;
         }
-        input {
-            width: 100%;
-            box-sizing: border-box;
-        }
-        button {
+        .email-form button {
+            padding: 14px;
+            margin-top: 10px;
             background-color: #4285f4;
             color: white;
             border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: 600;
+            cursor: pointer;
         }
-        button:hover {
+        .email-form button:hover {
             background-color: #3367d6;
         }
         button.sign-out {
             background-color: #ea4335;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
         }
         button.sign-out:hover {
             background-color: #d33426;
         }
+        /* Rest of your existing styles for user cards, search results, etc. */
         .user-card {
             display: flex;
             justify-content: space-between;
@@ -89,41 +155,53 @@
     </style>
 </head>
 <body>
-    <div id="app-container">
-        <!-- Authentication Section -->
-        <div id="auth-container">
-            <h2>Welcome to Tajib Max</h2>
-            <div>
-                <input type="email" id="email" placeholder="Email">
-                <input type="password" id="password" placeholder="Password">
-                <input type="text" id="username" placeholder="Username">
-                <button onclick="signUp()">Sign Up</button>
-                <button onclick="signIn()">Sign In</button>
-            </div>
+    <!-- Authentication Section -->
+    <div id="auth-container">
+        <h1>Welcome to Tajib Max</h1>
+        <p>Sign in to start messaging</p>
+
+        <!-- Google Sign-In Button -->
+        <button id="googleSignIn" class="provider-btn btn-google">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google logo">
+            Sign in with Google
+        </button>
+
+        <!-- Apple Sign-In Button -->
+        <button id="appleSignIn" class="provider-btn btn-apple">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple logo" style="filter: invert(0%);">
+            Sign in with Apple
+        </button>
+
+        <div class="divider">or</div>
+
+        <!-- Email/Password Form (Optional) -->
+        <div class="email-form">
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <input type="text" id="username" placeholder="Username (for sign up)">
+            <button onclick="signUp()">Sign Up</button>
+            <button onclick="signIn()" style="background-color: #34a853;">Sign In</button>
         </div>
+    </div>
 
-        <!-- Main Application Section (hidden initially) -->
-        <div id="main-app">
-            <div class="app-header">
-                <h1>Tajib Max</h1>
-                <button class="sign-out" onclick="signOut()">Sign Out</button>
+    <!-- Main Application Section (hidden initially) -->
+    <div id="main-app">
+        <div class="app-header">
+            <h1>Tajib Max</h1>
+            <button class="sign-out" onclick="signOut()">Sign Out</button>
+        </div>
+        <!-- ... rest of your main app (search, chat, etc.) ... -->
+        <div>
+            <h2>Find Users</h2>
+            <div style="display: flex;">
+                <input type="text" id="search-input" placeholder="Search by username...">
+                <button onclick="searchUsers()" style="margin-left: 10px;">Search</button>
             </div>
-            
-            <!-- User Search Section -->
-            <div>
-                <h2>Find Users</h2>
-                <div style="display: flex;">
-                    <input type="text" id="search-input" placeholder="Search by username...">
-                    <button onclick="searchUsers()" style="margin-left: 10px;">Search</button>
-                </div>
-                <div id="search-results"></div>
-            </div>
-
-            <!-- Chat Section (to be implemented later) -->
-            <div id="chat-container" style="margin-top: 30px;">
-                <h2>Your Conversations</h2>
-                <p>Chat functionality will be implemented here soon.</p>
-            </div>
+            <div id="search-results"></div>
+        </div>
+        <div id="chat-container" style="margin-top: 30px;">
+            <h2>Your Conversations</h2>
+            <p>Chat functionality will be implemented here soon.</p>
         </div>
     </div>
 
@@ -131,25 +209,27 @@
     <script type="module">
         // Import the functions you need from the SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-        import { 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
+        import {
+            getAuth,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
             signOut,
-            onAuthStateChanged 
+            onAuthStateChanged,
+            signInWithPopup,
+            GoogleAuthProvider,
+            OAuthProvider // Needed for Apple and other OAuth providers
         } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-        import { 
-            getFirestore, 
-            doc, 
-            setDoc, 
-            getDoc,
+        import {
+            getFirestore,
+            doc,
+            setDoc,
             collection,
             query,
             where,
             getDocs,
             writeBatch,
             arrayUnion,
-            arrayRemove 
+            arrayRemove
         } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
         // Your web app's Firebase configuration
@@ -168,7 +248,11 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Make these variables global so our HTML onclick functions can access them
+        // Create provider instances
+        const googleProvider = new GoogleAuthProvider();
+        const appleProvider = new OAuthProvider('apple.com'); // Use 'apple.com' as the provider ID :cite[4]
+
+        // Make variables global so our HTML onclick functions can access them
         window.auth = auth;
         window.db = db;
         window.signOut = signOut;
@@ -189,31 +273,77 @@
             }
         });
 
-        // Sign up function
+        // --- GOOGLE SIGN-IN ---
+        document.getElementById('googleSignIn').addEventListener('click', () => {
+            signInWithPopup(auth, googleProvider)
+                .then((result) => {
+                    // This gives you a Google Access Token. You can use it to access the Google API.
+                    const credential = GoogleAuthProvider.credentialFromResult(result);
+                    const token = credential.accessToken;
+                    // The signed-in user info.
+                    const user = result.user;
+                    console.log("Google sign-in successful:", user);
+
+                    // Check if this is a new user signing in with Google for the first time
+                    const isNewUser = result._tokenResponse?.isNewUser;
+                    if (isNewUser) {
+                        // Create a user document in Firestore for new Google sign-ins
+                        createUserProfileInFirestore(user, user.displayName || user.email.split('@')[0]); // Use display name or part of email as username
+                    }
+                    // IdP data can be gotten from the result
+                }).catch((error) => {
+                    // Handle Errors here.
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+                    // The email of the user's account used.
+                    const email = error.customData.email;
+                    // The AuthCredential type that was used.
+                    const credential = GoogleAuthProvider.credentialFromError(error);
+                    console.error("Google sign-in error:", errorCode, errorMessage);
+                    alert(`Google sign-in failed: ${errorMessage}`);
+                });
+        });
+
+        // --- APPLE SIGN-IN ---
+        document.getElementById('appleSignIn').addEventListener('click', () => {
+            // Optional: Configure custom OAuth parameters for Apple if needed
+            // appleProvider.setCustomParameters({
+            //   locale: 'en' // Force English locale
+            // });
+
+            signInWithPopup(auth, appleProvider)
+                .then((result) => {
+                    // User is signed in.
+                    const user = result.user;
+                    console.log("Apple sign-in successful:", user);
+
+                    // Check if this is a new user signing in with Apple for the first time
+                    const isNewUser = result._tokenResponse?.isNewUser;
+                    if (isNewUser) {
+                        // Apple might not always provide a display name. You can prompt the user later if needed.
+                        const proposedName = user.displayName || user.email.split('@')[0];
+                        createUserProfileInFirestore(user, proposedName);
+                    }
+                }).catch((error) => {
+                    // Handle Errors here.
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+                    console.error("Apple sign-in error:", errorCode, errorMessage);
+                    alert(`Apple sign-in failed: ${errorMessage}`);
+                });
+        });
+
+        // --- EMAIL/PASSWORD SIGN-UP & SIGN-IN (Keep your existing functions) ---
         window.signUp = async function() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const username = document.getElementById('username').value;
 
             try {
-                // 1. Create user in Firebase Auth
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
-
-                // 2. Create user document in Firestore
-                await setDoc(doc(db, "users", user.uid), {
-                    uid: user.uid,
-                    email: email,
-                    username: username.toLowerCase(),
-                    displayName: username,
-                    bio: "",
-                    profilePicUrl: "",
-                    followers: [],
-                    following: [],
-                    createdAt: new Date()
-                });
-
-                alert("Account created successfully! You can now sign in.");
+                await createUserProfileInFirestore(user, username);
+                alert("Account created successfully!");
                 clearAuthFields();
             } catch (error) {
                 console.error("Error signing up:", error);
@@ -221,7 +351,6 @@
             }
         };
 
-        // Sign in function
         window.signIn = async function() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -235,7 +364,33 @@
             }
         };
 
-        // Sign out function
+        // --- HELPER FUNCTIONS ---
+        async function createUserProfileInFirestore(user, username) {
+            // Check if a profile already exists to avoid overwriting on subsequent logins
+            // This is a simple check; you might want a more robust solution.
+            const userDocRef = doc(db, "users", user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+
+            if (!userDocSnap.exists()) {
+                // Create user document ONLY if it doesn't exist
+                await setDoc(userDocRef, {
+                    uid: user.uid,
+                    email: user.email,
+                    username: username.toLowerCase(), // for easier searching
+                    displayName: username,
+                    bio: "",
+                    profilePicUrl: user.photoURL || "", // Google sign-in provides a photoURL
+                    followers: [],
+                    following: [],
+                    createdAt: new Date()
+                });
+                console.log("New user profile created in Firestore for:", user.uid);
+            } else {
+                console.log("User profile already exists, skipping creation.");
+                // You could update existing profile here if needed
+            }
+        }
+
         async function signOut() {
             try {
                 await signOut(auth);
@@ -244,87 +399,15 @@
             }
         }
 
-        // Search users function
-        window.searchUsers = async function() {
-            const searchTerm = document.getElementById('search-input').value.trim().toLowerCase();
-            const resultsContainer = document.getElementById('search-results');
-            
-            if (!searchTerm) {
-                resultsContainer.innerHTML = '<p>Please enter a search term</p>';
-                return;
-            }
-
-            try {
-                const usersRef = collection(db, "users");
-                const q = query(usersRef, 
-                    where("username", ">=", searchTerm),
-                    where("username", "<", searchTerm + '\uf8ff')
-                );
-
-                const querySnapshot = await getDocs(q);
-                resultsContainer.innerHTML = '';
-
-                if (querySnapshot.empty) {
-                    resultsContainer.innerHTML = '<p>No users found</p>';
-                    return;
-                }
-
-                querySnapshot.forEach((doc) => {
-                    const userData = doc.data();
-                    // Don't show the current user in search results
-                    if (userData.uid === auth.currentUser.uid) return;
-                    
-                    const userCard = document.createElement('div');
-                    userCard.className = 'user-card';
-                    userCard.innerHTML = `
-                        <div class="user-info">
-                            <strong>${userData.displayName}</strong>
-                            <p>@${userData.username}</p>
-                        </div>
-                        <div class="user-actions">
-                            <button onclick="followUser('${userData.uid}')">Follow</button>
-                        </div>
-                    `;
-                    resultsContainer.appendChild(userCard);
-                });
-            } catch (error) {
-                console.error("Error searching users:", error);
-                resultsContainer.innerHTML = '<p>Error searching users</p>';
-            }
-        };
-
-        // Follow user function (simplified version)
-        window.followUser = async function(targetUserId) {
-            try {
-                const currentUser = auth.currentUser;
-                if (!currentUser) return;
-
-                const batch = writeBatch(db);
-                const currentUserRef = doc(db, "users", currentUser.uid);
-                const targetUserRef = doc(db, "users", targetUserId);
-
-                batch.update(currentUserRef, {
-                    following: arrayUnion(targetUserId)
-                });
-                
-                batch.update(targetUserRef, {
-                    followers: arrayUnion(currentUser.uid)
-                });
-
-                await batch.commit();
-                alert("You are now following this user!");
-            } catch (error) {
-                console.error("Error following user:", error);
-                alert("Error: " + error.message);
-            }
-        };
-
-        // Helper function to clear auth fields
         function clearAuthFields() {
             document.getElementById('email').value = '';
             document.getElementById('password').value = '';
             document.getElementById('username').value = '';
         }
+
+        // Keep your existing searchUsers and followUser functions here
+        // ... (they remain the same as in your previous code)
+
     </script>
 </body>
 </html>
