@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tajib Max - Modern Login</title>
+    <title>Tajib Max - Messaging</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -14,378 +14,712 @@
         }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 450px;
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-            padding: 40px;
-            text-align: center;
-            transform: translateY(0);
-            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            background: #f0f2f5;
+            color: #333;
+            height: 100vh;
             overflow: hidden;
-            position: relative;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .logo {
-            margin-bottom: 30px;
+        .app-container {
+            display: flex;
+            height: 100vh;
+            max-width: 1600px;
+            margin: 0 auto;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
             opacity: 0;
-            animation: fadeIn 0.6s forwards 0.3s;
+            animation: fadeIn 0.5s forwards;
         }
 
-        .logo h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-        }
-
-        .logo p {
-            color: #666;
-            font-size: 1.1rem;
-        }
-
-        .auth-buttons {
+        /* Left Sidebar - Conversations */
+        .sidebar-left {
+            width: 350px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            margin: 30px 0;
-        }
-
-        .auth-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px 24px;
-            border-radius: 12px;
-            border: none;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            position: relative;
             overflow: hidden;
         }
 
-        .auth-btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 5px;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.5);
-            opacity: 0;
-            border-radius: 100%;
-            transform: scale(1, 1) translate(-50%);
-            transform-origin: 50% 50%;
+        .sidebar-header {
+            padding: 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .auth-btn:active::after {
-            animation: ripple 1s ease-out;
-        }
-
-        .auth-btn i {
-            margin-right: 12px;
-            font-size: 1.2rem;
-        }
-
-        .google-btn {
-            background: #fff;
-            color: #757575;
-            border: 1px solid #ddd;
-        }
-
-        .google-btn:hover {
-            background: #f8f9fa;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-        }
-
-        .apple-btn {
-            background: #000;
-            color: #fff;
-        }
-
-        .apple-btn:hover {
-            background: #1a1a1a;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .divider {
+        .user-profile {
             display: flex;
             align-items: center;
-            margin: 25px 0;
-            opacity: 0;
-            animation: fadeIn 0.6s forwards 0.8s;
+            gap: 12px;
         }
 
-        .divider-line {
-            flex: 1;
-            height: 1px;
-            background: #ddd;
-        }
-
-        .divider-text {
-            padding: 0 15px;
-            color: #888;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        .loader {
-            width: 24px;
-            height: 24px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
+        .user-avatar {
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-            margin: 0 auto;
-            display: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
         }
 
-        .status-message {
-            margin-top: 20px;
-            padding: 12px;
+        .user-info h3 {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .user-info p {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .search-box {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .search-container {
+            background: #f0f2f5;
+            border-radius: 18px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-container i {
+            color: #65676b;
+            margin-right: 10px;
+        }
+
+        .search-container input {
+            border: none;
+            background: transparent;
+            width: 100%;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .conversations-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+
+        .conversation-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .conversation-item:hover {
+            background: #f5f5f5;
+        }
+
+        .conversation-item.active {
+            background: #f0f2f5;
+            border-left-color: #667eea;
+        }
+
+        .conversation-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #ddd;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #555;
+            position: relative;
+        }
+
+        .online-status {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4cd964;
+            border: 2px solid white;
+        }
+
+        .conversation-info {
+            flex: 1;
+        }
+
+        .conversation-info h4 {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .conversation-info p {
+            color: #666;
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .conversation-meta {
+            text-align: right;
+        }
+
+        .conversation-meta .time {
+            font-size: 12px;
+            color: #65676b;
+            margin-bottom: 5px;
+        }
+
+        .unread-count {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            font-size: 12px;
+            padding: 2px 6px;
             border-radius: 10px;
-            font-size: 0.9rem;
-            display: none;
         }
 
-        .success {
-            background: #e6f7ee;
-            color: #0c8f4e;
-            display: block;
+        /* Main Content - Messages */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f0f2f5;
         }
 
-        .error {
-            background: #fee;
-            color: #f33;
-            display: block;
+        .chat-header {
+            padding: 15px 25px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .footer {
-            margin-top: 30px;
-            color: #888;
-            font-size: 0.85rem;
-            opacity: 0;
-            animation: fadeIn 0.6s forwards 1.2s;
+        .chat-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
+        .chat-user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .chat-actions button {
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            color: #65676b;
+            margin-left: 15px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .chat-actions button:hover {
+            color: #667eea;
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 65%;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+            border-radius: 18px;
+            position: relative;
+            animation: fadeInUp 0.3s;
+        }
+
+        .message.received {
+            background: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.sent {
+            background: #667eea;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            margin-top: 5px;
+            opacity: 0.8;
+            text-align: right;
+        }
+
+        .message-input-container {
+            padding: 15px 25px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+        }
+
+        .message-input {
+            flex: 1;
+            border: 1px solid #e0e0e0;
+            border-radius: 24px;
+            padding: 12px 20px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .message-input:focus {
+            border-color: #667eea;
+        }
+
+        .input-actions {
+            display: flex;
+            margin-left: 15px;
+        }
+
+        .input-actions button {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            background: #667eea;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            margin-left: 10px;
+        }
+
+        .input-actions button:hover {
+            background: #5a6fd5;
+            transform: scale(1.05);
+        }
+
+        /* Right Sidebar - Contacts */
+        .sidebar-right {
+            width: 300px;
+            background: white;
+            border-left: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .contacts-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .contacts-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .contacts-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .contact-item:hover {
+            background: #f5f5f5;
+        }
+
+        .contact-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #ddd;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #555;
+            position: relative;
+        }
+
+        .contact-info h4 {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .contact-info p {
+            color: #666;
+            font-size: 13px;
+        }
+
+        /* Animations */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        @keyframes ripple {
-            0% {
-                transform: scale(0, 0);
-                opacity: 0.5;
-            }
-            100% {
-                transform: scale(100, 100);
+        @keyframes fadeInUp {
+            from { 
                 opacity: 0;
+                transform: translateY(10px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
             }
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .sidebar-right {
+                display: none;
+            }
         }
 
-        @media (max-width: 480px) {
-            .card {
-                padding: 30px 25px;
+        @media (max-width: 900px) {
+            .sidebar-left {
+                width: 80px;
             }
             
-            .logo h1 {
-                font-size: 2rem;
+            .sidebar-left .user-info,
+            .sidebar-left .conversation-info,
+            .sidebar-left .conversation-meta,
+            .sidebar-left .search-box {
+                display: none;
+            }
+            
+            .conversation-item {
+                justify-content: center;
+                padding: 15px 10px;
+            }
+            
+            .conversation-avatar {
+                margin-right: 0;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <div class="logo">
-                <h1>Tajib Max</h1>
-                <p>Connect with others seamlessly</p>
+    <div class="app-container">
+        <!-- Left Sidebar - Conversations -->
+        <div class="sidebar-left">
+            <div class="sidebar-header">
+                <div class="user-profile">
+                    <div class="user-avatar">TM</div>
+                    <div class="user-info">
+                        <h3>Tajib Max</h3>
+                        <p>Online</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button><i class="fas fa-ellipsis-v"></i></button>
+                </div>
             </div>
             
-            <div class="auth-buttons">
-                <button class="auth-btn google-btn" id="googleSignIn">
-                    <i class="fab fa-google"></i> Sign in with Google
-                </button>
+            <div class="search-box">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search conversations">
+                </div>
+            </div>
+            
+            <div class="conversations-list">
+                <div class="conversation-item active">
+                    <div class="conversation-avatar">
+                        JS
+                        <div class="online-status"></div>
+                    </div>
+                    <div class="conversation-info">
+                        <h4>John Smith</h4>
+                        <p>Hey, how are you doing?</p>
+                    </div>
+                    <div class="conversation-meta">
+                        <div class="time">2:30 PM</div>
+                        <div class="unread-count">3</div>
+                    </div>
+                </div>
                 
-                <button class="auth-btn apple-btn" id="appleSignIn">
-                    <i class="fab fa-apple"></i> Sign in with Apple
-                </button>
+                <div class="conversation-item">
+                    <div class="conversation-avatar">
+                        EM
+                    </div>
+                    <div class="conversation-info">
+                        <h4>Emma Wilson</h4>
+                        <p>I'll send you the files tomorrow</p>
+                    </div>
+                    <div class="conversation-meta">
+                        <div class="time">Yesterday</div>
+                    </div>
+                </div>
+                
+                <div class="conversation-item">
+                    <div class="conversation-avatar">
+                        AD
+                        <div class="online-status"></div>
+                    </div>
+                    <div class="conversation-info">
+                        <h4>Alex Davis</h4>
+                        <p>Are we still meeting today?</p>
+                    </div>
+                    <div class="conversation-meta">
+                        <div class="time">10:22 AM</div>
+                    </div>
+                </div>
+                
+                <div class="conversation-item">
+                    <div class="conversation-avatar">
+                        SJ
+                    </div>
+                    <div class="conversation-info">
+                        <h4>Sarah Johnson</h4>
+                        <p>Thanks for your help!</p>
+                    </div>
+                    <div class="conversation-meta">
+                        <div class="time">Wednesday</div>
+                    </div>
+                </div>
+                
+                <div class="conversation-item">
+                    <div class="conversation-avatar">
+                        MR
+                    </div>
+                    <div class="conversation-info">
+                        <h4>Mike Roberts</h4>
+                        <p>Did you see the new project?</p>
+                    </div>
+                    <div class="conversation-meta">
+                        <div class="time">Monday</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content - Messages -->
+        <div class="main-content">
+            <div class="chat-header">
+                <div class="chat-user">
+                    <div class="chat-user-avatar">JS</div>
+                    <div class="chat-user-info">
+                        <h3>John Smith</h3>
+                        <p>Online</p>
+                    </div>
+                </div>
+                <div class="chat-actions">
+                    <button><i class="fas fa-phone"></i></button>
+                    <button><i class="fas fa-video"></i></button>
+                    <button><i class="fas fa-info-circle"></i></button>
+                </div>
             </div>
             
-            <div class="divider">
-                <div class="divider-line"></div>
-                <div class="divider-text">Secure Authentication</div>
-                <div class="divider-line"></div>
+            <div class="messages-container">
+                <div class="message received">
+                    <p>Hey there! How's it going?</p>
+                    <div class="message-time">10:30 AM</div>
+                </div>
+                
+                <div class="message sent">
+                    <p>Pretty good! Just working on the new Tajib Max project.</p>
+                    <div class="message-time">10:32 AM</div>
+                </div>
+                
+                <div class="message received">
+                    <p>That's awesome! How's it coming along?</p>
+                    <div class="message-time">10:33 AM</div>
+                </div>
+                
+                <div class="message sent">
+                    <p>Really well! The messaging interface is taking shape nicely.</p>
+                    <div class="message-time">10:35 AM</div>
+                </div>
+                
+                <div class="message received">
+                    <p>Can't wait to see it when it's finished! 😊</p>
+                    <div class="message-time">10:36 AM</div>
+                </div>
+                
+                <div class="message sent">
+                    <p>I'll send you a preview later today. By the way, are you free for a quick call tomorrow?</p>
+                    <div class="message-time">10:37 AM</div>
+                </div>
+                
+                <div class="message received">
+                    <p>Sure, I should be available in the morning. What time were you thinking?</p>
+                    <div class="message-time">10:39 AM</div>
+                </div>
             </div>
             
-            <div class="loader" id="loader"></div>
+            <div class="message-input-container">
+                <input type="text" class="message-input" placeholder="Type a message...">
+                <div class="input-actions">
+                    <button><i class="far fa-smile"></i></button>
+                    <button><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Sidebar - Contacts -->
+        <div class="sidebar-right">
+            <div class="contacts-header">
+                <h2>Contacts</h2>
+            </div>
             
-            <div class="status-message" id="statusMessage"></div>
-            
-            <div class="footer">
-                <p>By continuing, you agree to our Terms of Service and Privacy Policy</p>
+            <div class="contacts-list">
+                <div class="contact-item">
+                    <div class="contact-avatar">
+                        EM
+                        <div class="online-status"></div>
+                    </div>
+                    <div class="contact-info">
+                        <h4>Emma Wilson</h4>
+                        <p>Last seen: 2 hours ago</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-avatar">
+                        AD
+                    </div>
+                    <div class="contact-info">
+                        <h4>Alex Davis</h4>
+                        <p>Last seen: 5 minutes ago</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-avatar">
+                        SJ
+                        <div class="online-status"></div>
+                    </div>
+                    <div class="contact-info">
+                        <h4>Sarah Johnson</h4>
+                        <p>Last seen: Recently</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-avatar">
+                        MR
+                    </div>
+                    <div class="contact-info">
+                        <h4>Mike Roberts</h4>
+                        <p>Last seen: Yesterday</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-avatar">
+                        LJ
+                        <div class="online-status"></div>
+                    </div>
+                    <div class="contact-info">
+                        <h4>Lisa Jones</h4>
+                        <p>Last seen: Recently</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-avatar">
+                        DW
+                    </div>
+                    <div class="contact-info">
+                        <h4>David Williams</h4>
+                        <p>Last seen: 3 hours ago</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Firebase App (the SDKs we need) -->
-    <script type="module">
-        // Import the functions you need from the SDKs
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-        import {
-            getAuth,
-            signInWithPopup,
-            GoogleAuthProvider,
-            OAuthProvider,
-            onAuthStateChanged
-        } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyCKDx9r120x-ssDKOHObK4l4C73p6pwrYs",
-            authDomain: "tajibpro-6fb95.firebaseapp.com",
-            projectId: "tajibpro-6fb95",
-            storageBucket: "tajibpro-6fb95.firebasestorage.app",
-            messagingSenderId: "732812404485",
-            appId: "1:732812404485:web:3f2f5132f452344bc2f96c",
-            measurementId: "G-KBYDP4CL93"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-
-        // Create provider instances
-        const googleProvider = new GoogleAuthProvider();
-        const appleProvider = new OAuthProvider('apple.com');
-
-        // Get DOM elements
-        const googleSignInBtn = document.getElementById('googleSignIn');
-        const appleSignInBtn = document.getElementById('appleSignIn');
-        const loader = document.getElementById('loader');
-        const statusMessage = document.getElementById('statusMessage');
-
-        // Show loading state
-        function showLoading() {
-            loader.style.display = 'block';
-            statusMessage.style.display = 'none';
-            googleSignInBtn.disabled = true;
-            appleSignInBtn.disabled = true;
-        }
-
-        // Hide loading state
-        function hideLoading() {
-            loader.style.display = 'none';
-            googleSignInBtn.disabled = false;
-            appleSignInBtn.disabled = false;
-        }
-
-        // Show status message
-        function showStatus(message, isError = false) {
-            statusMessage.textContent = message;
-            statusMessage.className = isError ? 'status-message error' : 'status-message success';
-            statusMessage.style.display = 'block';
+    <script>
+        // Simple animation for messages
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.message');
+            messages.forEach((message, index) => {
+                message.style.animationDelay = `${index * 0.1}s`;
+            });
             
-            // Auto hide after 5 seconds
-            setTimeout(() => {
-                statusMessage.style.display = 'none';
-            }, 5000);
-        }
-
-        // Google Sign-In
-        googleSignInBtn.addEventListener('click', () => {
-            showLoading();
+            // Send message on enter key
+            const messageInput = document.querySelector('.message-input');
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
             
-            signInWithPopup(auth, googleProvider)
-                .then((result) => {
-                    // Signed in
-                    const user = result.user;
-                    showStatus(`Welcome, ${user.displayName || user.email}!`);
+            // Send message on button click
+            const sendButton = document.querySelector('.input-actions button:last-child');
+            sendButton.addEventListener('click', sendMessage);
+            
+            function sendMessage() {
+                const messageText = messageInput.value.trim();
+                if (messageText) {
+                    const messagesContainer = document.querySelector('.messages-container');
+                    const newMessage = document.createElement('div');
+                    newMessage.className = 'message sent';
+                    newMessage.innerHTML = `
+                        <p>${messageText}</p>
+                        <div class="message-time">Just now</div>
+                    `;
+                    messagesContainer.appendChild(newMessage);
+                    messageInput.value = '';
                     
-                    // Simulate redirect to app
-                    setTimeout(() => {
-                        hideLoading();
-                        // In a real app, you would redirect to the main app page
-                        alert('Success! Redirecting to Tajib Max...');
-                    }, 1500);
-                })
-                .catch((error) => {
-                    hideLoading();
-                    const errorMessage = error.message || 'An error occurred during Google sign-in';
-                    showStatus(errorMessage, true);
-                    console.error("Google sign-in error:", error);
-                });
-        });
-
-        // Apple Sign-In
-        appleSignInBtn.addEventListener('click', () => {
-            showLoading();
-            
-            signInWithPopup(auth, appleProvider)
-                .then((result) => {
-                    // Signed in
-                    const user = result.user;
-                    showStatus(`Welcome, ${user.displayName || user.email}!`);
+                    // Scroll to bottom
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
                     
-                    // Simulate redirect to app
+                    // Simulate reply after a short delay
                     setTimeout(() => {
-                        hideLoading();
-                        // In a real app, you would redirect to the main app page
-                        alert('Success! Redirecting to Tajib Max...');
-                    }, 1500);
-                })
-                .catch((error) => {
-                    hideLoading();
-                    const errorMessage = error.message || 'An error occurred during Apple sign-in';
-                    showStatus(errorMessage, true);
-                    console.error("Apple sign-in error:", error);
-                });
-        });
-
-        // Monitor authentication state
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // User is signed in
-                console.log("User is signed in:", user.uid);
-            } else {
-                // User is signed out
-                console.log("User is signed out");
+                        const replyMessage = document.createElement('div');
+                        replyMessage.className = 'message received';
+                        replyMessage.innerHTML = `
+                            <p>Thanks for your message! I'll reply soon.</p>
+                            <div class="message-time">Just now</div>
+                        `;
+                        messagesContainer.appendChild(replyMessage);
+                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    }, 2000);
+                }
             }
-        });
-
-        // Add ripple effect to buttons
-        document.querySelectorAll('.auth-btn').forEach(button => {
-            button.addEventListener('click', function(e) {
-                // Ripple effect is handled via CSS
+            
+            // Conversation item click handler
+            const conversationItems = document.querySelectorAll('.conversation-item');
+            conversationItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    conversationItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update chat header with selected conversation
+                    const userName = this.querySelector('h4').textContent;
+                    document.querySelector('.chat-user h3').textContent = userName;
+                });
             });
         });
     </script>
