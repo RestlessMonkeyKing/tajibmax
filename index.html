@@ -3,205 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tajib Max - Welcome</title>
+    <title>Tajib Max - Modern Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f5f5f5;
+        * {
             margin: 0;
-            padding: 20px;
+            padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
-        #auth-container {
-            background: white;
-            padding: 2.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            width: 100%;
-            max-width: 400px;
-        }
-        #main-app {
-            display: none; /* Hidden until logged in */
-            width: 100%;
-            max-width: 1200px;
-        }
-        .app-header {
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            margin-bottom: 2rem;
+            padding: 20px;
         }
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
+
+        .container {
+            width: 100%;
+            max-width: 450px;
         }
-        p {
-            color: #7f8c8d;
-            margin-bottom: 2rem;
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            text-align: center;
+            transform: translateY(0);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            overflow: hidden;
+            position: relative;
         }
-        /* Style for the custom provider buttons */
-        .provider-btn {
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            margin-bottom: 30px;
+            opacity: 0;
+            animation: fadeIn 0.6s forwards 0.3s;
+        }
+
+        .logo h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .auth-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .auth-btn {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 100%;
-            padding: 12px 16px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: white;
-            font-size: 16px;
-            font-weight: 500;
+            padding: 16px 24px;
+            border-radius: 12px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
         }
-        .provider-btn:hover {
-            background-color: #f8f9fa;
-            border-color: #ccc;
+
+        .auth-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
         }
-        .provider-btn img {
-            width: 20px;
-            height: 20px;
+
+        .auth-btn:active::after {
+            animation: ripple 1s ease-out;
+        }
+
+        .auth-btn i {
             margin-right: 12px;
+            font-size: 1.2rem;
         }
-        .btn-google {
-            /* Google brand colors can be added if desired */
+
+        .google-btn {
+            background: #fff;
+            color: #757575;
+            border: 1px solid #ddd;
         }
-        .btn-apple {
-            /* Apple brand style */
+
+        .google-btn:hover {
+            background: #f8f9fa;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
         }
+
+        .apple-btn {
+            background: #000;
+            color: #fff;
+        }
+
+        .apple-btn:hover {
+            background: #1a1a1a;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
         .divider {
             display: flex;
             align-items: center;
-            text-align: center;
-            margin: 1.5rem 0;
-            color: #95a5a6;
-            font-size: 14px;
+            margin: 25px 0;
+            opacity: 0;
+            animation: fadeIn 0.6s forwards 0.8s;
         }
-        .divider::before,
-        .divider::after {
-            content: '';
+
+        .divider-line {
             flex: 1;
-            border-bottom: 1px solid #ecf0f1;
+            height: 1px;
+            background: #ddd;
         }
-        .divider::before {
-            margin-right: .5em;
+
+        .divider-text {
+            padding: 0 15px;
+            color: #888;
+            font-weight: 500;
+            font-size: 0.9rem;
         }
-        .divider::after {
-            margin-left: .5em;
+
+        .loader {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto;
+            display: none;
         }
-        .email-form {
-            display: flex;
-            flex-direction: column;
+
+        .status-message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            display: none;
         }
-        .email-form input {
-            padding: 14px;
-            margin: 8px 0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
+
+        .success {
+            background: #e6f7ee;
+            color: #0c8f4e;
+            display: block;
         }
-        .email-form button {
-            padding: 14px;
-            margin-top: 10px;
-            background-color: #4285f4;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
+
+        .error {
+            background: #fee;
+            color: #f33;
+            display: block;
         }
-        .email-form button:hover {
-            background-color: #3367d6;
+
+        .footer {
+            margin-top: 30px;
+            color: #888;
+            font-size: 0.85rem;
+            opacity: 0;
+            animation: fadeIn 0.6s forwards 1.2s;
         }
-        button.sign-out {
-            background-color: #ea4335;
-            padding: 10px 16px;
-            border: none;
-            border-radius: 6px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        button.sign-out:hover {
-            background-color: #d33426;
+
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(100, 100);
+                opacity: 0;
+            }
         }
-        /* Rest of your existing styles for user cards, search results, etc. */
-        .user-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            background: #fafafa;
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
-        .user-info {
-            flex-grow: 1;
-        }
-        .user-actions {
-            margin-left: 15px;
-        }
-        #search-results {
-            margin-top: 15px;
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 30px 25px;
+            }
+            
+            .logo h1 {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Authentication Section -->
-    <div id="auth-container">
-        <h1>Welcome to Tajib Max</h1>
-        <p>Sign in to start messaging</p>
-
-        <!-- Google Sign-In Button -->
-        <button id="googleSignIn" class="provider-btn btn-google">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google logo">
-            Sign in with Google
-        </button>
-
-        <!-- Apple Sign-In Button -->
-        <button id="appleSignIn" class="provider-btn btn-apple">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple logo" style="filter: invert(0%);">
-            Sign in with Apple
-        </button>
-
-        <div class="divider">or</div>
-
-        <!-- Email/Password Form (Optional) -->
-        <div class="email-form">
-            <input type="email" id="email" placeholder="Email">
-            <input type="password" id="password" placeholder="Password">
-            <input type="text" id="username" placeholder="Username (for sign up)">
-            <button onclick="signUp()">Sign Up</button>
-            <button onclick="signIn()" style="background-color: #34a853;">Sign In</button>
-        </div>
-    </div>
-
-    <!-- Main Application Section (hidden initially) -->
-    <div id="main-app">
-        <div class="app-header">
-            <h1>Tajib Max</h1>
-            <button class="sign-out" onclick="signOut()">Sign Out</button>
-        </div>
-        <!-- ... rest of your main app (search, chat, etc.) ... -->
-        <div>
-            <h2>Find Users</h2>
-            <div style="display: flex;">
-                <input type="text" id="search-input" placeholder="Search by username...">
-                <button onclick="searchUsers()" style="margin-left: 10px;">Search</button>
+    <div class="container">
+        <div class="card">
+            <div class="logo">
+                <h1>Tajib Max</h1>
+                <p>Connect with others seamlessly</p>
             </div>
-            <div id="search-results"></div>
-        </div>
-        <div id="chat-container" style="margin-top: 30px;">
-            <h2>Your Conversations</h2>
-            <p>Chat functionality will be implemented here soon.</p>
+            
+            <div class="auth-buttons">
+                <button class="auth-btn google-btn" id="googleSignIn">
+                    <i class="fab fa-google"></i> Sign in with Google
+                </button>
+                
+                <button class="auth-btn apple-btn" id="appleSignIn">
+                    <i class="fab fa-apple"></i> Sign in with Apple
+                </button>
+            </div>
+            
+            <div class="divider">
+                <div class="divider-line"></div>
+                <div class="divider-text">Secure Authentication</div>
+                <div class="divider-line"></div>
+            </div>
+            
+            <div class="loader" id="loader"></div>
+            
+            <div class="status-message" id="statusMessage"></div>
+            
+            <div class="footer">
+                <p>By continuing, you agree to our Terms of Service and Privacy Policy</p>
+            </div>
         </div>
     </div>
 
@@ -211,26 +263,11 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
         import {
             getAuth,
-            createUserWithEmailAndPassword,
-            signInWithEmailAndPassword,
-            signOut,
-            onAuthStateChanged,
             signInWithPopup,
             GoogleAuthProvider,
-            OAuthProvider // Needed for Apple and other OAuth providers
+            OAuthProvider,
+            onAuthStateChanged
         } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-        import {
-            getFirestore,
-            doc,
-            setDoc,
-            collection,
-            query,
-            where,
-            getDocs,
-            writeBatch,
-            arrayUnion,
-            arrayRemove
-        } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -246,168 +283,111 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
 
         // Create provider instances
         const googleProvider = new GoogleAuthProvider();
-        const appleProvider = new OAuthProvider('apple.com'); // Use 'apple.com' as the provider ID :cite[4]
+        const appleProvider = new OAuthProvider('apple.com');
 
-        // Make variables global so our HTML onclick functions can access them
-        window.auth = auth;
-        window.db = db;
-        window.signOut = signOut;
+        // Get DOM elements
+        const googleSignInBtn = document.getElementById('googleSignIn');
+        const appleSignInBtn = document.getElementById('appleSignIn');
+        const loader = document.getElementById('loader');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // Show loading state
+        function showLoading() {
+            loader.style.display = 'block';
+            statusMessage.style.display = 'none';
+            googleSignInBtn.disabled = true;
+            appleSignInBtn.disabled = true;
+        }
+
+        // Hide loading state
+        function hideLoading() {
+            loader.style.display = 'none';
+            googleSignInBtn.disabled = false;
+            appleSignInBtn.disabled = false;
+        }
+
+        // Show status message
+        function showStatus(message, isError = false) {
+            statusMessage.textContent = message;
+            statusMessage.className = isError ? 'status-message error' : 'status-message success';
+            statusMessage.style.display = 'block';
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // Google Sign-In
+        googleSignInBtn.addEventListener('click', () => {
+            showLoading();
+            
+            signInWithPopup(auth, googleProvider)
+                .then((result) => {
+                    // Signed in
+                    const user = result.user;
+                    showStatus(`Welcome, ${user.displayName || user.email}!`);
+                    
+                    // Simulate redirect to app
+                    setTimeout(() => {
+                        hideLoading();
+                        // In a real app, you would redirect to the main app page
+                        alert('Success! Redirecting to Tajib Max...');
+                    }, 1500);
+                })
+                .catch((error) => {
+                    hideLoading();
+                    const errorMessage = error.message || 'An error occurred during Google sign-in';
+                    showStatus(errorMessage, true);
+                    console.error("Google sign-in error:", error);
+                });
+        });
+
+        // Apple Sign-In
+        appleSignInBtn.addEventListener('click', () => {
+            showLoading();
+            
+            signInWithPopup(auth, appleProvider)
+                .then((result) => {
+                    // Signed in
+                    const user = result.user;
+                    showStatus(`Welcome, ${user.displayName || user.email}!`);
+                    
+                    // Simulate redirect to app
+                    setTimeout(() => {
+                        hideLoading();
+                        // In a real app, you would redirect to the main app page
+                        alert('Success! Redirecting to Tajib Max...');
+                    }, 1500);
+                })
+                .catch((error) => {
+                    hideLoading();
+                    const errorMessage = error.message || 'An error occurred during Apple sign-in';
+                    showStatus(errorMessage, true);
+                    console.error("Apple sign-in error:", error);
+                });
+        });
 
         // Monitor authentication state
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 // User is signed in
                 console.log("User is signed in:", user.uid);
-                document.getElementById('auth-container').style.display = 'none';
-                document.getElementById('main-app').style.display = 'block';
-                // Load user data here later
             } else {
                 // User is signed out
                 console.log("User is signed out");
-                document.getElementById('auth-container').style.display = 'block';
-                document.getElementById('main-app').style.display = 'none';
             }
         });
 
-        // --- GOOGLE SIGN-IN ---
-        document.getElementById('googleSignIn').addEventListener('click', () => {
-            signInWithPopup(auth, googleProvider)
-                .then((result) => {
-                    // This gives you a Google Access Token. You can use it to access the Google API.
-                    const credential = GoogleAuthProvider.credentialFromResult(result);
-                    const token = credential.accessToken;
-                    // The signed-in user info.
-                    const user = result.user;
-                    console.log("Google sign-in successful:", user);
-
-                    // Check if this is a new user signing in with Google for the first time
-                    const isNewUser = result._tokenResponse?.isNewUser;
-                    if (isNewUser) {
-                        // Create a user document in Firestore for new Google sign-ins
-                        createUserProfileInFirestore(user, user.displayName || user.email.split('@')[0]); // Use display name or part of email as username
-                    }
-                    // IdP data can be gotten from the result
-                }).catch((error) => {
-                    // Handle Errors here.
-                    const errorCode = error.code;
-                    const errorMessage = error.message;
-                    // The email of the user's account used.
-                    const email = error.customData.email;
-                    // The AuthCredential type that was used.
-                    const credential = GoogleAuthProvider.credentialFromError(error);
-                    console.error("Google sign-in error:", errorCode, errorMessage);
-                    alert(`Google sign-in failed: ${errorMessage}`);
-                });
+        // Add ripple effect to buttons
+        document.querySelectorAll('.auth-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                // Ripple effect is handled via CSS
+            });
         });
-
-        // --- APPLE SIGN-IN ---
-        document.getElementById('appleSignIn').addEventListener('click', () => {
-            // Optional: Configure custom OAuth parameters for Apple if needed
-            // appleProvider.setCustomParameters({
-            //   locale: 'en' // Force English locale
-            // });
-
-            signInWithPopup(auth, appleProvider)
-                .then((result) => {
-                    // User is signed in.
-                    const user = result.user;
-                    console.log("Apple sign-in successful:", user);
-
-                    // Check if this is a new user signing in with Apple for the first time
-                    const isNewUser = result._tokenResponse?.isNewUser;
-                    if (isNewUser) {
-                        // Apple might not always provide a display name. You can prompt the user later if needed.
-                        const proposedName = user.displayName || user.email.split('@')[0];
-                        createUserProfileInFirestore(user, proposedName);
-                    }
-                }).catch((error) => {
-                    // Handle Errors here.
-                    const errorCode = error.code;
-                    const errorMessage = error.message;
-                    console.error("Apple sign-in error:", errorCode, errorMessage);
-                    alert(`Apple sign-in failed: ${errorMessage}`);
-                });
-        });
-
-        // --- EMAIL/PASSWORD SIGN-UP & SIGN-IN (Keep your existing functions) ---
-        window.signUp = async function() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const username = document.getElementById('username').value;
-
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-                await createUserProfileInFirestore(user, username);
-                alert("Account created successfully!");
-                clearAuthFields();
-            } catch (error) {
-                console.error("Error signing up:", error);
-                alert("Error: " + error.message);
-            }
-        };
-
-        window.signIn = async function() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                clearAuthFields();
-            } catch (error) {
-                console.error("Error signing in:", error);
-                alert("Error: " + error.message);
-            }
-        };
-
-        // --- HELPER FUNCTIONS ---
-        async function createUserProfileInFirestore(user, username) {
-            // Check if a profile already exists to avoid overwriting on subsequent logins
-            // This is a simple check; you might want a more robust solution.
-            const userDocRef = doc(db, "users", user.uid);
-            const userDocSnap = await getDoc(userDocRef);
-
-            if (!userDocSnap.exists()) {
-                // Create user document ONLY if it doesn't exist
-                await setDoc(userDocRef, {
-                    uid: user.uid,
-                    email: user.email,
-                    username: username.toLowerCase(), // for easier searching
-                    displayName: username,
-                    bio: "",
-                    profilePicUrl: user.photoURL || "", // Google sign-in provides a photoURL
-                    followers: [],
-                    following: [],
-                    createdAt: new Date()
-                });
-                console.log("New user profile created in Firestore for:", user.uid);
-            } else {
-                console.log("User profile already exists, skipping creation.");
-                // You could update existing profile here if needed
-            }
-        }
-
-        async function signOut() {
-            try {
-                await signOut(auth);
-            } catch (error) {
-                console.error("Error signing out:", error);
-            }
-        }
-
-        function clearAuthFields() {
-            document.getElementById('email').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('username').value = '';
-        }
-
-        // Keep your existing searchUsers and followUser functions here
-        // ... (they remain the same as in your previous code)
-
     </script>
 </body>
 </html>
