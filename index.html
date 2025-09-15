@@ -3,1138 +3,328 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TajibMax Messenger</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Tajib Max - Messaging App</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        :root {
-            --primary: #0084ff;
-            --primary-dark: #0066cc;
-            --background: #f0f2f5;
-            --card-bg: #ffffff;
-            --text-primary: #1c1e21;
-            --text-secondary: #65676b;
-            --border: #dddfe2;
-            --online: #31a24c;
-            --away: #ffab00;
-            --busy: #ff3b30;
-            --offline: #8a8d91;
-            --message-sent: #0084ff;
-            --message-received: #e4e6eb;
-            --follow-btn: #0084ff;
-            --follow-btn-hover: #0066cc;
-            --unfollow-btn: #e4e6eb;
-            --unfollow-btn-hover: #d8dadf;
-        }
-
         body {
-            background-color: var(--background);
-            color: var(--text-primary);
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Login Screen */
-        .login-screen {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: linear-gradient(135deg, #0084ff, #00c4ff);
-            color: white;
-            text-align: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
         }
-
-        .login-logo {
-            font-size: 4rem;
-            margin-bottom: 20px;
-        }
-
-        .login-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .login-subtitle {
-            font-size: 1.2rem;
-            margin-bottom: 30px;
-            opacity: 0.9;
-            max-width: 500px;
-        }
-
-        .login-btn {
-            background: white;
-            color: #0084ff;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 30px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
+        #app-container {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25);
-        }
-
-        /* Main App */
-        .app-container {
-            display: none;
-            height: 100vh;
             flex-direction: column;
+            gap: 20px;
         }
-
-        /* Header */
+        #auth-container, #main-app {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        #main-app {
+            display: none; /* Hidden until logged in */
+        }
+        h1, h2 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
         .app-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 20px;
-            background-color: var(--card-bg);
-            border-bottom: 1px solid var(--border);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
         }
-
-        .app-logo {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            position: relative;
-            padding: 5px 10px;
-            border-radius: 20px;
-            transition: background 0.2s;
-        }
-
-        .user-profile:hover {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        .avatar-container {
-            position: relative;
-            display: inline-block;
-        }
-
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--border);
-        }
-
-        .status-indicator {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 2px solid white;
-        }
-
-        .status-online {
-            background-color: var(--online);
-        }
-
-        .status-away {
-            background-color: var(--away);
-        }
-
-        .status-busy {
-            background-color: var(--busy);
-        }
-
-        .status-offline {
-            background-color: var(--offline);
-        }
-
-        .user-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .user-name {
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .user-status {
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-        }
-
-        /* Main Content */
-        .app-content {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 350px;
-            background: var(--card-bg);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .search-container {
-            position: relative;
-            padding: 15px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .search-box {
-            display: flex;
-            align-items: center;
-            background: var(--background);
-            border-radius: 20px;
-            padding: 10px 15px;
-        }
-
-        .search-box input {
-            flex: 1;
-            border: none;
-            background: transparent;
-            padding: 5px;
-            outline: none;
-            font-size: 1rem;
-        }
-
-        .search-results-container {
-            position: absolute;
-            top: 100%;
-            left: 15px;
-            right: 15px;
-            background: var(--card-bg);
-            border-radius: 0 0 12px 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            max-height: 300px;
-            overflow-y: auto;
-            z-index: 100;
-            display: none;
-        }
-
-        .search-result-item {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            gap: 12px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .search-result-item:hover {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        .contacts-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px 0;
-        }
-
-        .contact {
-            display: flex;
-            align-items: center;
+        input, button {
             padding: 12px 15px;
-            gap: 12px;
-            cursor: pointer;
-            transition: background 0.2s;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 16px;
         }
-
-        .contact:hover {
-            background: rgba(0, 0, 0, 0.05);
+        input {
+            width: 100%;
+            box-sizing: border-box;
         }
-
-        .contact.active {
-            background: rgba(0, 132, 255, 0.1);
-        }
-
-        .contact-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            object-fit: cover;
-            position: relative;
-        }
-
-        .contact-info {
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .contact-name {
-            font-weight: 600;
-            margin-bottom: 4px;
-            font-size: 0.95rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .contact-lastmsg {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .contact-meta {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-
-        .contact-time {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-bottom: 5px;
-        }
-
-        .contact-badge {
-            background: var(--primary);
+        button {
+            background-color: #4285f4;
             color: white;
-            font-size: 0.75rem;
-            min-width: 18px;
-            height: 18px;
-            border-radius: 9px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 5px;
-        }
-
-        /* Suggested Contacts */
-        .suggested-section {
-            padding: 15px;
-            border-top: 1px solid var(--border);
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .section-title {
-            font-size: 1.1rem;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
             font-weight: 600;
-            margin-bottom: 12px;
+        }
+        button:hover {
+            background-color: #3367d6;
+        }
+        button.sign-out {
+            background-color: #ea4335;
+        }
+        button.sign-out:hover {
+            background-color: #d33426;
+        }
+        .user-card {
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-
-        .see-all {
-            font-size: 0.85rem;
-            color: var(--primary);
-            font-weight: normal;
-            cursor: pointer;
-        }
-
-        .suggested-contacts {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .suggested-contact {
-            display: flex;
-            align-items: center;
-            padding: 10px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
             border-radius: 8px;
-            cursor: pointer;
-            gap: 10px;
-            transition: background 0.2s;
-        }
-
-        .suggested-contact:hover {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        .suggested-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            position: relative;
-        }
-
-        .suggested-name {
-            font-size: 0.9rem;
-            font-weight: 500;
-            flex: 1;
-        }
-
-        .follow-btn {
-            background: var(--follow-btn);
-            color: white;
-            border: none;
-            border-radius: 15px;
-            padding: 5px 12px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .follow-btn:hover {
-            background: var(--follow-btn-hover);
-        }
-
-        .follow-btn.following {
-            background: var(--unfollow-btn);
-            color: var(--text-primary);
-        }
-
-        .follow-btn.following:hover {
-            background: var(--unfollow-btn-hover);
-        }
-
-        /* Chat Area */
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--background);
-        }
-
-        .chat-header {
-            display: flex;
-            align-items: center;
-            padding: 15px 20px;
-            background: var(--card-bg);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .chat-user {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
-        }
-
-        .chat-actions {
-            display: flex;
-            gap: 15px;
-        }
-
-        .chat-action-btn {
-            background: none;
-            border: none;
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-            cursor: pointer;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-        }
-
-        .chat-action-btn:hover {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        .messages-container {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .message {
-            max-width: 70%;
-            padding: 10px 14px;
-            border-radius: 18px;
-            position: relative;
-            animation: fadeIn 0.3s ease;
-            font-size: 0.95rem;
-            line-height: 1.4;
-        }
-
-        .message.received {
-            background: var(--message-received);
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-        }
-
-        .message.sent {
-            background: var(--message-sent);
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-
-        .message-time {
-            font-size: 0.65rem;
-            margin-top: 5px;
-            opacity: 0.7;
-            text-align: right;
-        }
-
-        .message-input-container {
-            display: flex;
-            align-items: center;
-            padding: 15px 20px;
-            background: var(--card-bg);
-            border-top: 1px solid var(--border);
-            gap: 12px;
-        }
-
-        .message-input {
-            flex: 1;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 12px 18px;
-            outline: none;
-            font-size: 0.95rem;
-            resize: none;
-            min-height: 20px;
-            max-height: 100px;
-            overflow-y: auto;
-        }
-
-        .attachment-btn, .send-btn {
-            background: none;
-            border: none;
-            font-size: 1.3rem;
-            color: var(--primary);
-            cursor: pointer;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-        }
-
-        .attachment-btn:hover, .send-btn:hover {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        /* Welcome message */
-        .welcome-message {
-            text-align: center;
-            padding: 30px;
-            color: var(--text-secondary);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-        }
-
-        .welcome-icon {
-            font-size: 4rem;
-            color: var(--primary);
-            margin-bottom: 20px;
-            opacity: 0.7;
-        }
-
-        .welcome-title {
-            font-size: 1.5rem;
             margin-bottom: 10px;
-            font-weight: 600;
+            background: #fafafa;
         }
-
-        .welcome-subtitle {
-            font-size: 1rem;
-            max-width: 400px;
-            line-height: 1.5;
-            opacity: 0.8;
+        .user-info {
+            flex-grow: 1;
         }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .user-actions {
+            margin-left: 15px;
         }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 80px;
-            }
-            
-            .contact-info, .contact-meta, .contact-name, .contact-lastmsg {
-                display: none;
-            }
-            
-            .suggested-section {
-                display: none;
-            }
-        }
-
-        .no-contacts, .no-results {
-            text-align: center;
-            padding: 20px;
-            color: var(--text-secondary);
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: var(--text-secondary);
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .toast.show {
-            opacity: 1;
+        #search-results {
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
-    <!-- Login Screen -->
-    <div class="login-screen" id="loginScreen">
-        <div class="login-logo">
-            <i class="fas fa-comments"></i>
-        </div>
-        <h1 class="login-title">TajibMax Messenger</h1>
-        <p class="login-subtitle">Connect with friends and the world around you with our secure messaging platform</p>
-        <button class="login-btn" id="loginBtn">
-            <i class="fab fa-google"></i> Sign in with Google
-        </button>
-    </div>
-
-    <!-- Main App -->
-    <div class="app-container" id="appContainer">
-        <!-- Header -->
-        <div class="app-header">
-            <div class="app-logo">
-                <i class="fas fa-comment-dots"></i> TajibMax
-            </div>
-            <div class="user-profile" id="userProfile">
-                <div class="avatar-container">
-                    <img src="" class="user-avatar" id="userAvatar" alt="User Avatar">
-                    <span class="status-indicator status-online" id="userStatusIndicator"></span>
-                </div>
-                <div class="user-info">
-                    <div class="user-name" id="userName">User Name</div>
-                    <div class="user-status">Online</div>
-                </div>
+    <div id="app-container">
+        <!-- Authentication Section -->
+        <div id="auth-container">
+            <h2>Welcome to Tajib Max</h2>
+            <div>
+                <input type="email" id="email" placeholder="Email">
+                <input type="password" id="password" placeholder="Password">
+                <input type="text" id="username" placeholder="Username">
+                <button onclick="signUp()">Sign Up</button>
+                <button onclick="signIn()">Sign In</button>
             </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="app-content">
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <div class="search-container">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search for users..." id="searchInput">
-                    </div>
-                    <div class="search-results-container" id="searchResultsContainer">
-                        <!-- Search results will appear here -->
-                    </div>
+        <!-- Main Application Section (hidden initially) -->
+        <div id="main-app">
+            <div class="app-header">
+                <h1>Tajib Max</h1>
+                <button class="sign-out" onclick="signOut()">Sign Out</button>
+            </div>
+            
+            <!-- User Search Section -->
+            <div>
+                <h2>Find Users</h2>
+                <div style="display: flex;">
+                    <input type="text" id="search-input" placeholder="Search by username...">
+                    <button onclick="searchUsers()" style="margin-left: 10px;">Search</button>
                 </div>
-
-                <div class="contacts-container" id="contactsContainer">
-                    <div class="no-contacts">
-                        <p>No conversations yet. Follow users to start chatting!</p>
-                    </div>
-                </div>
-
-                <div class="suggested-section">
-                    <div class="section-title">
-                        <span>All Users</span>
-                    </div>
-                    <div class="suggested-contacts" id="suggestedContacts">
-                        <!-- All users will be populated here -->
-                    </div>
-                </div>
+                <div id="search-results"></div>
             </div>
 
-            <!-- Chat Area -->
-            <div class="chat-area">
-                <div class="welcome-message" id="welcomeMessage">
-                    <div class="welcome-icon">
-                        <i class="fas fa-comments"></i>
-                    </div>
-                    <h2 class="welcome-title">Welcome to TajibMax Messenger</h2>
-                    <p class="welcome-subtitle">Search for users to follow and start chatting, or select a user from your contacts.</p>
-                </div>
-
-                <div class="chat-header" id="chatHeader" style="display: none;">
-                    <div class="chat-user">
-                        <div class="avatar-container">
-                            <img src="" class="user-avatar" id="chatAvatar" alt="Chat User">
-                            <span class="status-indicator status-online" id="chatStatusIndicator"></span>
-                        </div>
-                        <div class="user-info">
-                            <div class="user-name" id="chatUserName">Select a contact</div>
-                            <div class="user-status" id="chatUserStatus">Online</div>
-                        </div>
-                    </div>
-                    <div class="chat-actions">
-                        <button class="chat-action-btn"><i class="fas fa-phone"></i></button>
-                        <button class="chat-action-btn"><i class="fas fa-video"></i></button>
-                        <button class="chat-action-btn"><i class="fas fa-info-circle"></i></button>
-                    </div>
-                </div>
-
-                <div class="messages-container" id="messagesContainer" style="display: none;">
-                    <!-- Messages will be populated here -->
-                </div>
-
-                <div class="message-input-container" id="messageInputContainer" style="display: none;">
-                    <button class="attachment-btn"><i class="fas fa-plus-circle"></i></button>
-                    <div class="message-input" contenteditable="true" id="messageInput" placeholder="Type a message..."></div>
-                    <button class="send-btn" id="sendMessageBtn"><i class="fas fa-paper-plane"></i></button>
-                </div>
+            <!-- Chat Section (to be implemented later) -->
+            <div id="chat-container" style="margin-top: 30px;">
+                <h2>Your Conversations</h2>
+                <p>Chat functionality will be implemented here soon.</p>
             </div>
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div class="toast" id="toast"></div>
+    <!-- Firebase App (the SDKs we need) -->
+    <script type="module">
+        // Import the functions you need from the SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            signOut,
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc, 
+            getDoc,
+            collection,
+            query,
+            where,
+            getDocs,
+            writeBatch,
+            arrayUnion,
+            arrayRemove 
+        } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-    <script>
-        // Mock user data for demonstration
-        const mockUsers = [
-            { id: '1', name: 'Emma Johnson', email: 'emma@example.com', avatar: 'https://randomuser.me/api/portraits/women/32.jpg', status: 'online' },
-            { id: '2', name: 'James Smith', email: 'james@example.com', avatar: 'https://randomuser.me/api/portraits/men/22.jpg', status: 'online' },
-            { id: '3', name: 'Sophia Williams', email: 'sophia@example.com', avatar: 'https://randomuser.me/api/portraits/women/44.jpg', status: 'away' },
-            { id: '4', name: 'Liam Brown', email: 'liam@example.com', avatar: 'https://randomuser.me/api/portraits/men/57.jpg', status: 'online' },
-            { id: '5', name: 'Olivia Davis', email: 'olivia@example.com', avatar: 'https://randomuser.me/api/portraits/women/68.jpg', status: 'busy' },
-            { id: '6', name: 'Noah Miller', email: 'noah@example.com', avatar: 'https://randomuser.me/api/portraits/men/77.jpg', status: 'offline' },
-            { id: '7', name: 'Ava Wilson', email: 'ava@example.com', avatar: 'https://randomuser.me/api/portraits/women/79.jpg', status: 'online' },
-            { id: '8', name: 'William Taylor', email: 'william@example.com', avatar: 'https://randomuser.me/api/portraits/men/81.jpg', status: 'away' }
-        ];
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCKDx9r120x-ssDKOHObK4l4C73p6pwrYs",
+            authDomain: "tajibpro-6fb95.firebaseapp.com",
+            projectId: "tajibpro-6fb95",
+            storageBucket: "tajibpro-6fb95.firebasestorage.app",
+            messagingSenderId: "732812404485",
+            appId: "1:732812404485:web:3f2f5132f452344bc2f96c",
+            measurementId: "G-KBYDP4CL93"
+        };
 
-        // DOM Elements
-        const loginScreen = document.getElementById('loginScreen');
-        const appContainer = document.getElementById('appContainer');
-        const loginBtn = document.getElementById('loginBtn');
-        const userProfile = document.getElementById('userProfile');
-        const userName = document.getElementById('userName');
-        const userAvatar = document.getElementById('userAvatar');
-        const userStatusIndicator = document.getElementById('userStatusIndicator');
-        const contactsContainer = document.getElementById('contactsContainer');
-        const suggestedContacts = document.getElementById('suggestedContacts');
-        const messagesContainer = document.getElementById('messagesContainer');
-        const messageInput = document.getElementById('messageInput');
-        const sendMessageBtn = document.getElementById('sendMessageBtn');
-        const chatUserName = document.getElementById('chatUserName');
-        const chatAvatar = document.getElementById('chatAvatar');
-        const chatStatusIndicator = document.getElementById('chatStatusIndicator');
-        const chatUserStatus = document.getElementById('chatUserStatus');
-        const searchInput = document.getElementById('searchInput');
-        const welcomeMessage = document.getElementById('welcomeMessage');
-        const chatHeader = document.getElementById('chatHeader');
-        const messageInputContainer = document.getElementById('messageInputContainer');
-        const searchResultsContainer = document.getElementById('searchResultsContainer');
-        const toast = document.getElementById('toast');
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        // App state
-        let currentUser = null;
-        let activeChat = null;
-        let users = [];
-        let following = [];
-        let messages = [];
+        // Make these variables global so our HTML onclick functions can access them
+        window.auth = auth;
+        window.db = db;
+        window.signOut = signOut;
 
-        // Initialize the app
-        function init() {
-            // Check if user is already logged in (for demo purposes)
-            const demoUser = {
-                uid: 'demo-user',
-                displayName: 'Demo User',
-                photoURL: 'https://randomuser.me/api/portraits/men/1.jpg',
-                email: 'demo@example.com'
-            };
-            
-            // Simulate login for demo
-            setTimeout(() => {
-                loginUser(demoUser);
-            }, 500);
-            
-            // Event listeners
-            loginBtn.addEventListener('click', simulateLogin);
-            sendMessageBtn.addEventListener('click', sendMessage);
-            messageInput.addEventListener('keydown', handleMessageInputKeydown);
-            searchInput.addEventListener('input', debounce(searchUsers, 300));
-            
-            // Close search results when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!searchInput.contains(e.target) && !searchResultsContainer.contains(e.target)) {
-                    searchResultsContainer.style.display = 'none';
-                }
-            });
-        }
-
-        // Simulate login for demo
-        function simulateLogin() {
-            const demoUser = {
-                uid: 'demo-user',
-                displayName: 'Demo User',
-                photoURL: 'https://randomuser.me/api/portraits/men/1.jpg',
-                email: 'demo@example.com'
-            };
-            
-            loginUser(demoUser);
-        }
-
-        // Login user
-        function loginUser(user) {
-            currentUser = user;
-            
-            // Update UI with user info
-            userName.textContent = user.displayName;
-            userAvatar.src = user.photoURL;
-            
-            // Hide login, show app
-            loginScreen.style.display = 'none';
-            appContainer.style.display = 'flex';
-            
-            // Load users and conversations
-            loadUsers();
-            loadConversations();
-            
-            showToast('Successfully logged in!');
-        }
-
-        // Show toast notification
-        function showToast(message, duration = 3000) {
-            toast.textContent = message;
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, duration);
-        }
-
-        // Load all users (for suggested contacts)
-        function loadUsers() {
-            // For demo, use mock users
-            users = mockUsers;
-            
-            renderSuggestedContacts();
-        }
-
-        // Load user conversations
-        function loadConversations() {
-            // For demo, use the first 4 users as conversations
-            renderConversations();
-        }
-
-        // Render suggested contacts
-        function renderSuggestedContacts() {
-            suggestedContacts.innerHTML = '';
-            
-            if (users.length === 0) {
-                suggestedContacts.innerHTML = '<div class="no-contacts">No users found</div>';
-                return;
-            }
-            
-            users.forEach(user => {
-                const isFollowing = following.includes(user.id);
-                
-                const contactElement = document.createElement('div');
-                contactElement.className = 'suggested-contact';
-                contactElement.innerHTML = `
-                    <img src="${user.avatar}" class="suggested-avatar" alt="${user.name}">
-                    <div class="suggested-name">${user.name}</div>
-                    <button class="follow-btn ${isFollowing ? 'following' : ''}" data-uid="${user.id}">
-                        ${isFollowing ? 'Following' : 'Follow'}
-                    </button>
-                `;
-                
-                contactElement.querySelector('.follow-btn').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    toggleFollow(user.id);
-                });
-                
-                contactElement.addEventListener('click', () => {
-                    openChat(user.id, user.name, user.avatar, user.status);
-                });
-                
-                suggestedContacts.appendChild(contactElement);
-            });
-        }
-
-        // Toggle follow status
-        function toggleFollow(userId) {
-            if (following.includes(userId)) {
-                // Unfollow user
-                following = following.filter(id => id !== userId);
-                showToast("Unfollowed user");
+        // Monitor authentication state
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                console.log("User is signed in:", user.uid);
+                document.getElementById('auth-container').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                // Load user data here later
             } else {
-                // Follow user
-                following.push(userId);
-                showToast("Following user");
+                // User is signed out
+                console.log("User is signed out");
+                document.getElementById('auth-container').style.display = 'block';
+                document.getElementById('main-app').style.display = 'none';
             }
-            
-            // Update UI
-            renderSuggestedContacts();
-            renderConversations();
-        }
+        });
 
-        // Render conversations
-        function renderConversations() {
-            contactsContainer.innerHTML = '';
-            
-            if (following.length === 0) {
-                contactsContainer.innerHTML = '<div class="no-contacts">No conversations yet. Follow users to start chatting!</div>';
-                return;
-            }
-            
-            // Filter users to only those we're following
-            const followedUsers = users.filter(user => following.includes(user.id));
-            
-            followedUsers.forEach(user => {
-                const contactElement = document.createElement('div');
-                contactElement.className = 'contact';
-                contactElement.dataset.uid = user.id;
-                
-                contactElement.innerHTML = `
-                    <img src="${user.avatar}" class="contact-avatar" alt="${user.name}">
-                    <div class="contact-info">
-                        <div class="contact-name">${user.name}</div>
-                        <div class="contact-lastmsg">Click to start chatting</div>
-                    </div>
-                    <div class="contact-meta">
-                        <div class="contact-time">${user.status || 'offline'}</div>
-                    </div>
-                `;
-                
-                contactElement.addEventListener('click', () => {
-                    openChat(user.id, user.name, user.avatar, user.status);
-                    
-                    // Highlight active conversation
-                    document.querySelectorAll('.contact').forEach(c => c.classList.remove('active'));
-                    contactElement.classList.add('active');
+        // Sign up function
+        window.signUp = async function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value;
+
+            try {
+                // 1. Create user in Firebase Auth
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // 2. Create user document in Firestore
+                await setDoc(doc(db, "users", user.uid), {
+                    uid: user.uid,
+                    email: email,
+                    username: username.toLowerCase(),
+                    displayName: username,
+                    bio: "",
+                    profilePicUrl: "",
+                    followers: [],
+                    following: [],
+                    createdAt: new Date()
                 });
-                
-                contactsContainer.appendChild(contactElement);
-            });
-        }
 
-        // Open chat with a user
-        function openChat(userId, userName, userAvatarUrl, userStatus) {
-            activeChat = userId;
-            
-            // Update UI
-            chatUserName.textContent = userName;
-            chatAvatar.src = userAvatarUrl;
-            chatUserStatus.textContent = userStatus;
-            
-            // Show chat UI, hide welcome message
-            welcomeMessage.style.display = 'none';
-            chatHeader.style.display = 'flex';
-            messagesContainer.style.display = 'flex';
-            messageInputContainer.style.display = 'flex';
-            
-            // Clear messages
-            messagesContainer.innerHTML = '';
-            
-            // Load messages for this chat
-            loadMessages(userId);
-        }
+                alert("Account created successfully! You can now sign in.");
+                clearAuthFields();
+            } catch (error) {
+                console.error("Error signing up:", error);
+                alert("Error: " + error.message);
+            }
+        };
 
-        // Load messages for a chat
-        function loadMessages(userId) {
-            // For demo, generate some random messages
-            messages = [
-                { id: '1', senderId: userId, text: 'Hey there! How are you doing?', timestamp: new Date(Date.now() - 3600000) },
-                { id: '2', senderId: currentUser.uid, text: "I'm good, thanks! How about you?", timestamp: new Date(Date.now() - 3500000) },
-                { id: '3', senderId: userId, text: "I'm doing great! Just working on some projects.", timestamp: new Date(Date.now() - 3400000) },
-                { id: '4', senderId: userId, text: "What have you been up to lately?", timestamp: new Date(Date.now() - 3300000) }
-            ];
-            
-            // Display messages
-            messages.forEach(message => {
-                addMessageToChat(message, message.senderId === currentUser.uid);
-            });
-        }
+        // Sign in function
+        window.signIn = async function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
-        // Add message to chat UI
-        function addMessageToChat(message, isSent) {
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message');
-            messageElement.classList.add(isSent ? 'sent' : 'received');
-            
-            // Format timestamp
-            const timeText = message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            messageElement.innerHTML = `
-                ${message.text}
-                <div class="message-time">${timeText}</div>
-            `;
-            
-            messagesContainer.appendChild(messageElement);
-            
-            // Scroll to bottom
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                clearAuthFields();
+            } catch (error) {
+                console.error("Error signing in:", error);
+                alert("Error: " + error.message);
+            }
+        };
 
-        // Send message
-        function sendMessage() {
-            const messageText = messageInput.innerText.trim();
-            
-            if (!messageText || !activeChat) return;
-            
-            // Create message object
-            const message = {
-                id: Date.now().toString(),
-                senderId: currentUser.uid,
-                text: messageText,
-                timestamp: new Date()
-            };
-            
-            // Add to messages
-            messages.push(message);
-            
-            // Add to UI
-            addMessageToChat(message, true);
-            
-            // Clear input
-            messageInput.innerText = '';
-            
-            // Simulate reply after a short delay
-            setTimeout(() => {
-                const repliedUser = users.find(user => user.id === activeChat);
-                if (repliedUser) {
-                    const replies = [
-                        "That's interesting!",
-                        "I see what you mean.",
-                        "Tell me more about that.",
-                        "I've been thinking about that too.",
-                        "Thanks for sharing!"
-                    ];
-                    
-                    const reply = {
-                        id: Date.now().toString(),
-                        senderId: activeChat,
-                        text: replies[Math.floor(Math.random() * replies.length)],
-                        timestamp: new Date()
-                    };
-                    
-                    messages.push(reply);
-                    addMessageToChat(reply, false);
-                }
-            }, 1000);
-        }
-
-        // Handle message input keydown (Enter to send)
-        function handleMessageInputKeydown(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
+        // Sign out function
+        async function signOut() {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error("Error signing out:", error);
             }
         }
 
-        // Search users
-        function searchUsers() {
-            const searchTerm = searchInput.value.toLowerCase().trim();
+        // Search users function
+        window.searchUsers = async function() {
+            const searchTerm = document.getElementById('search-input').value.trim().toLowerCase();
+            const resultsContainer = document.getElementById('search-results');
             
             if (!searchTerm) {
-                searchResultsContainer.style.display = 'none';
+                resultsContainer.innerHTML = '<p>Please enter a search term</p>';
                 return;
             }
-            
-            const filteredUsers = users.filter(user => 
-                user.name.toLowerCase().includes(searchTerm) || 
-                (user.email && user.email.toLowerCase().includes(searchTerm))
-            );
-            
-            searchResultsContainer.innerHTML = '';
-            
-            if (filteredUsers.length === 0) {
-                searchResultsContainer.innerHTML = '<div class="no-results">No users found</div>';
-                searchResultsContainer.style.display = 'block';
-                return;
+
+            try {
+                const usersRef = collection(db, "users");
+                const q = query(usersRef, 
+                    where("username", ">=", searchTerm),
+                    where("username", "<", searchTerm + '\uf8ff')
+                );
+
+                const querySnapshot = await getDocs(q);
+                resultsContainer.innerHTML = '';
+
+                if (querySnapshot.empty) {
+                    resultsContainer.innerHTML = '<p>No users found</p>';
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const userData = doc.data();
+                    // Don't show the current user in search results
+                    if (userData.uid === auth.currentUser.uid) return;
+                    
+                    const userCard = document.createElement('div');
+                    userCard.className = 'user-card';
+                    userCard.innerHTML = `
+                        <div class="user-info">
+                            <strong>${userData.displayName}</strong>
+                            <p>@${userData.username}</p>
+                        </div>
+                        <div class="user-actions">
+                            <button onclick="followUser('${userData.uid}')">Follow</button>
+                        </div>
+                    `;
+                    resultsContainer.appendChild(userCard);
+                });
+            } catch (error) {
+                console.error("Error searching users:", error);
+                resultsContainer.innerHTML = '<p>Error searching users</p>';
             }
-            
-            filteredUsers.forEach(user => {
-                const isFollowing = following.includes(user.id);
-                
-                const resultElement = document.createElement('div');
-                resultElement.className = 'search-result-item';
-                resultElement.innerHTML = `
-                    <img src="${user.avatar}" class="suggested-avatar" alt="${user.name}">
-                    <div class="suggested-name">${user.name}</div>
-                    <button class="follow-btn ${isFollowing ? 'following' : ''}" data-uid="${user.id}">
-                        ${isFollowing ? 'Following' : 'Follow'}
-                    </button>
-                `;
-                
-                resultElement.querySelector('.follow-btn').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    toggleFollow(user.id);
-                    searchResultsContainer.style.display = 'none';
-                    searchInput.value = '';
+        };
+
+        // Follow user function (simplified version)
+        window.followUser = async function(targetUserId) {
+            try {
+                const currentUser = auth.currentUser;
+                if (!currentUser) return;
+
+                const batch = writeBatch(db);
+                const currentUserRef = doc(db, "users", currentUser.uid);
+                const targetUserRef = doc(db, "users", targetUserId);
+
+                batch.update(currentUserRef, {
+                    following: arrayUnion(targetUserId)
                 });
                 
-                resultElement.addEventListener('click', () => {
-                    openChat(user.id, user.name, user.avatar, user.status);
-                    searchResultsContainer.style.display = 'none';
-                    searchInput.value = '';
+                batch.update(targetUserRef, {
+                    followers: arrayUnion(currentUser.uid)
                 });
-                
-                searchResultsContainer.appendChild(resultElement);
-            });
-            
-            searchResultsContainer.style.display = 'block';
-        }
 
-        // Debounce function for search
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
+                await batch.commit();
+                alert("You are now following this user!");
+            } catch (error) {
+                console.error("Error following user:", error);
+                alert("Error: " + error.message);
+            }
+        };
 
-        // Initialize the app when the page loads
-        window.addEventListener('load', init);
+        // Helper function to clear auth fields
+        function clearAuthFields() {
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('username').value = '';
+        }
     </script>
 </body>
 </html>
