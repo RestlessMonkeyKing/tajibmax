@@ -26,8 +26,6 @@
             max-width: 1400px;
             margin: 0 auto;
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
-            opacity: 0;
-            animation: fadeIn 0.5s forwards;
         }
 
         /* Left Sidebar - Conversations & Users */
@@ -66,6 +64,13 @@
             color: white;
             font-weight: bold;
             font-size: 18px;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
         }
 
         .user-info h3 {
@@ -134,6 +139,12 @@
             padding: 10px 0;
         }
 
+        .no-conversations-message, .loading-users, .no-users-message, .error-message {
+            padding: 20px;
+            text-align: center;
+            color: #666;
+        }
+
         .conversation-item, .user-item {
             display: flex;
             align-items: center;
@@ -166,6 +177,13 @@
             position: relative;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+        }
+
+        .conversation-avatar img, .user-avatar-small img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
         }
 
         .online-status {
@@ -271,6 +289,13 @@
             color: #555;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+        }
+
+        .chat-user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
         }
 
         .chat-actions button {
@@ -391,11 +416,6 @@
         }
 
         /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
         @keyframes fadeInUp {
             from { 
                 opacity: 0;
@@ -440,7 +460,9 @@
         <div class="sidebar-left">
             <div class="sidebar-header">
                 <div class="user-profile">
-                    <div class="user-avatar" id="current-user-avatar">TM</div>
+                    <div class="user-avatar" id="current-user-avatar">
+                        <span id="avatar-fallback">TM</span>
+                    </div>
                     <div class="user-info">
                         <h3 id="current-user-name">Loading...</h3>
                         <p>Online</p>
@@ -557,64 +579,138 @@
         const activeChatAvatar = document.getElementById('active-chat-avatar');
         const activeChatName = document.getElementById('active-chat-name');
         const activeChatStatus = document.getElementById('active-chat-status');
+        const avatarFallback = document.getElementById('avatar-fallback');
 
         let currentUser = null;
         let selectedUser = null;
         let users = [];
         let conversations = [];
+        let authStateUnsubscribe = null;
 
-        // Logout function
-        logoutBtn.addEventListener('click', () => {
-            signOut(auth).then(() => {
-                console.log("User signed out successfully");
-                window.location.href = 'index.html'; // Redirect to login page
-            }).catch((error) => {
-                console.error("Logout error:", error);
-                alert("Failed to sign out. Please try again.");
+        // Initialize the app
+        function initApp() {
+            // Set up auth state listener
+            authStateUnsubscribe = onAuthStateChanged(auth, handleAuthStateChange);
+            
+            // Set up event listeners
+            logoutBtn.addEventListener('click', handleLogout);
+            sendMessageBtn.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
             });
-        });
+            
+            // Prevent form submission that causes page reload
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', (e) => e.preventDefault());
+            });
+        }
 
-        // Monitor authentication state
-        onAuthStateChanged(auth, async (user) => {
+        // Handle authentication state changes
+        async function handleAuthStateChange(user) {
             if (user) {
                 currentUser = user;
-                const userInitials = getUserInitials(user.displayName || user.email);
-                currentUserAvatar.textContent = userInitials;
-                currentUserName.textContent = user.displayName || user.email;
-                
-                // Create or update user document in Firestore
-                await createUserProfile(user);
-                
-                // Load users and conversations
+                await updateUserInterface(user);
                 await loadAllUsers();
                 await loadConversations();
             } else {
                 // User is signed out - redirect to login page
                 window.location.href = 'index.html';
             }
-        });
+        }
+
+        // Update user interface with current user data
+        async function updateUserInterface(user) {
+            // Set user name
+            currentUserName.textContent = user.displayName || user.email;
+            
+            // Set user avatar
+            if (user.photoURL) {
+                avatarFallback.style.display = 'none';
+                const img = document.createElement('img');
+                img.src = user.photoURL;
+                img.referrerPolicy = "no-referrer"; // Fix for Google profile images :cite[9]
+                img.alt = "Profile Picture";
+                currentUserAvatar.appendChild(img);
+            } else {
+                avatarFallback.textContent = getUserInitials(user.displayName || user.email);
+            }
+            
+            // Create or update user document in Firestore
+            await createUserProfile(user);
+        }
+
+        // Handle logout
+        async function handleLogout() {
+            try {
+                // Clear all data first
+                clearAppData();
+                
+                // Sign out from Firebase
+                await signOut(auth);
+                
+                console.log("User signed out successfully");
+                
+                // Redirect to login page after a short delay
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 500);
+                
+            } catch (error) {
+                console.error("Logout error:", error);
+                alert("Failed to sign out. Please try again.");
+            }
+        }
+
+        // Clear all app data
+        function clearAppData() {
+            currentUser = null;
+            selectedUser = null;
+            users = [];
+            conversations = [];
+            
+            // Clear UI elements
+            conversationsList.innerHTML = '<div class="no-conversations-message">No conversations yet</div>';
+            usersList.innerHTML = '<div class="loading-users">Loading users...</div>';
+            messagesContainer.innerHTML = `
+                <div class="no-conversation">
+                    <i class="fas fa-comments"></i>
+                    <p>Select a user from the sidebar to start a conversation</p>
+                </div>
+            `;
+            
+            activeChatName.textContent = "Select a user to message";
+            activeChatStatus.textContent = "Online";
+            messageInput.disabled = true;
+            messageInput.placeholder = "Type a message...";
+        }
 
         // Create user profile in Firestore
         async function createUserProfile(user) {
-            const userRef = doc(db, "users", user.uid);
-            const userSnap = await getDoc(userRef);
-            
-            if (!userSnap.exists()) {
-                // Create new user document
-                await setDoc(userRef, {
-                    uid: user.uid,
-                    email: user.email,
-                    displayName: user.displayName || user.email.split('@')[0],
-                    username: user.email.split('@')[0],
-                    bio: "",
-                    profilePicUrl: user.photoURL || "",
-                    followers: [],
-                    following: [],
-                    createdAt: serverTimestamp()
-                });
-                console.log("New user profile created in Firestore");
-            } else {
-                console.log("User profile already exists");
+            try {
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+                
+                if (!userSnap.exists()) {
+                    // Create new user document
+                    await setDoc(userRef, {
+                        uid: user.uid,
+                        email: user.email,
+                        displayName: user.displayName || user.email.split('@')[0],
+                        username: user.email.split('@')[0],
+                        bio: "",
+                        profilePicUrl: user.photoURL || "",
+                        followers: [],
+                        following: [],
+                        createdAt: serverTimestamp()
+                    });
+                    console.log("New user profile created in Firestore");
+                } else {
+                    console.log("User profile already exists");
+                }
+            } catch (error) {
+                console.error("Error creating user profile:", error);
             }
         }
 
@@ -645,13 +741,28 @@
                     userItem.dataset.uid = userData.uid;
                     
                     userItem.innerHTML = `
-                        <div class="user-avatar-small">${getUserInitials(userData.displayName)}</div>
+                        <div class="user-avatar-small">
+                            <span class="avatar-fallback">${getUserInitials(userData.displayName)}</span>
+                        </div>
                         <div class="user-info-small">
                             <h4>${userData.displayName}</h4>
                             <p>@${userData.username}</p>
                         </div>
                         <button class="follow-btn">Follow</button>
                     `;
+                    
+                    // Add profile picture if available
+                    if (userData.profilePicUrl) {
+                        const avatarContainer = userItem.querySelector('.user-avatar-small');
+                        const fallback = userItem.querySelector('.avatar-fallback');
+                        fallback.style.display = 'none';
+                        
+                        const img = document.createElement('img');
+                        img.src = userData.profilePicUrl;
+                        img.referrerPolicy = "no-referrer"; // Fix for Google profile images :cite[9]
+                        img.alt = "Profile Picture";
+                        avatarContainer.appendChild(img);
+                    }
                     
                     usersList.appendChild(userItem);
                     
@@ -702,7 +813,9 @@
                         conversationItem.dataset.conversationId = doc.id;
                         
                         conversationItem.innerHTML = `
-                            <div class="conversation-avatar">${getUserInitials(otherUser.displayName)}</div>
+                            <div class="conversation-avatar">
+                                <span class="avatar-fallback">${getUserInitials(otherUser.displayName)}</span>
+                            </div>
                             <div class="conversation-info">
                                 <h4>${otherUser.displayName}</h4>
                                 <p>${convoData.lastMessage || 'Start a conversation'}</p>
@@ -711,6 +824,19 @@
                                 <div class="time">${formatTime(convoData.lastUpdated?.toDate())}</div>
                             </div>
                         `;
+                        
+                        // Add profile picture if available
+                        if (otherUser.profilePicUrl) {
+                            const avatarContainer = conversationItem.querySelector('.conversation-avatar');
+                            const fallback = conversationItem.querySelector('.avatar-fallback');
+                            fallback.style.display = 'none';
+                            
+                            const img = document.createElement('img');
+                            img.src = otherUser.profilePicUrl;
+                            img.referrerPolicy = "no-referrer"; // Fix for Google profile images :cite[9]
+                            img.alt = "Profile Picture";
+                            avatarContainer.appendChild(img);
+                        }
                         
                         conversationsList.appendChild(conversationItem);
                         
@@ -728,9 +854,19 @@
         // Select a user to chat with
         function selectUser(user, conversationId = null) {
             selectedUser = user;
-            activeChatAvatar.textContent = getUserInitials(user.displayName);
             activeChatName.textContent = user.displayName;
             activeChatStatus.textContent = "Online";
+            
+            // Update active chat avatar
+            activeChatAvatar.innerHTML = getUserInitials(user.displayName);
+            if (user.profilePicUrl) {
+                activeChatAvatar.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = user.profilePicUrl;
+                img.referrerPolicy = "no-referrer"; // Fix for Google profile images :cite[9]
+                img.alt = "Profile Picture";
+                activeChatAvatar.appendChild(img);
+            }
             
             messageInput.disabled = false;
             messageInput.placeholder = "Type a message...";
@@ -794,13 +930,6 @@
         }
 
         // Send a new message
-        sendMessageBtn.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
         async function sendMessage() {
             if (!selectedUser || !messageInput.value.trim()) return;
             
@@ -899,6 +1028,9 @@
             if (!date) return '';
             return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
