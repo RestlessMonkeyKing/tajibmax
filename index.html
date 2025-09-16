@@ -442,7 +442,7 @@
                 <div class="user-profile">
                     <div class="user-avatar" id="current-user-avatar">TM</div>
                     <div class="user-info">
-                        <h3 id="current-user-name">Tajib Max</h3>
+                        <h3 id="current-user-name">Loading...</h3>
                         <p>Online</p>
                     </div>
                 </div>
@@ -458,12 +458,12 @@
             
             <div class="section-title">Conversations</div>
             <div class="conversations-list" id="conversations-list">
-                <!-- Conversations will be dynamically added here -->
+                <div class="no-conversations-message">No conversations yet</div>
             </div>
             
             <div class="section-title">All Users</div>
             <div class="users-list" id="users-list">
-                <!-- Users will be dynamically added here -->
+                <div class="loading-users">Loading users...</div>
             </div>
         </div>
         
@@ -561,29 +561,33 @@
         let currentUser = null;
         let selectedUser = null;
         let users = [];
+        let conversations = [];
 
         // Logout function
         logoutBtn.addEventListener('click', () => {
             signOut(auth).then(() => {
+                console.log("User signed out successfully");
                 window.location.href = 'index.html'; // Redirect to login page
             }).catch((error) => {
                 console.error("Logout error:", error);
+                alert("Failed to sign out. Please try again.");
             });
         });
 
         // Monitor authentication state
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
-                currentUserAvatar.textContent = getUserInitials(user.displayName || user.email);
+                const userInitials = getUserInitials(user.displayName || user.email);
+                currentUserAvatar.textContent = userInitials;
                 currentUserName.textContent = user.displayName || user.email;
                 
                 // Create or update user document in Firestore
-                createUserProfile(user);
+                await createUserProfile(user);
                 
                 // Load users and conversations
-                loadAllUsers();
-                loadConversations();
+                await loadAllUsers();
+                await loadConversations();
             } else {
                 // User is signed out - redirect to login page
                 window.location.href = 'index.html';
@@ -600,7 +604,7 @@
                 await setDoc(userRef, {
                     uid: user.uid,
                     email: user.email,
-                    displayName: user.displayName || user.email,
+                    displayName: user.displayName || user.email.split('@')[0],
                     username: user.email.split('@')[0],
                     bio: "",
                     profilePicUrl: user.photoURL || "",
@@ -608,20 +612,32 @@
                     following: [],
                     createdAt: serverTimestamp()
                 });
+                console.log("New user profile created in Firestore");
+            } else {
+                console.log("User profile already exists");
             }
         }
 
         // Load all users from Firestore
         async function loadAllUsers() {
-            const usersRef = collection(db, "users");
-            const q = query(usersRef, where("uid", "!=", currentUser.uid));
-            
-            onSnapshot(q, (snapshot) => {
+            try {
+                const usersRef = collection(db, "users");
+                const q = query(usersRef);
+                
+                const querySnapshot = await getDocs(q);
                 users = [];
                 usersList.innerHTML = '';
                 
-                snapshot.forEach((doc) => {
+                if (querySnapshot.empty) {
+                    usersList.innerHTML = '<div class="no-users-message">No users found</div>';
+                    return;
+                }
+                
+                querySnapshot.forEach((doc) => {
                     const userData = doc.data();
+                    // Don't show the current user in the list
+                    if (userData.uid === currentUser.uid) return;
+                    
                     users.push(userData);
                     
                     const userItem = document.createElement('div');
@@ -651,24 +667,32 @@
                         selectUser(userData);
                     });
                 });
-            });
+            } catch (error) {
+                console.error("Error loading users:", error);
+                usersList.innerHTML = '<div class="error-message">Error loading users</div>';
+            }
         }
 
         // Load user conversations
         async function loadConversations() {
-            const conversationsRef = collection(db, "conversations");
-            const q = query(conversationsRef, where("participants", "array-contains", currentUser.uid));
-            
-            onSnapshot(q, (snapshot) => {
-                conversationsList.innerHTML = '';
+            try {
+                const conversationsRef = collection(db, "conversations");
+                const q = query(conversationsRef, where("participants", "array-contains", currentUser.uid));
                 
-                if (snapshot.empty) {
-                    conversationsList.innerHTML = '<p style="padding: 20px; text-align: center; color: #666;">No conversations yet</p>';
+                const querySnapshot = await getDocs(q);
+                conversationsList.innerHTML = '';
+                conversations = [];
+                
+                if (querySnapshot.empty) {
+                    conversationsList.innerHTML = '<div class="no-conversations-message">No conversations yet</div>';
                     return;
                 }
                 
-                snapshot.forEach((doc) => {
+                querySnapshot.forEach((doc) => {
                     const convoData = doc.data();
+                    convoData.id = doc.id;
+                    conversations.push(convoData);
+                    
                     const otherUserId = convoData.participants.find(uid => uid !== currentUser.uid);
                     const otherUser = users.find(user => user.uid === otherUserId);
                     
@@ -695,7 +719,10 @@
                         });
                     }
                 });
-            });
+            } catch (error) {
+                console.error("Error loading conversations:", error);
+                conversationsList.innerHTML = '<div class="error-message">Error loading conversations</div>';
+            }
         }
 
         // Select a user to chat with
@@ -779,36 +806,33 @@
             
             try {
                 // Check if conversation already exists
-                const conversationsRef = collection(db, "conversations");
-                const q = query(conversationsRef, 
-                    where("participants", "array-contains", currentUser.uid));
-                
-                const querySnapshot = await getDocs(q);
                 let conversationId = null;
+                const existingConvo = conversations.find(convo => 
+                    convo.participants.includes(currentUser.uid) && 
+                    convo.participants.includes(selectedUser.uid)
+                );
                 
-                // Look for existing conversation with the selected user
-                querySnapshot.forEach((doc) => {
-                    const convoData = doc.data();
-                    if (convoData.participants.includes(selectedUser.uid)) {
-                        conversationId = doc.id;
-                    }
-                });
-                
-                // If no existing conversation, create a new one
-                if (!conversationId) {
-                    const newConvoRef = await addDoc(conversationsRef, {
-                        participants: [currentUser.uid, selectedUser.uid],
-                        lastMessage: messageInput.value,
-                        lastUpdated: serverTimestamp()
-                    });
-                    conversationId = newConvoRef.id;
-                } else {
+                if (existingConvo) {
+                    conversationId = existingConvo.id;
+                    
                     // Update existing conversation
                     const convoRef = doc(db, "conversations", conversationId);
                     await updateDoc(convoRef, {
                         lastMessage: messageInput.value,
                         lastUpdated: serverTimestamp()
                     });
+                } else {
+                    // Create new conversation
+                    const conversationsRef = collection(db, "conversations");
+                    const newConvoRef = await addDoc(conversationsRef, {
+                        participants: [currentUser.uid, selectedUser.uid],
+                        lastMessage: messageInput.value,
+                        lastUpdated: serverTimestamp()
+                    });
+                    conversationId = newConvoRef.id;
+                    
+                    // Reload conversations to include the new one
+                    await loadConversations();
                 }
                 
                 // Add the message to the subcollection
@@ -824,6 +848,7 @@
                 
             } catch (error) {
                 console.error("Error sending message:", error);
+                alert("Failed to send message. Please try again.");
             }
         }
 
@@ -861,6 +886,7 @@
                 }
             } catch (error) {
                 console.error("Error toggling follow:", error);
+                alert("Failed to update follow status. Please try again.");
             }
         }
 
