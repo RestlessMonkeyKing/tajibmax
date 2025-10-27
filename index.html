@@ -3,15 +3,23 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mini Message — Fixed Messaging</title>
+  <title>Mini Message — Landing & Login Flow</title>
   <style>
-    :root{
-      --bg:#ffffff; --panel:#f7f7fb; --primary:#0a84ff; --muted:#8e8e93; --text:#111; --glass:rgba(0,0,0,0.04);
-      --bubble-me:var(--primary); --bubble-other:#e5e6ea;
-    }
-    [data-theme="dark"]{ --bg:#0b1020; --panel:#0f1726; --primary:#4aa3ff; --muted:#9aa4b2; --text:#e8eef8; --bubble-me:#2b6cff; --bubble-other:#172033; --glass:rgba(255,255,255,0.03); }
-    html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);}
-    .app{display:flex;flex-direction:column;height:100vh;max-width:980px;margin:0 auto;border-left:1px solid var(--glass);border-right:1px solid var(--glass);}
+    :root{--bg:#ffffff;--panel:#f7f7fb;--primary:#0a84ff;--muted:#8e8e93;--text:#111;--glass:rgba(0,0,0,0.04);--bubble-me:var(--primary);--bubble-other:#e5e6ea}
+    [data-theme="dark"]{--bg:#0b1020;--panel:#0f1726;--primary:#4aa3ff;--muted:#9aa4b2;--text:#e8eef8;--bubble-me:#2b6cff;--bubble-other:#172033;--glass:rgba(255,255,255,0.03)}
+    html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+    .full{height:100vh;display:flex;align-items:center;justify-content:center}
+    .card{width:100%;max-width:920px;margin:20px;border-radius:14px;background:var(--panel);box-shadow:0 6px 24px rgba(0,0,0,0.06);overflow:hidden;display:flex}
+    /* Landing column */
+    .left{flex:1;padding:36px;min-width:320px}
+    .right{width:360px;border-left:1px solid var(--glass);padding:22px;display:flex;flex-direction:column;gap:12px}
+    h1{margin:0 0 6px 0;font-size:20px}
+    p.lead{margin:0 0 18px 0;color:var(--muted)}
+    .btn{padding:10px 14px;border-radius:10px;border:1px solid var(--glass);cursor:pointer;background:transparent}
+    .primary{background:var(--primary);color:#fff;border:none}
+    .small{font-size:13px;color:var(--muted)}
+    /* App layout (hidden until signed in) */
+    .app{display:flex;flex-direction:column;height:100vh;max-width:980px;margin:0 auto;border-left:1px solid var(--glass);border-right:1px solid var(--glass)}
     header{display:flex;align-items:center;gap:12px;padding:10px 14px}
     .main{display:flex;flex:1;overflow:hidden}
     .col{flex-basis:320px;flex-shrink:0;border-right:1px solid var(--glass);background:var(--panel);overflow:auto}
@@ -24,31 +32,55 @@
     .msg{max-width:74%;padding:10px 12px;border-radius:16px;word-wrap:break-word}
     .msg.me{margin-left:auto;background:linear-gradient(180deg,var(--bubble-me),#0077e6);color:white}
     .msg.other{margin-right:auto;background:var(--bubble-other);color:var(--text)}
-    .meta{font-size:11px;color:rgba(0,0,0,0.45);margin-top:6px}
     .composer{position:fixed;left:0;right:0;bottom:0;padding:12px;background:transparent;display:flex;justify-content:center}
     .composer-inner{width:100%;max-width:980px;padding:10px 14px;background:var(--panel);display:flex;gap:8px;border-top:1px solid var(--glass)}
     .text{flex:1;padding:10px 12px;border-radius:999px;border:1px solid var(--glass);background:transparent;color:var(--text);outline:none}
-    .send{background:var(--primary);color:white;padding:10px 14px;border-radius:999px;border:none;font-weight:700;cursor:pointer}
-    .small{font-size:13px;color:var(--muted)}
     .hidden{display:none}
+    @media(max-width:900px){ .card{flex-direction:column} .right{width:100%;border-left:none;border-top:1px solid var(--glass)} }
   </style>
 </head>
-<body>
-  <div class="app" id="app" data-theme="light">
+<body data-theme="light">
+
+  <!-- LANDING / LOGIN SCREEN (always shown first) -->
+  <div id="landing" class="full">
+    <div class="card" role="dialog" aria-labelledby="landing-title" aria-describedby="landing-desc">
+      <div class="left">
+        <h1 id="landing-title">Mini Message</h1>
+        <p class="lead" id="landing-desc">Real-time, minimal messaging with profiles and following. Sign in to continue.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button id="btn-google" class="btn primary">Sign in with Google</button>
+          <button id="btn-anon" class="btn">Quick Start (Anonymous)</button>
+        </div>
+
+        <hr style="margin:18px 0;border:none;border-top:1px solid var(--glass)" />
+        <div class="small">Already have an account? Use Google above. Guests can try anonymous mode. Every session starts here.</div>
+
+        <div id="landing-note" class="small" style="margin-top:18px;color:var(--muted)"></div>
+      </div>
+
+      <div class="right">
+        <div style="font-weight:700">Why Mini Message</div>
+        <div class="small">Clean iMessage-style UI · Follow users · Real-time messaging via Firebase</div>
+        <div style="flex:1"></div>
+        <div class="small" style="text-align:center">By signing in you agree to store your profile and messages on Firebase for this app demo.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP (hidden until auth transition completes) -->
+  <div id="app" class="app hidden" aria-hidden="true">
     <header>
       <div style="display:flex;gap:10px;align-items:center">
         <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(180deg,var(--primary),#006fe6)"></div>
-        <div style="font-weight:700">Mini Message (Fixed)</div>
+        <div style="font-weight:700">Mini Message</div>
       </div>
       <div style="flex:1"></div>
-      <div id="auth-area"></div>
+      <div id="auth-area" style="display:flex;gap:8px;align-items:center"></div>
     </header>
 
     <div class="main">
       <div class="col" id="left-col">
-        <div style="padding:12px;display:flex;align-items:center;gap:8px">
-          <div class="small">Chats</div>
-        </div>
+        <div style="padding:12px;display:flex;align-items:center;gap:8px"><div class="small">Chats</div></div>
         <div id="chats-list" class="list"></div>
       </div>
 
@@ -78,7 +110,7 @@
     <div class="composer" aria-hidden="false">
       <div class="composer-inner">
         <input id="text-input" class="text" placeholder="Message" />
-        <button id="send-btn" class="send">Send</button>
+        <button id="send-btn" class="btn primary">Send</button>
       </div>
     </div>
   </div>
@@ -86,7 +118,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, addDoc, collection, query, where, orderBy, limit, onSnapshot, serverTimestamp, enableIndexedDbPersistence, updateDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCvaWRvpDY-BOOg_oitS4oVGDoQkiWMR6A",
@@ -100,146 +132,224 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    try { await enableIndexedDbPersistence(db); } catch(e){ /* ignore multi-tab errors */ }
 
-    const $ = sel => document.querySelector(sel);
-    const create = (t,cls)=>{const e=document.createElement(t); if(cls) e.className=cls; return e;};
-    const nowTs = ()=>serverTimestamp();
+    // Utilities
+    const $ = s => document.querySelector(s);
+    const create = (t,cls)=>{ const e=document.createElement(t); if(cls) e.className=cls; return e; };
+    const escapeHtml = s => (s+'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const conversationId = (a,b) => [a,b].sort().join('_');
+    const nowTs = () => serverTimestamp();
 
-    let me = null;
-    let activePeer = null;
-    let messagesUnsub = null;
-    let usersCache = {};
-    let followsCache = new Set();
-
+    // DOM
+    const landing = $('#landing'), appEl = $('#app');
+    const btnGoogle = $('#btn-google'), btnAnon = $('#btn-anon'), landingNote = $('#landing-note');
     const authArea = $('#auth-area');
     const chatsList = $('#chats-list');
     const chatWrap = $('#chat-wrap'), chatEmpty = $('#chat-empty');
     const messagesEl = $('#messages'), chatName = $('#chat-name'), chatBio = $('#chat-bio'), chatAvatar = $('#chat-avatar');
     const sendBtn = $('#send-btn'), textInput = $('#text-input');
 
+    // In-memory state
+    let me = null;
+    let usersCache = {};
+    let followsCache = new Set();
+    let activePeer = null;
+    let messagesUnsub = null;
+    let usersUnsub = null;
+    let followsUnsub = null;
+
+    // Ensure profile exists server-side and return profile
     async function ensureProfile(user){
       const uRef = doc(db,'users',user.uid);
       const snap = await getDoc(uRef);
       if(!snap.exists()){
-        const basic = { uid:user.uid, displayName:user.displayName || `User${user.uid.slice(0,6)}`, bio:'', createdAt: serverTimestamp(), theme:'light' };
-        await setDoc(uRef,basic);
-        usersCache[user.uid]=basic;
-        return basic;
+        const base = { uid:user.uid, displayName: user.displayName || `User${user.uid.slice(0,6)}`, bio:'', createdAt: nowTs(), theme:'light' };
+        await setDoc(uRef, base);
+        usersCache[user.uid] = base;
+        return base;
       } else {
-        const data = snap.data(); usersCache[user.uid]=data; return data;
+        usersCache[user.uid] = snap.data();
+        return snap.data();
       }
     }
 
-    onAuthStateChanged(auth, async user=>{
-      if(!user){ try{ await signInAnonymously(auth); }catch(e){ console.error(e);} return; }
-      const profile = await ensureProfile(user);
-      me = {...profile, uid:user.uid};
-      renderAuth();
-      start();
+    // Streamlined sign-in flows
+    btnGoogle.onclick = async ()=>{ try{ const p = new GoogleAuthProvider(); await signInWithPopup(auth,p); } catch(e){ console.error(e); alert('Google sign-in failed'); } };
+    btnAnon.onclick = async ()=>{ try{ await signInAnonymously(auth); } catch(e){ console.error(e); alert('Anonymous sign-in failed'); } };
+
+    // Render landing page (always first). If a previous session exists, landing shows a short status then auto-continues.
+    let initialAuthHandled = false;
+    onAuthStateChanged(auth, async user => {
+      // This callback fires on page load and on sign-in/out
+      if(!initialAuthHandled){
+        // First auth event after load: we want landing visible first.
+        // If user already signed in (Firebase persisted), detect and auto-proceed after brief note.
+        if(user){
+          landingNote.textContent = 'Detected previous sign-in, restoring your session…';
+          try{
+            const profile = await ensureProfile(user);
+            me = {...profile, uid: user.uid};
+            // Small delay so user sees landing status (feel free to remove)
+            setTimeout(()=>enterApp(), 700);
+          } catch(e){
+            console.error('restore failed', e);
+            landingNote.textContent = 'Could not restore session. Please sign in.';
+          }
+        } else {
+          // No signed-in user: show landing and wait for explicit sign-in
+          landingNote.textContent = '';
+          landing.style.display = 'flex';
+          appEl.classList.add('hidden');
+        }
+        initialAuthHandled = true;
+        return;
+      }
+
+      // Subsequent auth changes (sign-in or sign-out) should transition appropriately:
+      if(user){
+        // Signed in (after user clicks sign-in)
+        try{
+          const profile = await ensureProfile(user);
+          me = {...profile, uid:user.uid};
+          enterApp();
+        } catch(e){
+          console.error('ensureProfile error', e);
+          alert('Sign-in succeeded but failed to load profile');
+        }
+      } else {
+        // Signed out: return to landing and clear all memory and listeners
+        await signOutCleanupUI();
+      }
     });
 
-    async function googleSignIn(){ const provider = new GoogleAuthProvider(); try{ await signInWithPopup(auth, provider);}catch(e){console.error(e);} }
+    // Enter main app UI after successful sign-in
+    function enterApp(){
+      // Hide landing, show app
+      landing.style.display = 'none';
+      appEl.classList.remove('hidden');
+      appEl.setAttribute('aria-hidden','false');
+      renderAuthArea();
+      initAppForUser();
+    }
 
-    function renderAuth(){
+    // Render compact auth area (avatar + sign out)
+    function renderAuthArea(){
       authArea.innerHTML = '';
       const av = create('div','avatar'); av.textContent = (me.displayName||'U')[0].toUpperCase();
-      const name = create('div'); name.textContent = me.displayName || 'You';
+      const name = create('div'); name.textContent = me.displayName || 'You'; name.style.marginLeft='8px';
       const wrap = create('div'); wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.gap='8px';
       wrap.appendChild(av); wrap.appendChild(name);
-      authArea.appendChild(wrap);
-      const googleBtn = create('button'); googleBtn.textContent='Google Signin'; googleBtn.onclick=googleSignIn;
-      const signOutBtn = create('button'); signOutBtn.textContent='Sign Out'; signOutBtn.onclick=()=>signOut(auth);
-      authArea.appendChild(googleBtn); authArea.appendChild(signOutBtn);
+      const signOutBtn = create('button','btn'); signOutBtn.textContent = 'Sign out';
+      signOutBtn.onclick = async ()=>{ try{ await signOut(auth); } catch(e){ console.error('signout', e); } };
+      authArea.appendChild(wrap); authArea.appendChild(signOutBtn);
     }
 
-    function conversationId(a,b){ return [a,b].sort().join('_'); }
+    // Clean UI + memory and show landing again
+    async function signOutCleanupUI(){
+      // Unsubscribe listeners
+      if(messagesUnsub){ messagesUnsub(); messagesUnsub = null; }
+      if(usersUnsub){ usersUnsub(); usersUnsub = null; }
+      if(followsUnsub){ followsUnsub(); followsUnsub = null; }
 
-    // ---- Messaging: improved send/receive ----
-
-    // Local optimistic pending map keyed by tempId to reconcile after server write
-    const pendingMap = new Map();
-
-    // Show messages array (serverDocs + pending local messages), sorted stable by timestamp + createdAt fallback
-    function renderMessagesList(docs){
-      // docs: array of message objects { id, data }
-      // sort by timestamp (server) then localCreated (fallback)
-      docs.sort((A,B)=>{
-        const aTs = A.data.timestamp && A.data.timestamp.toMillis ? A.data.timestamp.toMillis() : (A.data._localCreated || 0);
-        const bTs = B.data.timestamp && B.data.timestamp.toMillis ? B.data.timestamp.toMillis() : (B.data._localCreated || 0);
-        if(aTs === bTs) return (A.id||'').localeCompare(B.id||'');
-        return aTs - bTs;
-      });
-
+      // Clear memory-only caches and UI state
+      me = null;
+      usersCache = {};
+      followsCache = new Set();
+      activePeer = null;
+      chatsList.innerHTML = '';
       messagesEl.innerHTML = '';
-      docs.forEach(item=>{
-        if(item.data.deleted) return;
-        const m = item.data;
-        const el = create('div','msg ' + (m.senderId === me.uid ? 'me' : 'other'));
-        el.dataset.id = item.id;
-        const text = escapeHtml(m.text || '');
-        const tsText = m.timestamp && m.timestamp.toDate ? formatTimestamp(m.timestamp) : (m._localCreated ? formatTimestamp(new Date(m._localCreated)) + ' (sending...)' : '');
-        el.innerHTML = `<div>${text}</div><div class="meta">${tsText}${m.senderId===me.uid ? ' · You' : ''}</div>`;
-        // Allow deleting own messages when server id present
-        if(m.senderId === me.uid && !item.id.startsWith('local_')){
-          el.ondblclick = async ()=>{ if(confirm('Delete this message?')) await updateDoc(doc(db,'messages',item.id), { deleted:true }); };
-        }
-        messagesEl.appendChild(el);
-      });
-      // auto-scroll to bottom after rendering
-      requestAnimationFrame(()=>{ messagesEl.scrollTop = messagesEl.scrollHeight; });
+      chatName.textContent = 'User';
+      chatBio.textContent = '';
+      chatAvatar.textContent = 'U';
+      chatWrap.classList.add('hidden');
+      chatEmpty.style.display = 'flex';
+
+      // Show landing again
+      landing.style.display = 'flex';
+      appEl.classList.add('hidden');
+      landingNote.textContent = '';
     }
 
-    // Subscribe to conversation messages (only one subscription at a time)
+    // Initialize app features for signed-in user: subscribe users + follows
+    function initAppForUser(){
+      // Subscribe to users collection (in-memory only)
+      usersUnsub = onSnapshot(collection(db,'users'), snap => {
+        usersCache = {};
+        snap.forEach(s => { const u = s.data(); usersCache[u.uid] = u; });
+        delete usersCache[me.uid];
+        renderChatsList();
+      }, err => console.error('users subscription', err));
+
+      // Subscribe to follows for preview/chat list
+      followsUnsub = onSnapshot(query(collection(db,'follows'), where('followerId','==', me.uid)), snap => {
+        followsCache = new Set();
+        snap.forEach(s => followsCache.add(s.data().followingId));
+        renderChatsList();
+      }, err => console.error('follows subscription', err));
+
+      // Wire send
+      sendBtn.onclick = sendMessage;
+      textInput.addEventListener('keydown', e => { if(e.key === 'Enter') sendMessage(); });
+    }
+
+    // Render chat list (follows prioritized)
+    function renderChatsList(){
+      chatsList.innerHTML = '';
+      const uids = followsCache.size ? Array.from(followsCache) : Object.keys(usersCache).filter(id => id !== me.uid);
+      if(uids.length === 0){ chatsList.innerHTML = '<div class="small">No chats yet</div>'; return; }
+      uids.forEach(uid => {
+        const u = usersCache[uid]; if(!u) return;
+        const row = create('div','user-row');
+        const av = create('div','avatar'); av.textContent = (u.displayName||'U')[0].toUpperCase();
+        const body = create('div'); body.style.flex = '1';
+        const name = create('div'); name.style.fontWeight='700'; name.textContent = u.displayName || 'User';
+        const meta = create('div'); meta.className='small'; meta.textContent = u.bio || '';
+        body.appendChild(name); body.appendChild(meta);
+        row.appendChild(av); row.appendChild(body);
+        row.onclick = ()=>openChatWith(u);
+        chatsList.appendChild(row);
+      });
+    }
+
+    // Messaging subscribe for convo (single active subscription at a time)
     function subscribeToConversation(peerUid){
-      if(messagesUnsub) messagesUnsub(); messagesUnsub = null;
+      if(messagesUnsub){ messagesUnsub(); messagesUnsub = null; }
       const convo = conversationId(me.uid, peerUid);
-      const q = query(collection(db,'messages'), where('conversationId','==',convo), orderBy('timestamp','asc'));
-      // We use onSnapshot to get server-synced messages; if timestamp isn't set yet (pending writes), Firestore returns them locally but timestamp is null; handle that in render.
-      messagesUnsub = onSnapshot(q, snap=>{
-        const docs = [];
-        snap.forEach(docSnap=>{
-          docs.push({ id: docSnap.id, data: docSnap.data() });
+      messagesEl.innerHTML = '<div class="small">Loading messages…</div>';
+      messagesUnsub = onSnapshot(query(collection(db,'messages'), where('conversationId','==', convo), orderBy('timestamp','asc')), snap => {
+        messagesEl.innerHTML = '';
+        snap.forEach(d => {
+          const m = d.data();
+          if(m.deleted) return;
+          const el = create('div','msg ' + (m.senderId === me.uid ? 'me' : 'other'));
+          el.innerHTML = `<div>${escapeHtml(m.text || '')}</div><div class="small">${m.timestamp ? formatTimestamp(m.timestamp) : ''}${m.senderId===me.uid ? ' · You' : ''}</div>`;
+          if(m.senderId === me.uid){
+            el.ondblclick = async ()=>{ if(confirm('Delete this message?')) await deleteMessage(d.id); };
+          }
+          messagesEl.appendChild(el);
         });
-        // merge with pending local messages for this conversation
-        const pendingForConvo = Array.from(pendingMap.values()).filter(p=>p.conversationId === convo);
-        pendingForConvo.forEach(p=>{
-          // give pending docs a stable local id prefix so they sort predictably
-          docs.push({ id: 'local_'+p.tempId, data: p });
-        });
-        renderMessagesList(docs);
-      }, err=>{
-        console.error('messages onSnapshot error', err);
-      });
+        requestAnimationFrame(()=> messagesEl.scrollTop = messagesEl.scrollHeight);
+      }, err => console.error('messages subscription', err));
     }
 
-    // Send message with optimistic UI and reliable write
+    function openChatWith(u){
+      activePeer = u;
+      chatEmpty.style.display = 'none';
+      chatWrap.classList.remove('hidden');
+      chatName.textContent = u.displayName || 'User';
+      chatBio.textContent = u.bio || '';
+      chatAvatar.textContent = (u.displayName||'U')[0].toUpperCase();
+      subscribeToConversation(u.uid);
+    }
+
     async function sendMessage(){
       const text = textInput.value.trim();
       if(!text) return;
       if(!activePeer){ alert('Select recipient'); return; }
-      // Ensure conversation allowed (for your app rules you can change this)
-      // Create local pending object
+      if(!followsCache.has(activePeer.uid)){ alert('You can only message users you follow'); return; }
       const convo = conversationId(me.uid, activePeer.uid);
-      const tempId = `${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
-      const localCreated = Date.now();
-      const pending = {
-        tempId,
-        conversationId: convo,
-        senderId: me.uid,
-        receiverId: activePeer.uid,
-        text,
-        deleted: false,
-        _localCreated: localCreated
-      };
-      // show immediately
-      pendingMap.set(tempId, pending);
-      // re-render messages by forcing a local update (subscribe should already merge pending)
-      // If no subscription yet, create one
-      if(!messagesUnsub) subscribeToConversation(activePeer.uid);
-      // Add to Firestore
       try{
-        const docRef = await addDoc(collection(db,'messages'), {
+        await addDoc(collection(db,'messages'), {
           conversationId: convo,
           senderId: me.uid,
           receiverId: activePeer.uid,
@@ -247,110 +357,28 @@
           timestamp: nowTs(),
           deleted: false
         });
-        // On successful write, remove pending entry that matches text + localCreated
-        pendingMap.forEach((p, k)=>{
-          if(p.tempId === tempId) pendingMap.delete(k);
-        });
-        // After server write, snapshot listener will include the new server doc
-      } catch(e){
-        console.error('Send failed', e);
-        // leave pending with an error flag so user can retry
-        const p = pendingMap.get(tempId); if(p) p._failed = true;
-        alert('Message failed to send. Check connection and try again.');
-      } finally {
         textInput.value = '';
+      } catch(e){
+        console.error('send failed', e);
+        alert('Failed to send message');
       }
     }
 
-    // Message list helpers
+    async function deleteMessage(messageId){
+      try{ await updateDoc(doc(db,'messages',messageId), { deleted: true }); } catch(e){ console.error(e); }
+    }
+
     function formatTimestamp(ts){
       if(!ts) return '';
       const d = ts.toDate ? ts.toDate() : new Date(ts);
       return d.toLocaleString([], {hour:'2-digit',minute:'2-digit',month:'short',day:'numeric'});
     }
-    function escapeHtml(s){ return (s+'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
 
-    // ---- Chats list rendering (shows last message) ----
-    function renderChatsList(){
-      chatsList.innerHTML = '';
-      // For demo: show users we follow (followsCache), otherwise show all cached users
-      const uids = followsCache.size ? Array.from(followsCache) : Object.keys(usersCache).filter(id=>id!==me.uid);
-      if(uids.length === 0){ chatsList.innerHTML = '<div class="small">No chats yet</div>'; return; }
-      uids.forEach(uid=>{
-        const u = usersCache[uid]; if(!u) return;
-        const row = create('div','user-row');
-        const av = create('div','avatar'); av.textContent = (u.displayName||'U')[0].toUpperCase();
-        const body = create('div'); body.style.flex='1';
-        const name = create('div'); name.style.fontWeight='700'; name.textContent = u.displayName || 'User';
-        const meta = create('div'); meta.className='small'; meta.textContent = 'Loading last message...';
-        body.appendChild(name); body.appendChild(meta);
-        row.appendChild(av); row.appendChild(body);
-        row.onclick = ()=>openChatWith(u);
-        chatsList.appendChild(row);
-
-        // Query last message for preview (order desc + limit 1)
-        const convo = conversationId(me.uid, uid);
-        const q = query(collection(db,'messages'), where('conversationId','==',convo), orderBy('timestamp','desc'), limit(1));
-        onSnapshot(q, snap=>{
-          if(snap.empty){ meta.textContent = u.bio || ''; return; }
-          const m = snap.docs[0].data();
-          const preview = (m.senderId === me.uid ? 'You: ' : '') + (m.text || '');
-          meta.textContent = preview + ' · ' + (m.timestamp ? timeAgo(m.timestamp) : 'now');
-        });
-      });
-    }
-
-    function timeAgo(ts){
-      if(!ts) return '';
-      const d = ts.toDate ? ts.toDate() : new Date(ts);
-      const s = Math.floor((Date.now() - d.getTime())/1000);
-      if(s < 60) return `${s}s`; if(s < 3600) return `${Math.floor(s/60)}m`; if(s < 86400) return `${Math.floor(s/3600)}h`; return `${Math.floor(s/86400)}d`;
-    }
-
-    // ---- Open chat and subscribe ----
-    function openChatWith(u){
-      activePeer = u;
-      chatEmpty.style.display='none';
-      chatWrap.classList.remove('hidden');
-      chatName.textContent = u.displayName || 'User';
-      chatBio.textContent = u.bio || '';
-      chatAvatar.textContent = (u.displayName||'U')[0].toUpperCase();
-      // subscribe to messages for this convo
-      subscribeToConversation(u.uid);
-    }
-
-    // ---- Start app after auth ----
-    async function start(){
-      // load some users (simple demo: subscribe to users collection)
-      const q = collection(db,'users');
-      onSnapshot(q, snap=>{
-        snap.forEach(s=>{ const u = s.data(); usersCache[u.uid]=u; });
-        // don't include self in caches when rendering lists
-        delete usersCache[me.uid];
-        renderChatsList();
-      });
-      // load follows for me
-      const fq = query(collection(db,'follows'), where('followerId','==',me.uid));
-      onSnapshot(fq, snap=>{
-        followsCache.clear(); snap.forEach(s=>followsCache.add(s.data().followingId));
-        renderChatsList();
-      });
-
-      // wire UI
-      sendBtn.onclick = sendMessage;
-      textInput.addEventListener('keydown', e=>{ if(e.key==='Enter') sendMessage(); });
-    }
-
-    // Helper to get doc ref for update
-    import { doc as docRef } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-    // minimal polyfill: use docRef above where needed (updateDoc uses docRef)
-
-    // small utility to updateDoc (already imported above)
-    // Note: updateDoc and doc were imported at top; if needed use updateDoc(doc(db,'messages',id), {...})
-
-    // Safety: disable UI until authenticated
-    chatWrap.classList.add('hidden');
-    chatsList.innerHTML = '<div class="small">Waiting for auth...</div>';
+    // Boot: show landing; onAuthStateChanged will auto-restore if session persisted
+    (function boot(){
+      landing.style.display = 'flex';
+      appEl.classList.add('hidden');
+    })();
   </script>
 </body>
 </html>
