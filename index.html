@@ -911,11 +911,12 @@
             </div>
             <div class="form-group">
                 <label for="editName">Display Name</label>
-                <input type="text" id="editName" class="form-control" placeholder="Your display name">
+                <input type="text" id="editName" class="form-control" placeholder="Your display name" maxlength="30">
             </div>
             <div class="form-group">
-                <label for="editBio">Bio</label>
-                <textarea id="editBio" class="form-control" rows="3" placeholder="Tell others about yourself"></textarea>
+                <label for="editBio">Bio (max 10 words)</label>
+                <textarea id="editBio" class="form-control" rows="3" placeholder="Tell others about yourself (max 10 words)" maxlength="100"></textarea>
+                <small style="color: #8E8E93; font-size: 12px;">Words remaining: <span id="wordCount">10</span></small>
             </div>
             <button class="btn" id="saveProfileBtn">Save Changes</button>
         </div>
@@ -945,7 +946,8 @@
             doc,
             setDoc,
             getDoc,
-            getDocs
+            getDocs,
+            deleteDoc
         } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
 
         // Firebase configuration
@@ -986,6 +988,7 @@
         const saveProfileBtn = document.getElementById('saveProfileBtn');
         const editName = document.getElementById('editName');
         const editBio = document.getElementById('editBio');
+        const wordCount = document.getElementById('wordCount');
         const messageInput = document.querySelector('.message-input');
         const sendBtn = document.querySelector('.send-btn');
 
@@ -1009,6 +1012,24 @@
             profileCardTimeout = setTimeout(() => {
                 profileCard.classList.remove('expanded');
             }, 300);
+        });
+
+        // Bio word count limit
+        editBio.addEventListener('input', () => {
+            const words = editBio.value.trim().split(/\s+/).filter(word => word.length > 0);
+            const wordLimit = 10;
+            const remaining = wordLimit - words.length;
+            
+            wordCount.textContent = remaining;
+            
+            if (remaining < 0) {
+                wordCount.style.color = '#FF3B30';
+                // Truncate to 10 words
+                editBio.value = words.slice(0, wordLimit).join(' ');
+                wordCount.textContent = 0;
+            } else {
+                wordCount.style.color = '#8E8E93';
+            }
         });
 
         // Google Sign-In
@@ -1063,6 +1084,11 @@
         editProfileBtn.addEventListener('click', () => {
             editName.value = profileName.textContent;
             editBio.value = profileBio.textContent;
+            
+            // Update word count
+            const words = editBio.value.trim().split(/\s+/).filter(word => word.length > 0);
+            wordCount.textContent = 10 - words.length;
+            
             editProfileModal.style.display = 'flex';
         });
 
@@ -1072,7 +1098,13 @@
 
         saveProfileBtn.addEventListener('click', () => {
             const newName = editName.value;
-            const newBio = editBio.value;
+            let newBio = editBio.value;
+            
+            // Limit bio to 10 words
+            const words = newBio.trim().split(/\s+/).filter(word => word.length > 0);
+            if (words.length > 10) {
+                newBio = words.slice(0, 10).join(' ');
+            }
             
             profileName.textContent = newName;
             profileBio.textContent = newBio;
@@ -1199,7 +1231,6 @@
                     }
                 });
                 loadUsers();
-                loadChats();
             });
             
             // Listen for follows
@@ -1236,10 +1267,10 @@
                 messageListenerUnsubscribe();
             }
             
-            // Create a query for messages involving the current user
+            // Create a query for messages where current user is either sender or receiver
             const messagesQuery = query(
                 collection(db, 'messages'),
-                where('participants', 'array-contains', currentUser.uid),
+                where('senderId', 'in', [currentUser.uid, ...users.map(u => u.id)]),
                 orderBy('timestamp', 'asc')
             );
             
@@ -1248,7 +1279,10 @@
                 chats = [];
                 snapshot.forEach(doc => {
                     const messageData = doc.data();
-                    chats.push({ id: doc.id, ...messageData });
+                    // Only include messages where current user is sender or receiver
+                    if (messageData.senderId === currentUser.uid || messageData.receiverId === currentUser.uid) {
+                        chats.push({ id: doc.id, ...messageData });
+                    }
                 });
                 
                 // Update the UI
@@ -1279,6 +1313,11 @@
             users.forEach(user => {
                 const isFollowing = follows.some(follow => follow.followingId === user.id);
                 
+                // Limit bio to 5 words for user list to prevent clutter
+                const shortBio = user.bio ? 
+                    user.bio.split(' ').slice(0, 5).join(' ') + (user.bio.split(' ').length > 5 ? '...' : '') : 
+                    'No bio yet';
+                
                 const userElement = document.createElement('div');
                 userElement.className = 'user-item';
                 
@@ -1288,7 +1327,7 @@
                     </div>
                     <div class="user-info">
                         <h4>${user.displayName}</h4>
-                        <p>${user.bio || 'No bio yet'}</p>
+                        <p>${shortBio}</p>
                     </div>
                     <div class="user-actions">
                         ${isFollowing ? 
@@ -1348,7 +1387,7 @@
             
             chats.forEach(chat => {
                 // Determine the other user in the conversation
-                const otherUserId = chat.participants.find(id => id !== currentUser.uid);
+                const otherUserId = chat.senderId === currentUser.uid ? chat.receiverId : chat.senderId;
                 const otherUser = users.find(user => user.id === otherUserId);
                 
                 if (!chatMap.has(otherUserId)) {
@@ -1433,9 +1472,8 @@
             
             // Filter messages for this specific conversation
             const userChats = chats.filter(chat => 
-                chat.participants && 
-                chat.participants.includes(currentUser.uid) && 
-                chat.participants.includes(userId)
+                (chat.senderId === currentUser.uid && chat.receiverId === userId) ||
+                (chat.senderId === userId && chat.receiverId === currentUser.uid)
             );
             
             if (userChats.length === 0) {
@@ -1490,17 +1528,11 @@
             
             if (messageText && currentUser) {
                 try {
-                    // Create a unique conversation ID for these two users
-                    const participants = [currentUser.uid, receiverId].sort();
-                    const conversationId = participants.join('_');
-                    
                     await addDoc(collection(db, 'messages'), {
                         senderId: currentUser.uid,
                         receiverId: receiverId,
                         text: messageText,
-                        timestamp: serverTimestamp(),
-                        participants: participants,
-                        conversationId: conversationId
+                        timestamp: serverTimestamp()
                     });
                     
                     messageInput.value = '';
@@ -1561,7 +1593,7 @@
                 const querySnapshot = await getDocs(followsQuery);
                 querySnapshot.forEach(async (followDoc) => {
                     // Delete the follow document
-                    await updateDoc(doc(db, 'follows', followDoc.id), { active: false });
+                    await deleteDoc(doc(db, 'follows', followDoc.id));
                 });
                 
                 // Update follower count for the unfollowed user
