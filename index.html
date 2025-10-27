@@ -14,13 +14,17 @@
             --text-color: #1C1C1E;
             --border-radius: 20px;
             --shadow: 0 12px 48px rgba(31, 38, 135, 0.37);
-            --transition: all 0.3s ease;
+            --transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.18);
         }
 
         [data-theme="dark"] {
             --bg-color: #000000;
             --card-bg: rgba(30, 30, 30, 0.7);
             --text-color: #FFFFFF;
+            --glass-bg: rgba(30, 30, 30, 0.5);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
 
         * {
@@ -36,6 +40,9 @@
             transition: var(--transition);
             min-height: 100vh;
             overflow-x: hidden;
+            background-image: 
+                radial-gradient(at 47% 33%, rgba(0, 122, 255, 0.1) 0, transparent 59%), 
+                radial-gradient(at 82% 65%, rgba(88, 86, 214, 0.1) 0, transparent 55%);
         }
 
         /* Login Screen */
@@ -47,17 +54,30 @@
             height: 100vh;
             padding: 20px;
             text-align: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .login-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
             border-radius: var(--border-radius);
             padding: 40px;
             box-shadow: var(--shadow);
             max-width: 400px;
             width: 100%;
+            transform: translateY(0);
+            transition: var(--transition);
+        }
+
+        .login-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(31, 38, 135, 0.5);
         }
 
         .app-logo {
@@ -66,6 +86,13 @@
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
 
         .app-title {
@@ -99,6 +126,37 @@
             cursor: pointer;
             transition: var(--transition);
             margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .login-btn:hover::after {
+            animation: ripple 1s ease-out;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
         }
 
         .login-btn:hover {
@@ -118,41 +176,67 @@
             margin: 0 auto;
             padding: 20px;
             gap: 20px;
+            animation: fadeIn 0.5s ease-out;
         }
 
-        /* Profile Card - Smaller and positioned better */
+        /* Profile Card - Collapsible */
         .profile-card {
             position: absolute;
             top: 20px;
             right: 20px;
-            width: 220px; /* Reduced width */
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: var(--border-radius);
-            padding: 15px; /* Reduced padding */
+            width: 60px;
+            height: 60px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            padding: 0;
             box-shadow: var(--shadow);
             z-index: 100;
+            transition: var(--transition);
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .profile-card.expanded {
+            width: 240px;
+            height: auto;
+            border-radius: var(--border-radius);
+            padding: 20px;
         }
 
         .profile-header {
             display: flex;
             align-items: center;
-            margin-bottom: 10px; /* Reduced margin */
+            margin-bottom: 15px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .profile-card.expanded .profile-header {
+            opacity: 1;
         }
 
         .profile-pic {
-            width: 45px; /* Reduced size */
-            height: 45px; /* Reduced size */
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 18px; /* Reduced font size */
-            margin-right: 12px; /* Reduced margin */
+            font-size: 24px;
+            margin-right: 15px;
             overflow: hidden;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+
+        .profile-card:not(.expanded) .profile-pic {
+            margin-right: 0;
+            width: 100%;
+            height: 100%;
         }
 
         .profile-pic img {
@@ -161,47 +245,85 @@
             object-fit: cover;
         }
 
+        .profile-info {
+            overflow: hidden;
+        }
+
         .profile-info h3 {
-            font-size: 16px; /* Reduced font size */
-            margin-bottom: 3px; /* Reduced margin */
+            font-size: 18px;
+            margin-bottom: 5px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 120px;
         }
 
         .profile-info p {
-            font-size: 12px; /* Reduced font size */
+            font-size: 14px;
             color: #8E8E93;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 120px;
         }
 
         .profile-stats {
             display: flex;
             justify-content: space-between;
-            margin: 12px 0; /* Reduced margin */
-            font-size: 12px; /* Reduced font size */
+            margin: 15px 0;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .profile-card.expanded .profile-stats {
+            opacity: 1;
         }
 
         .profile-actions {
             display: flex;
-            gap: 8px; /* Reduced gap */
+            gap: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .profile-card.expanded .profile-actions {
+            opacity: 1;
         }
 
         .btn {
-            padding: 6px 12px; /* Reduced padding */
-            border-radius: 8px; /* Reduced radius */
+            padding: 8px 15px;
+            border-radius: 10px;
             border: none;
             background: var(--primary-color);
             color: white;
             font-weight: 500;
-            font-size: 12px; /* Reduced font size */
             cursor: pointer;
             transition: var(--transition);
             flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .btn:hover::after {
+            animation: ripple 1s ease-out;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
         }
 
         .btn-outline {
@@ -213,14 +335,16 @@
         /* Sidebar */
         .sidebar {
             width: 300px;
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
             border-radius: var(--border-radius);
             padding: 20px;
             box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
+            transform: translateX(0);
+            transition: var(--transition);
         }
 
         .app-title-bar {
@@ -253,16 +377,23 @@
         .tab.active {
             background: var(--primary-color);
             color: white;
+            transform: scale(1.05);
         }
 
         .search-box {
             padding: 12px;
             border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--glass-border);
             background: rgba(255, 255, 255, 0.3);
             margin-bottom: 20px;
             width: 100%;
             color: var(--text-color);
+            transition: var(--transition);
+        }
+
+        .search-box:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary-color);
         }
 
         .chat-list, .user-list {
@@ -278,10 +409,17 @@
             margin-bottom: 10px;
             cursor: pointer;
             transition: var(--transition);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
         .chat-item:hover, .user-item:hover {
             background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
         }
 
         .chat-item.active {
@@ -300,6 +438,7 @@
             font-size: 18px;
             margin-right: 15px;
             overflow: hidden;
+            flex-shrink: 0;
         }
 
         .chat-avatar img, .user-avatar img {
@@ -310,11 +449,15 @@
 
         .chat-info, .user-info {
             flex: 1;
+            min-width: 0;
         }
 
         .chat-info h4, .user-info h4 {
             font-size: 16px;
             margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .last-message {
@@ -323,7 +466,6 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 180px;
         }
 
         .user-actions {
@@ -340,6 +482,31 @@
             font-size: 12px;
             cursor: pointer;
             transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .follow-btn::after, .message-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .follow-btn:hover::after, .message-btn:hover::after {
+            animation: ripple 1s ease-out;
+        }
+
+        .follow-btn:hover, .message-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0, 122, 255, 0.3);
         }
 
         .follow-btn.following {
@@ -357,17 +524,19 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
             overflow: hidden;
+            transform: translateY(0);
+            transition: var(--transition);
         }
 
         .chat-header {
             padding: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 1px solid var(--glass-border);
             display: flex;
             align-items: center;
         }
@@ -384,6 +553,7 @@
             font-size: 16px;
             margin-right: 15px;
             overflow: hidden;
+            flex-shrink: 0;
         }
 
         .chat-header-avatar img {
@@ -407,6 +577,12 @@
             margin-bottom: 10px;
             position: relative;
             word-wrap: break-word;
+            animation: messageAppear 0.3s ease-out;
+        }
+
+        @keyframes messageAppear {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .message.sent {
@@ -432,7 +608,7 @@
 
         .message-input-container {
             padding: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-top: 1px solid var(--glass-border);
             display: flex;
             gap: 10px;
         }
@@ -441,9 +617,15 @@
             flex: 1;
             padding: 12px 20px;
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--glass-border);
             background: rgba(255, 255, 255, 0.3);
             color: var(--text-color);
+            transition: var(--transition);
+        }
+
+        .message-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary-color);
         }
 
         .send-btn {
@@ -458,10 +640,31 @@
             justify-content: center;
             cursor: pointer;
             transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .send-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .send-btn:hover::after {
+            animation: ripple 1s ease-out;
         }
 
         .send-btn:hover {
             transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
         }
 
         /* Theme Toggle */
@@ -472,15 +675,20 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             box-shadow: var(--shadow);
             z-index: 100;
+            transition: var(--transition);
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(15deg);
         }
 
         /* Edit Profile Modal */
@@ -496,17 +704,24 @@
             z-index: 1000;
             align-items: center;
             justify-content: center;
+            animation: fadeIn 0.3s ease-out;
         }
 
         .modal-content {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
             border-radius: var(--border-radius);
             padding: 30px;
             width: 90%;
             max-width: 500px;
             box-shadow: var(--shadow);
+            transform: scale(0.9);
+            animation: modalAppear 0.3s ease-out forwards;
+        }
+
+        @keyframes modalAppear {
+            to { transform: scale(1); }
         }
 
         .modal-header {
@@ -527,6 +742,11 @@
             font-size: 24px;
             cursor: pointer;
             color: var(--text-color);
+            transition: var(--transition);
+        }
+
+        .close-btn:hover {
+            transform: rotate(90deg);
         }
 
         .form-group {
@@ -543,9 +763,15 @@
             width: 100%;
             padding: 12px;
             border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--glass-border);
             background: rgba(255, 255, 255, 0.3);
             color: var(--text-color);
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary-color);
         }
 
         /* Responsive */
@@ -569,7 +795,13 @@
                 top: 0;
                 right: 0;
                 width: 100%;
+                height: auto;
+                border-radius: var(--border-radius);
                 margin-bottom: 20px;
+            }
+            
+            .profile-card.expanded {
+                width: 100%;
             }
         }
     </style>
@@ -597,7 +829,7 @@
             <i class="fas fa-moon"></i>
         </div>
 
-        <div class="profile-card">
+        <div class="profile-card" id="profileCard">
             <div class="profile-header">
                 <div class="profile-pic" id="profilePic">
                     <i class="fas fa-user"></i>
@@ -713,9 +945,7 @@
             doc,
             setDoc,
             getDoc,
-            getDocs,
-            arrayUnion,
-            arrayRemove
+            getDocs
         } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
 
         // Firebase configuration
@@ -739,6 +969,7 @@
         const appContainer = document.getElementById('appContainer');
         const googleSignInBtn = document.getElementById('googleSignInBtn');
         const themeToggle = document.getElementById('themeToggle');
+        const profileCard = document.getElementById('profileCard');
         const profilePic = document.getElementById('profilePic');
         const profileName = document.getElementById('profileName');
         const profileBio = document.getElementById('profileBio');
@@ -763,6 +994,21 @@
         let chats = [];
         let follows = [];
         let currentChatUser = null;
+        let messageInput = document.querySelector('.message-input');
+        let sendBtn = document.querySelector('.send-btn');
+
+        // Profile card hover behavior
+        let profileCardTimeout;
+        profileCard.addEventListener('mouseenter', () => {
+            clearTimeout(profileCardTimeout);
+            profileCard.classList.add('expanded');
+        });
+
+        profileCard.addEventListener('mouseleave', () => {
+            profileCardTimeout = setTimeout(() => {
+                profileCard.classList.remove('expanded');
+            }, 300);
+        });
 
         // Google Sign-In
         googleSignInBtn.addEventListener('click', () => {
@@ -954,10 +1200,11 @@
                 loadUsers();
             });
             
-            // Listen for messages
+            // Listen for messages - FIXED: Proper real-time message listener
             const messagesQuery = query(
                 collection(db, 'messages'),
-                where('receiverId', 'in', [uid, 'public']),
+                where('senderId', 'in', [uid, ...users.map(u => u.id)]),
+                where('receiverId', 'in', [uid, ...users.map(u => u.id)]),
                 orderBy('timestamp', 'asc')
             );
             
@@ -967,6 +1214,11 @@
                     chats.push({ id: doc.id, ...doc.data() });
                 });
                 loadChats();
+                
+                // If we're in a chat with the current user, update messages
+                if (currentChatUser) {
+                    loadChatMessages(currentChatUser.id);
+                }
             });
             
             // Listen for follows
@@ -1076,13 +1328,14 @@
                 return;
             }
             
-            // Group chats by user
+            // Group chats by user and get the latest message for each
             const chatMap = new Map();
             
             chats.forEach(chat => {
                 const otherUserId = chat.senderId === currentUser.uid ? chat.receiverId : chat.senderId;
+                const otherUser = users.find(user => user.id === otherUserId);
+                
                 if (!chatMap.has(otherUserId)) {
-                    const otherUser = users.find(user => user.id === otherUserId);
                     chatMap.set(otherUserId, {
                         user: otherUser,
                         lastMessage: chat.text,
@@ -1139,6 +1392,26 @@
             `;
             
             // Load messages for this chat
+            loadChatMessages(userId);
+            
+            // Update active chat in sidebar
+            document.querySelectorAll('.chat-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Find and activate the corresponding chat item
+            const chatItems = document.querySelectorAll('.chat-item');
+            for (let i = 0; i < chatItems.length; i++) {
+                const avatar = chatItems[i].querySelector('.chat-avatar img, .chat-avatar i');
+                if (avatar) {
+                    // This is a simplified check - in a real app, you'd have a better way to identify the chat
+                    chatItems[i].classList.add('active');
+                    break;
+                }
+            }
+        }
+
+        function loadChatMessages(userId) {
             const chatMessagesContainer = document.getElementById('chatMessages');
             chatMessagesContainer.innerHTML = '';
             
@@ -1164,42 +1437,28 @@
             // Scroll to bottom
             chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
             
-            // Update message input to send to this user
-            const messageInput = document.querySelector('.message-input');
-            const sendBtn = document.querySelector('.send-btn');
-            
+            // Set up message sending for this user
+            setupMessageSending(userId);
+        }
+
+        function setupMessageSending(userId) {
             // Remove previous event listeners
             const newSendBtn = sendBtn.cloneNode(true);
             sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
+            sendBtn = newSendBtn;
             
-            newSendBtn.addEventListener('click', () => {
-                sendMessage(userId, messageInput);
+            sendBtn.addEventListener('click', () => {
+                sendMessage(userId);
             });
             
             messageInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
-                    sendMessage(userId, messageInput);
+                    sendMessage(userId);
                 }
             });
-            
-            // Update active chat in sidebar
-            document.querySelectorAll('.chat-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Find and activate the corresponding chat item
-            const chatItems = document.querySelectorAll('.chat-item');
-            for (let i = 0; i < chatItems.length; i++) {
-                const avatar = chatItems[i].querySelector('.chat-avatar img, .chat-avatar i');
-                if (avatar) {
-                    // This is a simplified check - in a real app, you'd have a better way to identify the chat
-                    chatItems[i].classList.add('active');
-                    break;
-                }
-            }
         }
 
-        async function sendMessage(receiverId, messageInput) {
+        async function sendMessage(receiverId) {
             const messageText = messageInput.value.trim();
             
             if (messageText && currentUser) {
@@ -1267,10 +1526,9 @@
                 );
                 
                 const querySnapshot = await getDocs(followsQuery);
-                querySnapshot.forEach(async (doc) => {
-                    // Instead of deleting, we could mark as inactive
-                    // For now, we'll delete the document
-                    await updateDoc(doc.ref, { active: false }); // Soft delete
+                querySnapshot.forEach(async (followDoc) => {
+                    // Delete the follow document
+                    await updateDoc(doc(db, 'follows', followDoc.id), { active: false });
                 });
                 
                 // Update follower count for the unfollowed user
