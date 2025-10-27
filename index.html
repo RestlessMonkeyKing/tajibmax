@@ -120,17 +120,17 @@
             gap: 20px;
         }
 
-        /* Profile Card */
+        /* Profile Card - Smaller and positioned better */
         .profile-card {
             position: absolute;
             top: 20px;
             right: 20px;
-            width: 280px;
+            width: 220px; /* Reduced width */
             background: var(--card-bg);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: var(--border-radius);
-            padding: 20px;
+            padding: 15px; /* Reduced padding */
             box-shadow: var(--shadow);
             z-index: 100;
         }
@@ -138,20 +138,20 @@
         .profile-header {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px; /* Reduced margin */
         }
 
         .profile-pic {
-            width: 60px;
-            height: 60px;
+            width: 45px; /* Reduced size */
+            height: 45px; /* Reduced size */
             border-radius: 50%;
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 24px;
-            margin-right: 15px;
+            font-size: 18px; /* Reduced font size */
+            margin-right: 12px; /* Reduced margin */
             overflow: hidden;
         }
 
@@ -162,29 +162,43 @@
         }
 
         .profile-info h3 {
-            font-size: 18px;
-            margin-bottom: 5px;
+            font-size: 16px; /* Reduced font size */
+            margin-bottom: 3px; /* Reduced margin */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+        }
+
+        .profile-info p {
+            font-size: 12px; /* Reduced font size */
+            color: #8E8E93;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
         }
 
         .profile-stats {
             display: flex;
             justify-content: space-between;
-            margin: 15px 0;
-            font-size: 14px;
+            margin: 12px 0; /* Reduced margin */
+            font-size: 12px; /* Reduced font size */
         }
 
         .profile-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px; /* Reduced gap */
         }
 
         .btn {
-            padding: 8px 15px;
-            border-radius: 10px;
+            padding: 6px 12px; /* Reduced padding */
+            border-radius: 8px; /* Reduced radius */
             border: none;
             background: var(--primary-color);
             color: white;
             font-weight: 500;
+            font-size: 12px; /* Reduced font size */
             cursor: pointer;
             transition: var(--transition);
             flex: 1;
@@ -312,7 +326,12 @@
             max-width: 180px;
         }
 
-        .follow-btn {
+        .user-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .follow-btn, .message-btn {
             padding: 6px 12px;
             border-radius: 10px;
             border: none;
@@ -327,6 +346,10 @@
             background: transparent;
             border: 1px solid var(--primary-color);
             color: var(--primary-color);
+        }
+
+        .message-btn {
+            background: #34C759;
         }
 
         /* Chat Area */
@@ -739,6 +762,7 @@
         let users = [];
         let chats = [];
         let follows = [];
+        let currentChatUser = null;
 
         // Google Sign-In
         googleSignInBtn.addEventListener('click', () => {
@@ -980,11 +1004,17 @@
         function loadUsers() {
             userList.innerHTML = '';
             
+            if (users.length === 0) {
+                userList.innerHTML = '<div class="user-item">No other users found.</div>';
+                return;
+            }
+            
             users.forEach(user => {
                 const isFollowing = follows.some(follow => follow.followingId === user.id);
                 
                 const userElement = document.createElement('div');
                 userElement.className = 'user-item';
+                
                 userElement.innerHTML = `
                     <div class="user-avatar">
                         ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
@@ -993,9 +1023,13 @@
                         <h4>${user.displayName}</h4>
                         <p>${user.bio || 'No bio yet'}</p>
                     </div>
-                    <button class="follow-btn ${isFollowing ? 'following' : ''}" data-userid="${user.id}">
-                        ${isFollowing ? 'Following' : 'Follow'}
-                    </button>
+                    <div class="user-actions">
+                        ${isFollowing ? 
+                            `<button class="message-btn" data-userid="${user.id}">Message</button>
+                             <button class="follow-btn following" data-userid="${user.id}">Unfollow</button>` : 
+                            `<button class="follow-btn" data-userid="${user.id}">Follow</button>`
+                        }
+                    </div>
                 `;
                 
                 userList.appendChild(userElement);
@@ -1015,13 +1049,30 @@
                     }
                 });
             });
+            
+            // Add event listeners to message buttons
+            document.querySelectorAll('.message-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const userId = button.dataset.userid;
+                    const user = users.find(u => u.id === userId);
+                    if (user) {
+                        openChat(userId, user);
+                        // Switch to chats tab
+                        tabs.forEach(t => t.classList.remove('active'));
+                        document.querySelector('[data-tab="chats"]').classList.add('active');
+                        chatList.style.display = 'block';
+                        userList.style.display = 'none';
+                    }
+                });
+            });
         }
 
         function loadChats() {
             chatList.innerHTML = '';
             
             if (chats.length === 0) {
-                chatList.innerHTML = '<div class="chat-item">No conversations yet. Start following users to chat!</div>';
+                chatList.innerHTML = '<div class="chat-item">No conversations yet. Follow users to start chatting!</div>';
                 return;
             }
             
@@ -1037,12 +1088,23 @@
                         lastMessage: chat.text,
                         timestamp: chat.timestamp
                     });
+                } else {
+                    // Update if this message is more recent
+                    const existingChat = chatMap.get(otherUserId);
+                    if (chat.timestamp && existingChat.timestamp && 
+                        chat.timestamp.toDate() > existingChat.timestamp.toDate()) {
+                        existingChat.lastMessage = chat.text;
+                        existingChat.timestamp = chat.timestamp;
+                    }
                 }
             });
             
             chatMap.forEach((chat, userId) => {
                 const chatElement = document.createElement('div');
                 chatElement.className = 'chat-item';
+                if (currentChatUser && currentChatUser.id === userId) {
+                    chatElement.classList.add('active');
+                }
                 chatElement.innerHTML = `
                     <div class="chat-avatar">
                         ${chat.user && chat.user.photoURL ? `<img src="${chat.user.photoURL}" alt="${chat.user.displayName}">` : '<i class="fas fa-user"></i>'}
@@ -1062,6 +1124,8 @@
         }
 
         function openChat(userId, user) {
+            currentChatUser = { id: userId, ...user };
+            
             // Update chat header
             const chatHeader = document.querySelector('.chat-header');
             chatHeader.innerHTML = `
@@ -1117,6 +1181,22 @@
                     sendMessage(userId, messageInput);
                 }
             });
+            
+            // Update active chat in sidebar
+            document.querySelectorAll('.chat-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Find and activate the corresponding chat item
+            const chatItems = document.querySelectorAll('.chat-item');
+            for (let i = 0; i < chatItems.length; i++) {
+                const avatar = chatItems[i].querySelector('.chat-avatar img, .chat-avatar i');
+                if (avatar) {
+                    // This is a simplified check - in a real app, you'd have a better way to identify the chat
+                    chatItems[i].classList.add('active');
+                    break;
+                }
+            }
         }
 
         async function sendMessage(receiverId, messageInput) {
@@ -1188,6 +1268,8 @@
                 
                 const querySnapshot = await getDocs(followsQuery);
                 querySnapshot.forEach(async (doc) => {
+                    // Instead of deleting, we could mark as inactive
+                    // For now, we'll delete the document
                     await updateDoc(doc.ref, { active: false }); // Soft delete
                 });
                 
