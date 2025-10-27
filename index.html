@@ -986,6 +986,8 @@
         const saveProfileBtn = document.getElementById('saveProfileBtn');
         const editName = document.getElementById('editName');
         const editBio = document.getElementById('editBio');
+        const messageInput = document.querySelector('.message-input');
+        const sendBtn = document.querySelector('.send-btn');
 
         // Current user data
         let currentUser = null;
@@ -994,8 +996,7 @@
         let chats = [];
         let follows = [];
         let currentChatUser = null;
-        let messageInput = document.querySelector('.message-input');
-        let sendBtn = document.querySelector('.send-btn');
+        let messageListenerUnsubscribe = null;
 
         // Profile card hover behavior
         let profileCardTimeout;
@@ -1198,27 +1199,7 @@
                     }
                 });
                 loadUsers();
-            });
-            
-            // Listen for messages - FIXED: Proper real-time message listener
-            const messagesQuery = query(
-                collection(db, 'messages'),
-                where('senderId', 'in', [uid, ...users.map(u => u.id)]),
-                where('receiverId', 'in', [uid, ...users.map(u => u.id)]),
-                orderBy('timestamp', 'asc')
-            );
-            
-            onSnapshot(messagesQuery, (snapshot) => {
-                chats = [];
-                snapshot.forEach(doc => {
-                    chats.push({ id: doc.id, ...doc.data() });
-                });
                 loadChats();
-                
-                // If we're in a chat with the current user, update messages
-                if (currentChatUser) {
-                    loadChatMessages(currentChatUser.id);
-                }
             });
             
             // Listen for follows
@@ -1242,6 +1223,40 @@
                 if (doc.exists()) {
                     const userData = doc.data();
                     followerCount.textContent = userData.followers || 0;
+                }
+            });
+            
+            // Set up initial message listener for all user messages
+            setupMessageListener();
+        }
+
+        function setupMessageListener() {
+            // If there's an existing message listener, unsubscribe from it
+            if (messageListenerUnsubscribe) {
+                messageListenerUnsubscribe();
+            }
+            
+            // Create a query for messages involving the current user
+            const messagesQuery = query(
+                collection(db, 'messages'),
+                where('participants', 'array-contains', currentUser.uid),
+                orderBy('timestamp', 'asc')
+            );
+            
+            // Set up real-time listener for messages
+            messageListenerUnsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+                chats = [];
+                snapshot.forEach(doc => {
+                    const messageData = doc.data();
+                    chats.push({ id: doc.id, ...messageData });
+                });
+                
+                // Update the UI
+                loadChats();
+                
+                // If we're currently viewing a chat, update the messages
+                if (currentChatUser) {
+                    loadChatMessages(currentChatUser.id);
                 }
             });
         }
@@ -1328,11 +1343,12 @@
                 return;
             }
             
-            // Group chats by user and get the latest message for each
+            // Group chats by conversation and get the latest message for each
             const chatMap = new Map();
             
             chats.forEach(chat => {
-                const otherUserId = chat.senderId === currentUser.uid ? chat.receiverId : chat.senderId;
+                // Determine the other user in the conversation
+                const otherUserId = chat.participants.find(id => id !== currentUser.uid);
                 const otherUser = users.find(user => user.id === otherUserId);
                 
                 if (!chatMap.has(otherUserId)) {
@@ -1415,24 +1431,35 @@
             const chatMessagesContainer = document.getElementById('chatMessages');
             chatMessagesContainer.innerHTML = '';
             
+            // Filter messages for this specific conversation
             const userChats = chats.filter(chat => 
-                (chat.senderId === currentUser.uid && chat.receiverId === userId) ||
-                (chat.senderId === userId && chat.receiverId === currentUser.uid)
+                chat.participants && 
+                chat.participants.includes(currentUser.uid) && 
+                chat.participants.includes(userId)
             );
             
-            userChats.forEach(chat => {
-                const messageElement = document.createElement('div');
-                messageElement.className = `message ${chat.senderId === currentUser.uid ? 'sent' : 'received'}`;
-                
-                const timestamp = chat.timestamp ? chat.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now';
-                
-                messageElement.innerHTML = `
-                    ${chat.text}
-                    <div class="message-time">${timestamp}</div>
+            if (userChats.length === 0) {
+                chatMessagesContainer.innerHTML = `
+                    <div class="message received">
+                        Start a conversation with ${currentChatUser ? currentChatUser.displayName : 'this user'}!
+                        <div class="message-time">Just now</div>
+                    </div>
                 `;
-                
-                chatMessagesContainer.appendChild(messageElement);
-            });
+            } else {
+                userChats.forEach(chat => {
+                    const messageElement = document.createElement('div');
+                    messageElement.className = `message ${chat.senderId === currentUser.uid ? 'sent' : 'received'}`;
+                    
+                    const timestamp = chat.timestamp ? chat.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now';
+                    
+                    messageElement.innerHTML = `
+                        ${chat.text}
+                        <div class="message-time">${timestamp}</div>
+                    `;
+                    
+                    chatMessagesContainer.appendChild(messageElement);
+                });
+            }
             
             // Scroll to bottom
             chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
@@ -1463,11 +1490,17 @@
             
             if (messageText && currentUser) {
                 try {
+                    // Create a unique conversation ID for these two users
+                    const participants = [currentUser.uid, receiverId].sort();
+                    const conversationId = participants.join('_');
+                    
                     await addDoc(collection(db, 'messages'), {
                         senderId: currentUser.uid,
                         receiverId: receiverId,
                         text: messageText,
-                        timestamp: serverTimestamp()
+                        timestamp: serverTimestamp(),
+                        participants: participants,
+                        conversationId: conversationId
                     });
                     
                     messageInput.value = '';
