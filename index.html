@@ -3,12 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mini Message — Clean UI (Fixed)</title>
+  <title>Mini Message — Rebuilt</title>
   <style>
     :root{
       --bg:#ffffff; --panel:#f6f7fb; --primary:#0a84ff; --muted:#8e8e93; --text:#111; --glass:rgba(0,0,0,0.04);
-      --bubble-me:var(--primary); --bubble-other:#eef0f6;
-      --card-radius:14px; --tile-size:56px;
+      --bubble-me:var(--primary); --bubble-other:#eef0f6; --card-radius:14px;
     }
     [data-theme="dark"]{
       --bg:#071025; --panel:#071427; --primary:#4aa3ff; --muted:#9aa4b2; --text:#e8eef8; --glass:rgba(255,255,255,0.03);
@@ -16,13 +15,8 @@
     }
     [data-theme="glass"]{
       --bg:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      --panel:transparent;
-      --primary:#7c5cff;
-      --muted:#c7d0ff;
-      --text:#eef2ff;
-      --glass:rgba(255,255,255,0.06);
-      --bubble-me:#8b6bff;
-      --bubble-other:rgba(255,255,255,0.02);
+      --panel:transparent; --primary:#7c5cff; --muted:#c7d0ff; --text:#eef2ff; --glass:rgba(255,255,255,0.06);
+      --bubble-me:#8b6bff; --bubble-other:rgba(255,255,255,0.02);
     }
 
     /* Vision Pro Glass requested style */
@@ -35,21 +29,21 @@
       box-shadow: 0 0 48px rgba(99, 102, 241, 0.4), 0 16px 64px rgba(31, 38, 135, 0.4);
     }
 
-    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
     .app{display:flex;flex-direction:column;height:100vh;max-width:1100px;margin:0 auto;border-left:1px solid var(--glass);border-right:1px solid var(--glass)}
-    header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--glass);background:transparent}
+    header{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--glass);gap:12px}
     .logo{display:flex;align-items:center;gap:10px}
-    .logo .dot{width:40px;height:40px;border-radius:10px;background:linear-gradient(180deg,var(--primary),#006fe6)}
+    .logo .dot{width:36px;height:36px;border-radius:8px;background:linear-gradient(180deg,var(--primary),#006fe6)}
     .title{font-weight:700}
 
-    /* profile tile */
-    .profile-tile{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:14px;background:var(--panel);cursor:pointer;border:1px solid var(--glass);min-width:180px}
-    .profile-photo{width:var(--tile-size);height:var(--tile-size);border-radius:12px;background:linear-gradient(180deg,#ddd,#bbb);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:18px}
+    /* compact profile tile */
+    .profile-tile{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:12px;background:var(--panel);cursor:pointer;border:1px solid var(--glass);min-width:190px}
+    .profile-photo{width:48px;height:48px;border-radius:10px;background:linear-gradient(180deg,#ddd,#bbb);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}
     .profile-name{font-weight:700}
     .profile-sub{font-size:12px;color:var(--muted)}
 
-    /* menu */
-    .menu{position:fixed;right:18px;top:68px;background:var(--panel);border:1px solid var(--glass);border-radius:12px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,0.08);min-width:220px;display:none;z-index:60}
+    /* profile menu */
+    .menu{position:fixed;right:18px;top:64px;background:var(--panel);border:1px solid var(--glass);border-radius:12px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,0.08);min-width:220px;display:none;z-index:60}
     .menu.open{display:block}
     .menu button{width:100%;text-align:left;padding:8px 10px;border-radius:8px;background:transparent;border:none;cursor:pointer;font-weight:600}
     .menu .danger{color:#ff3b30}
@@ -57,7 +51,7 @@
     /* settings modal */
     .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);z-index:70}
     .modal.open{display:flex}
-    .modal-card{background:var(--panel);padding:18px;border-radius:12px;min-width:320px;max-width:420px}
+    .modal-card{background:var(--panel);padding:18px;border-radius:12px;min-width:320px;max-width:480px}
 
     /* layout */
     .main{display:flex;flex:1;overflow:hidden}
@@ -70,7 +64,6 @@
     /* lists */
     .list{padding:8px;display:flex;flex-direction:column;gap:8px}
     .user-row{display:flex;align-items:center;gap:12px;padding:8px;border-radius:10px;cursor:pointer}
-    .user-row:hover{background:rgba(0,0,0,0.02)}
     .avatar{width:48px;height:48px;border-radius:10px;background:linear-gradient(180deg,#ddd,#bbb);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
     .row-body{flex:1;min-width:0}
     .name{font-weight:700}
@@ -121,11 +114,9 @@
         </div>
       </div>
 
-      <div style="width:8px"></div>
       <button id="settingsBtn" class="profile-tile" style="min-width:48px;justify-content:center">⚙️</button>
     </header>
 
-    <!-- profile menu -->
     <div id="profileMenu" class="menu" role="menu" aria-hidden="true">
       <button id="menuEdit">Edit profile</button>
       <button id="menuThemes">Theme settings</button>
@@ -138,8 +129,7 @@
       <button id="menuSignOut" class="danger">Sign out</button>
     </div>
 
-    <!-- settings modal (opens on settingsBtn) -->
-    <div id="settingsModal" class="modal" role="dialog" aria-hidden="true">
+    <div id="settingsModal" class="modal" aria-hidden="true">
       <div class="modal-card vision-pro-glass">
         <h3 style="margin:0 0 8px 0">Settings</h3>
         <div style="display:flex;flex-direction:column;gap:8px">
@@ -211,6 +201,7 @@
   </div>
 
   <script type="module">
+    // Complete app initialization and wiring
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
     import {
@@ -218,6 +209,7 @@
       onSnapshot, addDoc, serverTimestamp, updateDoc, deleteDoc, getDocs
     } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
+    // Firebase config (replace if needed)
     const firebaseConfig = {
       apiKey: "AIzaSyCvaWRvpDY-BOOg_oitS4oVGDoQkiWMR6A",
       authDomain: "windowsassistant-36760.firebaseapp.com",
@@ -241,19 +233,17 @@
     const profilePhoto = $('#profilePhoto'), profileDisplayName = $('#profileDisplayName'), profileBio = $('#profileBio');
     const menuEdit = $('#menuEdit'), menuThemes = $('#menuThemes'), themeChoices = $('#themeChoices'), themeChoiceButtons = document.querySelectorAll('.themeChoice');
     const menuSignOut = $('#menuSignOut');
-
     const settingsBtn = $('#settingsBtn'), settingsModal = $('#settingsModal'), closeSettings = $('#closeSettings');
 
     const tabChats = $('#tab-chats'), tabPeople = $('#tab-people'), tabProfile = $('#tab-profile');
     const chatsPanel = $('#chats-panel'), peoplePanel = $('#people-panel'), profilePanel = $('#profile-panel');
     const suggestedList = $('#suggested-list'), peopleList = $('#people-list'), peopleSearch = $('#people-search');
-
     const myProfileCard = $('#myProfileCard');
 
     const chatWrap = $('#chatWrap'), chatEmpty = $('#chat-empty'), chatName = $('#chatName'), chatBio = $('#chatBio'), chatAvatar = $('#chatAvatar'), chatActions = $('#chatActions');
     const messagesEl = $('#messages'), sendBtn = $('#sendBtn'), textInput = $('#textInput');
 
-    // State (in-memory)
+    // State
     let me = null;
     let usersCache = {};
     let followsCache = new Set();
@@ -265,90 +255,157 @@
 
     const conversationId = (a,b) => [a,b].sort().join('_');
 
-    // Profile menu handling
-    function closeProfileMenu(){ profileMenu.classList.remove('open'); profileMenu.setAttribute('aria-hidden','true'); profileTile.setAttribute('aria-expanded','false'); }
-    function openProfileMenu(){ profileMenu.classList.add('open'); profileMenu.setAttribute('aria-hidden','false'); profileTile.setAttribute('aria-expanded','true'); }
-    profileTile.addEventListener('click', e => { if(profileMenu.classList.contains('open')) closeProfileMenu(); else openProfileMenu(); });
-    document.addEventListener('click', e => { if(!profileTile.contains(e.target) && !profileMenu.contains(e.target)) closeProfileMenu(); });
+    // Defensive safe init after DOM loaded
+    window.addEventListener('DOMContentLoaded', initApp);
 
-    // Theme choices (in-menu and in settings modal)
-    function applyTheme(theme){
+    function initApp(){
+      try{
+        // profile tile toggle
+        profileTile.addEventListener('click', (e)=> {
+          e.stopPropagation();
+          if(profileMenu.classList.contains('open')) closeProfileMenu(); else openProfileMenu();
+        });
+        document.addEventListener('click', (e)=> {
+          if(!profileTile.contains(e.target) && !profileMenu.contains(e.target)) closeProfileMenu();
+        });
+
+        // menu actions
+        menuThemes.addEventListener('click', ()=> { themeChoices.style.display = themeChoices.style.display === 'block' ? 'none' : 'block'; });
+        menuEdit.addEventListener('click', ()=> { openEditModal(); closeProfileMenu(); });
+        menuSignOut.addEventListener('click', async ()=> { await doSignOut(); });
+
+        // settings modal
+        settingsBtn.addEventListener('click', ()=> { settingsModal.classList.add('open'); settingsModal.setAttribute('aria-hidden','false'); });
+        closeSettings?.addEventListener('click', ()=> { settingsModal.classList.remove('open'); settingsModal.setAttribute('aria-hidden','true'); });
+        settingsModal?.addEventListener('click', e => { if(e.target === settingsModal) settingsModal.classList.remove('open'); });
+
+        // theme choice buttons both in menu and settings
+        document.addEventListener('click', e => {
+          const el = e.target;
+          if(el.classList && el.classList.contains('themeChoice')){
+            const t = el.dataset.theme;
+            applyTheme(t);
+          }
+        });
+
+        // tabs
+        tabChats.addEventListener('click', ()=> showTab('chats'));
+        tabPeople.addEventListener('click', ()=> { showTab('people'); loadPeople(); });
+        tabProfile.addEventListener('click', ()=> { showTab('profile'); renderMyProfile(); });
+
+        // people search
+        peopleSearch.addEventListener('input', renderPeopleLists);
+
+        // send handlers
+        sendBtn.addEventListener('click', sendMessage);
+        textInput.addEventListener('keydown', e => { if(e.key === 'Enter') sendMessage(); });
+
+        // initial sign-in menu
+        profileMenu.innerHTML = '';
+        const gbtn = create('button'); gbtn.textContent = 'Sign in with Google'; gbtn.addEventListener('click', googleSignIn);
+        const abtn = create('button'); abtn.textContent = 'Quick start (Anon)'; abtn.addEventListener('click', anonSignIn);
+        profileMenu.appendChild(gbtn); profileMenu.appendChild(abtn);
+        openProfileMenu();
+
+        // auth observer
+        onAuthStateChanged(auth, async user => {
+          if(!user){
+            // signed out state
+            me = null;
+            profileDisplayName.textContent = 'Guest';
+            profileBio.textContent = 'Sign in';
+            profilePhoto.textContent = 'U';
+            showTab('people');
+            openProfileMenu();
+            return;
+          }
+          // signed in
+          const profile = await ensureProfile(user);
+          me = {...profile, uid: user.uid};
+          profileDisplayName.textContent = me.displayName || 'You';
+          profileBio.textContent = me.bio || '';
+          profilePhoto.textContent = (me.displayName||'U')[0].toUpperCase();
+          applyTheme(me.theme || 'light', false);
+          closeProfileMenu();
+          subscribeAll();
+          renderMyProfile();
+          showTab('chats');
+        });
+
+      } catch(err){
+        console.error('initApp error', err);
+        alert('Initialization error, check console');
+      }
+    }
+
+    // UI helpers
+    function openProfileMenu(){ profileMenu.classList.add('open'); profileMenu.setAttribute('aria-hidden','false'); profileTile.setAttribute('aria-expanded','true'); }
+    function closeProfileMenu(){ profileMenu.classList.remove('open'); profileMenu.setAttribute('aria-hidden','true'); profileTile.setAttribute('aria-expanded','false'); }
+    function showTab(t){ tabChats.classList.toggle('active', t==='chats'); tabPeople.classList.toggle('active', t==='people'); tabProfile.classList.toggle('active', t==='profile'); chatsPanel.classList.toggle('hidden', t!=='chats'); peoplePanel.classList.toggle('hidden', t!=='people'); profilePanel.classList.toggle('hidden', t!=='profile'); }
+
+    // Theme
+    async function applyTheme(theme, save = true){
       if(theme === 'dark') document.body.setAttribute('data-theme','dark');
       else if(theme === 'glass') document.body.setAttribute('data-theme','glass');
       else document.body.setAttribute('data-theme','light');
-      // save theme to Firestore if signed in
-      if(me){ updateDoc(doc(db,'users',me.uid), { theme }).catch(()=>{}); }
+      if(save && me) {
+        try{ await updateDoc(doc(db,'users',me.uid), { theme }).catch(()=>{}); } catch(e){ /* ignore */ }
+      }
+      // close UI bits
+      if(themeChoices) themeChoices.style.display = 'none';
+      settingsModal.classList.remove('open');
     }
-    themeChoiceButtons.forEach(btn => btn.addEventListener('click', e => applyTheme(e.target.dataset.theme)));
 
-    // Menu actions
-    menuThemes.addEventListener('click', ()=> { themeChoices.style.display = themeChoices.style.display === 'block' ? 'none' : 'block'; });
-    menuEdit.addEventListener('click', ()=> { openEditModal(); closeProfileMenu(); });
-    menuSignOut.addEventListener('click', async ()=> { await doSignOut(); });
+    // Auth flows
+    async function googleSignIn(){ try{ await signInWithPopup(auth,new GoogleAuthProvider()); } catch(e){ console.error('googleSignIn', e); alert('Google sign-in failed'); } }
+    async function anonSignIn(){ try{ await signInAnonymously(auth); } catch(e){ console.error('anonSignIn', e); alert('Anonymous sign-in failed'); } }
 
-    // Settings modal handling
-    settingsBtn.addEventListener('click', ()=> { settingsModal.classList.add('open'); settingsModal.setAttribute('aria-hidden','false'); });
-    closeSettings?.addEventListener('click', ()=> { settingsModal.classList.remove('open'); settingsModal.setAttribute('aria-hidden','true'); });
-    settingsModal?.addEventListener('click', e => { if(e.target === settingsModal){ settingsModal.classList.remove('open'); settingsModal.setAttribute('aria-hidden','true'); } });
-
-    // Edit modal (reusing the settings modal structure)
+    // Profile edit modal
     function openEditModal(){
-      // show a simple prompt modal to edit name & bio
-      const modal = document.createElement('div'); modal.className='modal open'; modal.style.zIndex=120;
-      const card = document.createElement('div'); card.className='modal-card';
-      const title = document.createElement('h3'); title.textContent = 'Edit profile'; title.style.margin='0 0 8px 0';
-      const nameIn = document.createElement('input'); nameIn.style.width='100%'; nameIn.style.padding='8px'; nameIn.style.marginBottom='8px'; nameIn.value = me.displayName || '';
-      const bioIn = document.createElement('textarea'); bioIn.style.width='100%'; bioIn.style.padding='8px'; bioIn.style.minHeight='80px'; bioIn.value = me.bio || '';
-      const btnRow = document.createElement('div'); btnRow.style.display='flex'; btnRow.style.justifyContent='flex-end'; btnRow.style.gap='8px'; btnRow.style.marginTop='8px';
-      const cancel = document.createElement('button'); cancel.textContent='Cancel'; cancel.className='tab';
-      const save = document.createElement('button'); save.textContent='Save'; save.className='send';
+      if(!me) return alert('Sign in first');
+      const modal = create('div'); modal.className='modal open'; modal.style.zIndex=120;
+      const card = create('div'); card.className='modal-card';
+      const title = create('h3'); title.textContent = 'Edit profile'; title.style.margin='0 0 8px 0';
+      const nameIn = create('input'); nameIn.style.width='100%'; nameIn.style.padding='8px'; nameIn.style.marginBottom='8px'; nameIn.value = me.displayName || '';
+      const bioIn = create('textarea'); bioIn.style.width='100%'; bioIn.style.padding='8px'; bioIn.style.minHeight='80px'; bioIn.value = me.bio || '';
+      const btnRow = create('div'); btnRow.style.display='flex'; btnRow.style.justifyContent='flex-end'; btnRow.style.gap='8px'; btnRow.style.marginTop='8px';
+      const cancel = create('button'); cancel.textContent='Cancel'; cancel.className='tab';
+      const save = create('button'); save.textContent='Save'; save.className='send';
       btnRow.appendChild(cancel); btnRow.appendChild(save);
       card.appendChild(title); card.appendChild(nameIn); card.appendChild(bioIn); card.appendChild(btnRow);
       modal.appendChild(card); document.body.appendChild(modal);
-      cancel.addEventListener('click', ()=> { document.body.removeChild(modal); });
+      cancel.addEventListener('click', ()=> document.body.removeChild(modal));
       save.addEventListener('click', async ()=> {
         const name = (nameIn.value||'').trim(); const bio = (bioIn.value||'').trim();
-        try{ await updateDoc(doc(db,'users',me.uid), { displayName: name, bio }); document.body.removeChild(modal); } catch(e){ console.error(e); alert('Save failed'); }
+        try{ await updateDoc(doc(db,'users',me.uid), { displayName: name, bio }); document.body.removeChild(modal); } catch(e){ console.error('save profile', e); alert('Save failed'); }
       });
       modal.addEventListener('click', e => { if(e.target === modal) document.body.removeChild(modal); });
     }
 
-    // Tabs
-    tabChats.addEventListener('click', () => showTab('chats'));
-    tabPeople.addEventListener('click', () => { showTab('people'); loadPeople(); });
-    tabProfile.addEventListener('click', () => { showTab('profile'); renderMyProfile(); });
-
-    function showTab(t){
-      tabChats.classList.toggle('active', t==='chats');
-      tabPeople.classList.toggle('active', t==='people');
-      tabProfile.classList.toggle('active', t==='profile');
-      chatsPanel.classList.toggle('hidden', t!=='chats');
-      peoplePanel.classList.toggle('hidden', t!=='people');
-      profilePanel.classList.toggle('hidden', t!=='profile');
-    }
-
-    // People search handlers
-    peopleSearch.addEventListener('input', renderPeopleLists);
-
-    // Auth helpers
-    async function googleSignIn(){ try{ await signInWithPopup(auth,new GoogleAuthProvider()); } catch(e){ console.error(e); alert('Google sign-in failed'); } }
-    async function anonSignIn(){ try{ await signInAnonymously(auth); } catch(e){ console.error(e); alert('Anonymous sign-in failed'); } }
-
-    // Ensure profile exists in Firestore
+    // Ensure profile in Firestore
     async function ensureProfile(user){
-      const uRef = doc(db,'users',user.uid);
-      const snap = await getDoc(uRef);
-      if(!snap.exists()){
-        const base = { uid:user.uid, displayName: user.displayName || `User${user.uid.slice(0,6)}`, bio:'', createdAt: serverTimestamp(), theme:'light' };
-        await setDoc(uRef, base);
-        usersCache[user.uid] = base;
-        return base;
-      } else {
-        const data = snap.data(); usersCache[user.uid] = data; return data;
+      try{
+        const uRef = doc(db,'users',user.uid);
+        const snap = await getDoc(uRef);
+        if(!snap.exists()){
+          const base = { uid:user.uid, displayName: user.displayName || `User${user.uid.slice(0,6)}`, bio:'', createdAt: serverTimestamp(), theme:'light' };
+          await setDoc(uRef, base);
+          return base;
+        } else {
+          return snap.data();
+        }
+      } catch(e){
+        console.error('ensureProfile error', e);
+        throw e;
       }
     }
 
-    // Subscriptions
+    // Subscriptions: users + follows
+    function subscribeAll(){
+      subscribeUsers();
+      subscribeFollows();
+    }
+
     function subscribeUsers(){
       if(usersUnsub) usersUnsub();
       usersUnsub = onSnapshot(collection(db,'users'), snap => {
@@ -356,21 +413,25 @@
         snap.forEach(s => { const u = s.data(); usersCache[u.uid] = u; });
         if(me) delete usersCache[me.uid];
         renderSuggestedUsers(); renderPeopleLists(); renderChatsPreview();
-      }, e => console.error('users onSnapshot', e));
+      }, e => console.error('users subscription', e));
     }
 
-    function computeFollowersCountAndMyFollows(){
+    function subscribeFollows(){
       if(followsUnsub) followsUnsub();
       followsUnsub = onSnapshot(collection(db,'follows'), snap => {
         followersCount = {};
         snap.forEach(s => { const f = s.data(); followersCount[f.followingId] = (followersCount[f.followingId]||0) + 1; });
-        // my follows
+        // my follows (separate query)
         const q = query(collection(db,'follows'), where('followerId','==', auth.currentUser?.uid || ''));
-        onSnapshot(q, mySnap => { followsCache = new Set(); mySnap.forEach(ms => followsCache.add(ms.data().followingId)); renderSuggestedUsers(); renderPeopleLists(); renderChatsPreview(); }, e=>console.error(e));
-      }, e => console.error(e));
+        onSnapshot(q, mySnap => {
+          followsCache = new Set();
+          mySnap.forEach(ms => followsCache.add(ms.data().followingId));
+          renderSuggestedUsers(); renderPeopleLists(); renderChatsPreview();
+        }, e => console.error('my follows', e));
+      }, e => console.error('follows subscription', e));
     }
 
-    // Suggested users (simple ranking by follower count)
+    // Suggested users
     function renderSuggestedUsers(){
       suggestedList.innerHTML = '';
       const arr = Object.values(usersCache).filter(u => u.uid !== me.uid && !followsCache.has(u.uid));
@@ -381,13 +442,15 @@
         const meta = create('div','meta'); meta.textContent = (followersCount[u.uid]||0) + ' followers';
         body.appendChild(name); body.appendChild(meta);
         const btn = create('button','follow-btn'); btn.textContent = 'Follow';
-        btn.onclick = async e => { e.stopPropagation(); await toggleFollow(u.uid); };
+        btn.addEventListener('click', async (e)=> { e.stopPropagation(); await toggleFollow(u.uid); });
         row.appendChild(av); row.appendChild(body); row.appendChild(btn);
+        row.addEventListener('click', ()=> openProfile(u.uid));
         suggestedList.appendChild(row);
       });
       if(!suggestedList.children.length) suggestedList.innerHTML = '<div style="padding:8px;color:var(--muted)">No suggestions</div>';
     }
 
+    // People list
     function renderPeopleLists(){
       const q = (peopleSearch.value || '').trim().toLowerCase();
       const all = Object.values(usersCache).filter(u => u.uid !== me.uid);
@@ -399,17 +462,20 @@
         const body = create('div','row-body'); const name = create('div','name'); name.textContent = u.displayName || 'User';
         const meta = create('div','meta'); meta.textContent = (followersCount[u.uid]||0) + ' followers';
         body.appendChild(name); body.appendChild(meta);
-        const btn = create('button','follow-btn ' + (followsCache.has(u.uid)?'following':'')); btn.textContent = followsCache.has(u.uid) ? 'Following' : 'Follow';
-        btn.onclick = async e => { e.stopPropagation(); await toggleFollow(u.uid); };
-        const msg = create('button'); msg.textContent = 'Message'; msg.onclick = e => { e.stopPropagation(); openChatWith(u); };
+        const btn = create('button','follow-btn ' + (followsCache.has(u.uid) ? 'following' : '')); btn.textContent = followsCache.has(u.uid) ? 'Following' : 'Follow';
+        btn.addEventListener('click', async (e) => { e.stopPropagation(); await toggleFollow(u.uid); });
+        const msg = create('button'); msg.textContent = 'Message'; msg.addEventListener('click', (e)=> { e.stopPropagation(); openChatWith(u); });
         const actions = create('div'); actions.style.display='flex'; actions.style.gap='8px'; actions.appendChild(btn); actions.appendChild(msg);
         row.appendChild(av); row.appendChild(body); row.appendChild(actions);
+        row.addEventListener('click', ()=> openProfile(u.uid));
         peopleList.appendChild(row);
       });
       if(!peopleList.children.length) peopleList.innerHTML = '<div style="padding:8px;color:var(--muted)">No people found</div>';
     }
 
+    // Toggle follow/unfollow
     async function toggleFollow(targetUid){
+      if(!me) return alert('Sign in to follow');
       if(followsCache.has(targetUid)){
         const q = query(collection(db,'follows'), where('followerId','==', me.uid), where('followingId','==', targetUid));
         const snaps = await getDocs(q);
@@ -419,20 +485,28 @@
       }
     }
 
-    // My profile card
-    function renderMyProfile(){
+    // Open profile (left panel)
+    async function openProfile(uid){
+      showTab('profile');
+      const u = usersCache[uid] || (await getDoc(doc(db,'users',uid)).then(s=> s.exists() ? s.data() : null));
+      if(!u) return;
       myProfileCard.innerHTML = '';
-      const av = create('div','profile-avatar'); av.textContent = (me.displayName||'U')[0].toUpperCase();
-      const name = create('div'); name.style.fontWeight='700'; name.textContent = me.displayName || 'You';
-      const bio = create('div','bio'); bio.textContent = me.bio || '';
-      const stats = create('div','meta'); stats.textContent = `${followersCount[me.uid]||0} followers · ${Array.from(followsCache).length} following`;
-      myProfileCard.appendChild(av); myProfileCard.appendChild(name); myProfileCard.appendChild(bio); myProfileCard.appendChild(stats);
+      const av = create('div','profile-avatar'); av.textContent = (u.displayName||'U')[0].toUpperCase();
+      const name = create('div'); name.style.fontWeight='700'; name.textContent = u.displayName || 'User';
+      const bio = create('div','bio'); bio.textContent = u.bio || '';
+      const stats = create('div','meta'); stats.textContent = `${followersCount[u.uid]||0} followers`;
+      const actions = create('div'); actions.style.display='flex'; actions.style.gap='8px'; actions.style.marginTop='8px';
+      const follow = create('button','follow-btn ' + (followsCache.has(u.uid)?'following':'')); follow.textContent = followsCache.has(u.uid) ? 'Following' : 'Follow';
+      follow.addEventListener('click', async ()=> { await toggleFollow(u.uid); follow.textContent = followsCache.has(u.uid) ? 'Following' : 'Follow'; follow.classList.toggle('following', followsCache.has(u.uid)); });
+      const msg = create('button'); msg.textContent = 'Message'; msg.addEventListener('click', ()=> openChatWith(u));
+      actions.appendChild(follow); actions.appendChild(msg);
+      myProfileCard.appendChild(av); myProfileCard.appendChild(name); myProfileCard.appendChild(bio); myProfileCard.appendChild(stats); myProfileCard.appendChild(actions);
     }
 
-    // Chats list preview
+    // Chats preview
     function renderChatsPreview(){
       chatsPanel.innerHTML = '';
-      const uids = followsCache.size ? Array.from(followsCache) : Object.keys(usersCache).filter(id=>id!==me.uid);
+      const uids = followsCache.size ? Array.from(followsCache) : Object.keys(usersCache).filter(id=> id !== me.uid);
       if(!uids.length){ chatsPanel.innerHTML = '<div style="padding:8px;color:var(--muted)">No chats yet</div>'; return; }
       uids.forEach(uid => {
         const u = usersCache[uid]; if(!u) return;
@@ -440,23 +514,28 @@
         const body = create('div','row-body'); const name = create('div','name'); name.textContent = u.displayName || 'User';
         const meta = create('div','meta'); meta.textContent = u.bio || '';
         body.appendChild(name); body.appendChild(meta); row.appendChild(av); row.appendChild(body);
-        row.onclick = ()=>openChatWith(u); chatsPanel.appendChild(row);
+        row.addEventListener('click', ()=> openChatWith(u));
+        chatsPanel.appendChild(row);
 
+        // lightweight last-message preview
         const convo = conversationId(me.uid, uid);
         const q = query(collection(db,'messages'), where('conversationId','==', convo), orderBy('timestamp','desc'), limit(1));
-        onSnapshot(q, snap => { if(!snap.empty){ const m = snap.docs[0].data(); meta.textContent = (m.senderId===me.uid?'You: ':'') + (m.text||'').slice(0,40) + ' · ' + (m.timestamp ? timeAgo(m.timestamp) : 'now'); } }, e=>console.error(e));
+        onSnapshot(q, snap => { if(!snap.empty){ const m = snap.docs[0].data(); meta.textContent = (m.senderId===me.uid?'You: ':'') + (m.text||'').slice(0,40) + ' · ' + (m.timestamp ? timeAgo(m.timestamp) : 'now'); } }, e => console.error(e));
       });
     }
 
-    // Open chat and subscribe
+    // Open chat
     const MESSAGE_PAGE_SIZE = 30;
     function openChatWith(u){
       activePeer = u;
-      chatEmpty.style.display = 'none'; chatWrap.classList.remove('hidden');
-      chatName.textContent = u.displayName || 'User'; chatBio.textContent = u.bio || ''; chatAvatar.textContent = (u.displayName||'U')[0].toUpperCase();
+      chatEmpty.style.display = 'none';
+      chatWrap.classList.remove('hidden');
+      chatName.textContent = u.displayName || 'User';
+      chatBio.textContent = u.bio || '';
+      chatAvatar.textContent = (u.displayName||'U')[0].toUpperCase();
       chatActions.innerHTML = '';
       const followBtn = create('button','follow-btn ' + (followsCache.has(u.uid)?'following':'')); followBtn.textContent = followsCache.has(u.uid)?'Following':'Follow';
-      followBtn.onclick = async ()=> { await toggleFollow(u.uid); followBtn.textContent = followsCache.has(u.uid)?'Following':'Follow'; followBtn.classList.toggle('following', followsCache.has(u.uid)); };
+      followBtn.addEventListener('click', async ()=> { await toggleFollow(u.uid); followBtn.textContent = followsCache.has(u.uid)?'Following':'Follow'; followBtn.classList.toggle('following', followsCache.has(u.uid)); });
       chatActions.appendChild(followBtn);
       subscribeToConversation(u.uid);
     }
@@ -472,7 +551,7 @@
         messagesEl.innerHTML = '';
         docs.forEach(it => { if(it.data.deleted) return; const m = it.data; const el = create('div','msg ' + (m.senderId===me.uid?'me':'other')); el.innerHTML = `<div>${escapeHtml(m.text||'')}</div><div class="meta-small">${m.timestamp ? formatTimestamp(m.timestamp) : ''}${m.senderId===me.uid ? ' · You' : ''}</div>`; messagesEl.appendChild(el); });
         messagesEl.scrollTop = messagesEl.scrollHeight;
-        // switch to ascending stream for live updates
+        // switch to ascending stream
         if(messagesUnsub) messagesUnsub(); messagesUnsub = null;
         const qStream = query(collection(db,'messages'), where('conversationId','==', convo), orderBy('timestamp','asc'));
         messagesUnsub = onSnapshot(qStream, s => {
@@ -483,85 +562,56 @@
       }, e => console.error(e));
     }
 
+    // Send message
     async function sendMessage(){
       const t = (textInput.value||'').trim();
       if(!t) return;
-      if(!activePeer){ alert('Select a recipient'); return; }
-      if(!followsCache.has(activePeer.uid)){ alert('You can only message users you follow'); return; }
+      if(!activePeer) return alert('Select a recipient');
+      if(!followsCache.has(activePeer.uid)) return alert('You can only message users you follow');
       const convo = conversationId(me.uid, activePeer.uid);
-      try{ await addDoc(collection(db,'messages'), { conversationId: convo, senderId: me.uid, receiverId: activePeer.uid, text: t, timestamp: serverTimestamp(), deleted: false }); textInput.value=''; } catch(e){ console.error(e); alert('Failed to send'); }
+      try{
+        await addDoc(collection(db,'messages'), { conversationId: convo, senderId: me.uid, receiverId: activePeer.uid, text: t, timestamp: serverTimestamp(), deleted: false });
+        textInput.value = '';
+      } catch(e){
+        console.error('sendMessage', e);
+        alert('Failed to send message');
+      }
     }
 
-    // Helpers
+    // Time helpers
     function timeAgo(ts){ if(!ts) return ''; const d = ts.toDate ? ts.toDate() : new Date(ts); const s = Math.floor((Date.now() - d.getTime())/1000); if(s<60) return s+'s'; if(s<3600) return Math.floor(s/60)+'m'; if(s<86400) return Math.floor(s/3600)+'h'; return Math.floor(s/86400)+'d'; }
     function formatTimestamp(ts){ if(!ts) return ''; const d = ts.toDate ? ts.toDate() : new Date(ts); return d.toLocaleString([], {hour:'2-digit',minute:'2-digit',month:'short',day:'numeric'}); }
 
-    // Sign out flow
+    // Sign-out and cleanup
     async function doSignOut(){
-      try{ await signOut(auth); } catch(e){ console.error(e); }
+      try{ await signOut(auth); } catch(e){ console.error('signOut', e); }
       if(messagesUnsub) messagesUnsub(); if(usersUnsub) usersUnsub(); if(followsUnsub) followsUnsub();
       me = null; usersCache = {}; followsCache = new Set(); followersCount = {}; activePeer = null;
       profileDisplayName.textContent = 'Guest'; profileBio.textContent = 'Sign in'; profilePhoto.textContent = 'U';
       chatsPanel.innerHTML = ''; suggestedList.innerHTML = ''; peopleList.innerHTML = ''; myProfileCard.innerHTML = ''; messagesEl.innerHTML = '';
       chatWrap.classList.add('hidden'); chatEmpty.style.display = 'flex';
-      // show sign-in menu inside profileMenu
       profileMenu.innerHTML = '';
-      const g = create('button'); g.textContent = 'Sign in with Google'; g.onclick = googleSignIn;
-      const a = create('button'); a.textContent = 'Quick start (Anon)'; a.onclick = anonSignIn;
-      profileMenu.appendChild(g); profileMenu.appendChild(a);
+      const gbtn = create('button'); gbtn.textContent = 'Sign in with Google'; gbtn.addEventListener('click', googleSignIn);
+      const abtn = create('button'); abtn.textContent = 'Quick start (Anon)'; abtn.addEventListener('click', anonSignIn);
+      profileMenu.appendChild(gbtn); profileMenu.appendChild(abtn);
       openProfileMenu();
     }
 
-    // Auth state handling
-    onAuthStateChanged(auth, async user => {
-      if(!user){
-        // show sign-in menu
-        profileMenu.innerHTML = '';
-        const g = create('button'); g.textContent = 'Sign in with Google'; g.onclick = googleSignIn;
-        const a = create('button'); a.textContent = 'Quick start (Anon)'; a.onclick = anonSignIn;
-        profileMenu.appendChild(g); profileMenu.appendChild(a);
-        openProfileMenu();
-        showTab('people');
-        return;
-      }
-      const profile = await ensureProfile(user);
-      me = {...profile, uid: user.uid};
-      profileDisplayName.textContent = me.displayName || 'You';
-      profileBio.textContent = me.bio || '';
-      profilePhoto.textContent = (me.displayName||'U')[0].toUpperCase();
-      const t = me.theme || 'light'; applyTheme(t);
-      closeProfileMenu();
-      subscribeUsers(); computeFollowersCountAndMyFollows(); renderMyProfile(); showTab('chats');
-    });
+    // Utility: safely fetch doc (imported doc already above)
+    import { doc as docRef, getDoc as getDocRef } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
-    // Subscribe helpers
-    function subscribeUsers(){ if(usersUnsub) usersUnsub(); usersUnsub = onSnapshot(collection(db,'users'), snap => { usersCache = {}; snap.forEach(s=>{ const u = s.data(); usersCache[u.uid] = u; }); if(me) delete usersCache[me.uid]; renderSuggestedUsers(); renderPeopleLists(); renderChatsPreview(); }, e=>console.error(e)); }
-    function computeFollowersCountAndMyFollows(){ if(followsUnsub) followsUnsub(); followsUnsub = onSnapshot(collection(db,'follows'), snap => { followersCount = {}; snap.forEach(s=>{ const f=s.data(); followersCount[f.followingId] = (followersCount[f.followingId]||0)+1; }); const q = query(collection(db,'follows'), where('followerId','==', auth.currentUser?.uid || '')); onSnapshot(q, mySnap => { followsCache = new Set(); mySnap.forEach(ms=>followsCache.add(ms.data().followingId)); renderSuggestedUsers(); renderPeopleLists(); renderChatsPreview(); }, e=>console.error(e)); }, e=>console.error(e)); }
+    // Minimal helpers used by some flows
+    async function googleSignIn(){ try{ await signInWithPopup(auth,new GoogleAuthProvider()); } catch(e){ console.error('googleSignIn', e); alert('Google sign-in failed'); } }
+    async function anonSignIn(){ try{ await signInAnonymously(auth); } catch(e){ console.error('anonSignIn', e); alert('Anonymous sign-in failed'); } }
 
-    // Utility sign-in functions for menu buttons
-    async function googleSignIn(){ try{ await signInWithPopup(auth,new GoogleAuthProvider()); } catch(e){ console.error(e); alert('Google sign-in failed'); } }
-    async function anonSignIn(){ try{ await signInAnonymously(auth); } catch(e){ console.error(e); alert('Anonymous sign-in failed'); } }
-
-    // Save theme buttons in settings modal
-    document.querySelectorAll('#settingsModal .themeChoice').forEach(b => b.addEventListener('click', e => applyTheme(e.target.dataset.theme)));
-    // Also wire theme choices inside profile menu (dynamically handled via event delegation)
-    document.addEventListener('click', e => {
-      const el = e.target;
-      if(el.classList && el.classList.contains('themeChoice')){
-        const t = el.dataset.theme; applyTheme(t);
-      }
-    });
-
-    // Wire send button + enter key
-    sendBtn.addEventListener('click', sendMessage);
-    textInput.addEventListener('keydown', e => { if(e.key === 'Enter') sendMessage(); });
-
-    // Initial UI
-    profileMenu.innerHTML = '';
-    const gbtn = create('button'); gbtn.textContent = 'Sign in with Google'; gbtn.onclick = googleSignIn;
-    const abtn = create('button'); abtn.textContent = 'Quick start (Anon)'; abtn.onclick = anonSignIn;
-    profileMenu.appendChild(gbtn); profileMenu.appendChild(abtn);
-    openProfileMenu();
+    // Initial UI: sign-in menu
+    (function boot(){
+      profileMenu.innerHTML = '';
+      const gbtn = create('button'); gbtn.textContent = 'Sign in with Google'; gbtn.addEventListener('click', googleSignIn);
+      const abtn = create('button'); abtn.textContent = 'Quick start (Anon)'; abtn.addEventListener('click', anonSignIn);
+      profileMenu.appendChild(gbtn); profileMenu.appendChild(abtn);
+      openProfileMenu();
+    })();
   </script>
 </body>
 </html>
