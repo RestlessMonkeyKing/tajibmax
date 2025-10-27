@@ -3,87 +3,139 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mini Message — People, Profiles, Fast Messaging</title>
+  <title>Mini Message — Clean UI</title>
   <style>
     :root{
-      --bg:#fff; --panel:#f6f7fb; --primary:#0a84ff; --accent:#ff2d55; --muted:#8e8e93; --text:#111;
-      --glass:rgba(0,0,0,0.04); --bubble-me:var(--primary); --bubble-other:#eef0f6;
+      --bg:#ffffff; --panel:#f6f7fb; --primary:#0a84ff; --muted:#8e8e93; --text:#111; --glass:rgba(0,0,0,0.04);
+      --bubble-me:var(--primary); --bubble-other:#eef0f6;
+      --card-radius:14px; --tile-size:56px;
     }
     [data-theme="dark"]{
-      --bg:#071025; --panel:#071427; --primary:#4aa3ff; --accent:#ff7aa2; --muted:#9aa4b2; --text:#e8eef8;
-      --glass:rgba(255,255,255,0.03); --bubble-me:#2b6cff; --bubble-other:#0f1726;
+      --bg:#071025; --panel:#071427; --primary:#4aa3ff; --muted:#9aa4b2; --text:#e8eef8; --glass:rgba(255,255,255,0.03);
+      --bubble-me:#2b6cff; --bubble-other:#0f1726;
     }
-    html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
-    /* app shell */
+    [data-theme="glass"]{
+      --bg:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      --panel:transparent;
+      --primary:#7c5cff;
+      --muted:#c7d0ff;
+      --text:#eef2ff;
+      --glass:rgba(255,255,255,0.06);
+      --bubble-me:#8b6bff;
+      --bubble-other:rgba(255,255,255,0.02);
+    }
+
+    /* Vision Pro Glass component (user requested) */
+    .vision-pro-glass {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 28px;
+      padding: 32px;
+      box-shadow: 0 0 48px rgba(99, 102, 241, 0.4), 0 16px 64px rgba(31, 38, 135, 0.4);
+    }
+
+    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+    /* App shell */
     .app{display:flex;flex-direction:column;height:100vh;max-width:1100px;margin:0 auto;border-left:1px solid var(--glass);border-right:1px solid var(--glass)}
-    header{display:flex;align-items:center;gap:12px;padding:10px 14px;background:linear-gradient(180deg,transparent,rgba(0,0,0,0.02));position:sticky;top:0;z-index:10}
+    header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--glass);background:transparent}
     .logo{display:flex;align-items:center;gap:10px}
-    .logo .dot{width:36px;height:36px;border-radius:8px;background:linear-gradient(180deg,var(--primary),#006fe6)}
+    .logo .dot{width:40px;height:40px;border-radius:10px;background:linear-gradient(180deg,var(--primary),#006fe6)}
     .title{font-weight:700}
-    /* layout */
+    /* top-right profile tile */
+    .profile-tile{
+      display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:14px;background:var(--panel);cursor:pointer;border:1px solid var(--glass);
+      min-width:180px;box-shadow:0 6px 18px rgba(0,0,0,0.03)
+    }
+    .profile-photo{width:var(--tile-size);height:var(--tile-size);border-radius:12px;background:linear-gradient(180deg,#ddd,#bbb);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:18px}
+    .profile-name{font-weight:700}
+    .profile-sub{font-size:12px;color:var(--muted)}
+    /* profile menu */
+    .menu{position:absolute;right:18px;top:64px;background:var(--panel);border:1px solid var(--glass);border-radius:12px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,0.08);min-width:200px;display:none;z-index:60}
+    .menu.open{display:block}
+    .menu button{width:100%;text-align:left;padding:8px 10px;border-radius:8px;background:transparent;border:none;cursor:pointer;font-weight:600}
+    .menu .danger{color:#ff3b30}
+
+    /* Layout */
     .main{display:flex;flex:1;overflow:hidden}
-    .col{flex-basis:320px;flex-shrink:0;border-right:1px solid var(--glass);background:var(--panel);overflow:auto}
+    .col{flex-basis:320px;flex-shrink:0;border-right:1px solid var(--glass);background:var(--panel);overflow:auto;padding-bottom:120px}
     .col.full{flex:1;border-right:none;background:transparent}
-    /* left nav top */
     .tabs{display:flex;gap:8px;padding:12px}
     .tab{padding:8px 12px;border-radius:999px;cursor:pointer}
     .tab.active{background:var(--glass);font-weight:700}
     /* lists */
-    .list{padding:12px;display:flex;flex-direction:column;gap:10px}
+    .list{padding:8px;display:flex;flex-direction:column;gap:8px}
     .user-row{display:flex;align-items:center;gap:12px;padding:8px;border-radius:10px;cursor:pointer}
     .user-row:hover{background:rgba(0,0,0,0.02)}
-    .avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(180deg,#ddd,#bbb);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+    .avatar{width:48px;height:48px;border-radius:10px;background:linear-gradient(180deg,#ddd,#bbb);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
     .row-body{flex:1;min-width:0}
     .name{font-weight:700}
     .meta{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .follow-btn{padding:6px 10px;border-radius:8px;background:white;border:1px solid var(--glass);font-weight:700;cursor:pointer}
     .follow-btn.following{background:transparent;border:1px solid var(--glass);color:var(--muted);font-weight:600}
-    /* people search */
+
+    /* people search small */
     .search-row{display:flex;gap:8px;padding:8px}
     .search-input{flex:1;padding:8px;border-radius:12px;border:1px solid var(--glass);background:transparent;color:var(--text)}
-    .suggest-title{font-weight:700;padding:12px 12px 0 12px;color:var(--muted)}
-    /* profile */
-    .profile-card{padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px}
-    .profile-avatar{width:96px;height:96px;border-radius:50%;background:linear-gradient(180deg,#ddd,#bbb);display:flex;align-items:center;justify-content:center;font-size:40px;color:#fff}
+    /* profile card */
+    .profile-card{padding:18px;display:flex;flex-direction:column;align-items:center;gap:10px}
+    .profile-avatar{width:96px;height:96px;border-radius:14px;background:linear-gradient(180deg,#ddd,#bbb);display:flex;align-items:center;justify-content:center;font-size:40px;color:#fff}
     .bio{color:var(--muted);text-align:center}
-    .edit-btn{margin-top:8px;padding:8px 12px;border-radius:8px;border:1px solid var(--glass);background:transparent;cursor:pointer}
+
     /* chat area */
     .chat-wrap{display:flex;flex-direction:column;height:100%}
     .chat-header{padding:12px;border-bottom:1px solid var(--glass);display:flex;align-items:center;gap:12px}
-    .messages{flex:1;padding:16px 14px 120px;display:flex;flex-direction:column;gap:10px;overflow:auto}
-    .msg{max-width:76%;padding:10px 12px;border-radius:14px;word-wrap:break-word}
+    .messages{flex:1;padding:16px 14px 140px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+    .msg{max-width:76%;padding:10px 12px;border-radius:12px;word-wrap:break-word}
     .msg.me{margin-left:auto;background:linear-gradient(180deg,var(--bubble-me),#0077e6);color:white}
     .msg.other{margin-right:auto;background:var(--bubble-other);color:var(--text)}
     .meta-small{font-size:11px;color:var(--muted);margin-top:6px;text-align:right}
+
+    /* composer */
     .composer{position:fixed;left:0;right:0;bottom:0;padding:12px;background:transparent;display:flex;justify-content:center}
-    .composer-inner{width:100%;max-width:1100px;padding:12px 14px;background:var(--panel);display:flex;gap:8px;border-top:1px solid var(--glass);align-items:center}
+    .composer-inner{width:100%;max-width:1100px;padding:10px 14px;background:var(--panel);display:flex;gap:8px;border-top:1px solid var(--glass);align-items:center;border-radius:12px 12px 0 0}
     .text{flex:1;padding:10px 12px;border-radius:999px;border:1px solid var(--glass);background:transparent;color:var(--text);outline:none}
     .send{background:var(--primary);color:white;padding:10px 14px;border-radius:999px;border:none;font-weight:700;cursor:pointer}
+
     /* responsive */
     @media(max-width:980px){
       .col{display:none}
-      .col.left-active{display:block;position:absolute;top:60px;bottom:0;left:0;right:0;z-index:20}
-      .col.full{display:block;position:absolute;top:60px;bottom:0;left:0;right:0;z-index:19}
+      .col.left-active{display:block;position:absolute;top:64px;bottom:0;left:0;right:0;z-index:20}
+      .col.full{display:block;position:absolute;top:64px;bottom:0;left:0;right:0;z-index:19}
     }
   </style>
 </head>
 <body data-theme="light">
   <div class="app" id="app">
     <header>
-      <div class="logo">
-        <div class="dot" aria-hidden="true"></div>
-        <div>
-          <div class="title">Mini Message</div>
-          <div style="font-size:12px;color:var(--muted)">iMessage look · Insta follow suggestions</div>
+      <div class="logo"><div class="dot" aria-hidden="true"></div><div><div class="title">Mini Message</div><div style="font-size:12px;color:var(--muted)">Clean · Fast · Simple</div></div></div>
+      <div style="flex:1"></div>
+
+      <!-- Compact rounded tile -->
+      <div id="profileTile" class="profile-tile" aria-haspopup="true" aria-expanded="false" tabindex="0">
+        <div id="profilePhoto" class="profile-photo">U</div>
+        <div style="display:flex;flex-direction:column;min-width:0">
+          <div id="profileDisplayName" class="profile-name">Guest</div>
+          <div id="profileBio" class="profile-sub">Sign in</div>
         </div>
       </div>
-      <div style="flex:1"></div>
-      <div id="auth-area" style="display:flex;gap:8px;align-items:center"></div>
-      <button id="theme-toggle" class="tab">Dark</button>
+
+      <!-- menu shown when tile clicked -->
+      <div id="profileMenu" class="menu" role="menu" aria-hidden="true">
+        <button id="menuEdit">Edit profile</button>
+        <button id="menuThemes">Theme settings</button>
+        <div id="themeChoices" style="display:none;padding:8px 4px">
+          <button class="themeChoice" data-theme="light">Light</button>
+          <button class="themeChoice" data-theme="dark">Dark</button>
+          <button class="themeChoice" data-theme="glass">Liquid Glass</button>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--glass);margin:8px 0" />
+        <button id="menuSignOut" class="danger">Sign out</button>
+      </div>
     </header>
 
-    <div class="main">
-      <!-- Left column: tabs + lists -->
+    <div class="main" role="main">
+      <!-- Left column -->
       <div class="col" id="left-col">
         <div class="tabs" role="tablist">
           <div id="tab-chats" class="tab active" role="tab">Chats</div>
@@ -91,35 +143,24 @@
           <div id="tab-profile" class="tab" role="tab">Profile</div>
         </div>
 
-        <!-- Chats list -->
         <div id="chats-panel" class="list"></div>
 
-        <!-- People panel -->
         <div id="people-panel" class="hidden">
           <div class="search-row">
-            <input id="people-search" class="search-input" placeholder="Search people by name or bio" />
-            <button id="clear-search" class="tab">Clear</button>
+            <input id="people-search" class="search-input" placeholder="Search people" />
           </div>
-
-          <div class="suggest-title">Suggested for you</div>
-          <div id="suggested-list" class="list" style="padding-top:4px"></div>
-
-          <div style="border-top:1px solid var(--glass);margin-top:6px;padding-top:8px">
-            <div class="suggest-title">All people</div>
-            <div id="people-list" class="list" style="padding-top:4px"></div>
-          </div>
+          <div id="suggested-list" class="list"></div>
+          <div id="people-list" class="list"></div>
         </div>
 
-        <!-- Profile panel -->
         <div id="profile-panel" class="hidden">
-          <div class="profile-card" id="my-profile-card"></div>
+          <div id="myProfileCard" class="profile-card"></div>
           <div style="padding:12px">
-            <div style="font-weight:700">Edit profile</div>
-            <input id="edit-name" type="text" placeholder="Display name" style="width:100%;padding:8px;margin-top:8px;border-radius:8px;border:1px solid var(--glass)" />
-            <textarea id="edit-bio" placeholder="Bio" style="width:100%;padding:8px;margin-top:8px;border-radius:8px;border:1px solid var(--glass)"></textarea>
+            <input id="editName" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--glass)" placeholder="Display name" />
+            <textarea id="editBio" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--glass);margin-top:8px" placeholder="Bio"></textarea>
             <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-              <button id="cancel-edit" class="tab">Cancel</button>
-              <button id="save-edit" class="send">Save</button>
+              <button id="cancelEdit" class="tab">Cancel</button>
+              <button id="saveEdit" class="send">Save</button>
             </div>
           </div>
         </div>
@@ -128,20 +169,20 @@
       <!-- Chat column -->
       <div class="col full" id="chat-col">
         <div id="chat-empty" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted)">
-          <div style="text-align:center;max-width:420px">
+          <div style="text-align:center">
             <h3 style="margin:0 0 8px 0">No conversation selected</h3>
-            <div class="meta">Select someone from Chats or People to start messaging</div>
+            <div class="meta">Choose a person to start chatting</div>
           </div>
         </div>
 
-        <div class="chat-wrap hidden" id="chat-wrap" aria-live="polite">
+        <div id="chatWrap" class="chat-wrap hidden">
           <div class="chat-header">
-            <div id="chat-avatar" class="avatar">U</div>
+            <div id="chatAvatar" class="avatar">U</div>
             <div style="flex:1">
-              <div id="chat-name" class="name">User</div>
-              <div id="chat-bio" class="meta">Bio</div>
+              <div id="chatName" class="name">User</div>
+              <div id="chatBio" class="meta">Bio</div>
             </div>
-            <div id="chat-actions" style="display:flex;gap:8px"></div>
+            <div id="chatActions"></div>
           </div>
 
           <div id="messages" class="messages" tabindex="0"></div>
@@ -149,24 +190,18 @@
       </div>
     </div>
 
-    <div class="composer" aria-hidden="false">
+    <div class="composer">
       <div class="composer-inner">
-        <input id="text-input" class="text" placeholder="Message" />
-        <button id="send-btn" class="send">Send</button>
+        <input id="textInput" class="text" placeholder="Message" />
+        <button id="sendBtn" class="send">Send</button>
       </div>
     </div>
   </div>
 
   <script type="module">
-    /* Updated app:
-       - People search + Suggested users UI (Instagram-like)
-       - Profile pages and edit
-       - Faster message loading: load last 30 messages desc, then reverse for display; real-time streaming
-       - No persistent local storage for app data (in-memory only)
-    */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, addDoc, collection, query, where, orderBy, limit, onSnapshot, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, query, where, orderBy, limit, onSnapshot, addDoc, serverTimestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCvaWRvpDY-BOOg_oitS4oVGDoQkiWMR6A",
@@ -184,32 +219,71 @@
     // DOM helpers
     const $ = s => document.querySelector(s);
     const create = (t, cls) => { const e = document.createElement(t); if (cls) e.className = cls; return e; };
-    const escapeHtml = s => (s+'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
     // Elements
+    const profileTile = $('#profileTile'), profileMenu = $('#profileMenu');
+    const profilePhoto = $('#profilePhoto'), profileDisplayName = $('#profileDisplayName'), profileBio = $('#profileBio');
+    const menuEdit = $('#menuEdit'), menuThemes = $('#menuThemes'), themeChoices = $('#themeChoices'), themeButtons = document.querySelectorAll('.themeChoice');
+    const menuSignOut = $('#menuSignOut');
+
     const tabChats = $('#tab-chats'), tabPeople = $('#tab-people'), tabProfile = $('#tab-profile');
     const chatsPanel = $('#chats-panel'), peoplePanel = $('#people-panel'), profilePanel = $('#profile-panel');
-    const peopleList = $('#people-list'), suggestedList = $('#suggested-list'), peopleSearch = $('#people-search'), clearSearch = $('#clear-search');
-    const myProfileCard = $('#my-profile-card'), editName = $('#edit-name'), editBio = $('#edit-bio'), saveEdit = $('#save-edit'), cancelEdit = $('#cancel-edit');
-    const chatWrap = $('#chat-wrap'), chatEmpty = $('#chat-empty'), messagesEl = $('#messages');
-    const chatName = $('#chat-name'), chatBio = $('#chat-bio'), chatAvatar = $('#chat-avatar'), chatActions = $('#chat-actions');
-    const sendBtn = $('#send-btn'), textInput = $('#text-input');
-    const authArea = $('#auth-area'), themeToggle = $('#theme-toggle');
+    const suggestedList = $('#suggested-list'), peopleList = $('#people-list'), peopleSearch = $('#people-search');
 
-    // State (in-memory only)
-    let me = null;                    // current user profile
-    let usersCache = {};              // uid -> profile
-    let followsCache = new Set();     // who I follow
-    let followersCount = {};          // uid -> number (for suggestions)
-    let activePeer = null;            // uid of opened chat
-    let messagesUnsub = null;         // current messages listener
-    let usersUnsub = null;            // users listener
-    let followsUnsub = null;          // follows listener
+    const myProfileCard = $('#myProfileCard'), editName = $('#editName'), editBio = $('#editBio'), saveEdit = $('#saveEdit'), cancelEdit = $('#cancelEdit');
 
-    // UI tab switching
-    tabChats.onclick = () => showTab('chats');
-    tabPeople.onclick = () => { showTab('people'); loadPeople(); };
-    tabProfile.onclick = () => { showTab('profile'); renderMyProfile(); };
+    const chatWrap = $('#chatWrap'), chatEmpty = $('#chat-empty'), chatName = $('#chatName'), chatBio = $('#chatBio'), chatAvatar = $('#chatAvatar'), chatActions = $('#chatActions');
+    const messagesEl = $('#messages'), sendBtn = $('#sendBtn'), textInput = $('#textInput');
+
+    // App state (in-memory only)
+    let me = null;
+    let usersCache = {};
+    let followsCache = new Set();
+    let followersCount = {};
+    let activePeer = null;
+    let messagesUnsub = null;
+    let usersUnsub = null;
+    let followsUnsub = null;
+
+    // Small utilities
+    const conversationId = (a,b) => [a,b].sort().join('_');
+    const escapeHtml = s => (s+'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const nowTs = () => serverTimestamp();
+
+    // Profile tile interactions (toggle menu)
+    function closeProfileMenu(){ profileMenu.classList.remove('open'); profileMenu.setAttribute('aria-hidden','true'); profileTile.setAttribute('aria-expanded','false'); }
+    function openProfileMenu(){ profileMenu.classList.add('open'); profileMenu.setAttribute('aria-hidden','false'); profileTile.setAttribute('aria-expanded','true'); }
+
+    profileTile.addEventListener('click', e => {
+      if(profileMenu.classList.contains('open')) closeProfileMenu(); else openProfileMenu();
+    });
+    document.addEventListener('click', e => {
+      if(!profileTile.contains(e.target) && !profileMenu.contains(e.target)) closeProfileMenu();
+    });
+
+    // Theme settings display
+    menuThemes.addEventListener('click', ()=> {
+      themeChoices.style.display = themeChoices.style.display === 'block' ? 'none' : 'block';
+    });
+    themeButtons.forEach(b => b.addEventListener('click', async (e) => {
+      const t = e.target.dataset.theme;
+      document.body.setAttribute('data-theme', t === 'light' ? 'light' : (t === 'dark' ? 'dark' : 'glass'));
+      // save to Firestore if signed in
+      if(me) {
+        try{ await updateDoc(doc(db,'users',me.uid), { theme: t }); } catch(e){ console.warn('theme save failed', e); }
+      }
+      themeChoices.style.display = 'none';
+    }));
+
+    // Sign out
+    menuSignOut.addEventListener('click', async ()=> {
+      await doSignOut();
+    });
+
+    // Tabs
+    tabChats.addEventListener('click', ()=> showTab('chats'));
+    tabPeople.addEventListener('click', ()=> { showTab('people'); loadPeople(); });
+    tabProfile.addEventListener('click', ()=> { showTab('profile'); renderMyProfile(); });
 
     function showTab(t){
       tabChats.classList.toggle('active', t==='chats');
@@ -220,40 +294,25 @@
       profilePanel.classList.toggle('hidden', t!=='profile');
     }
 
-    // Auth UI
-    function renderAuthUI(){
-      authArea.innerHTML = '';
-      if(!me){
-        const google = create('button'); google.textContent = 'Google Sign in'; google.onclick = async ()=>{ try{ await signInWithPopup(auth,new GoogleAuthProvider()); } catch(e){ console.error(e); alert('Google sign-in failed'); } };
-        const anon = create('button'); anon.textContent = 'Quick Start (Anon)'; anon.onclick = async ()=>{ try{ await signInAnonymously(auth); } catch(e){ console.error(e); } };
-        authArea.appendChild(google); authArea.appendChild(anon);
-      } else {
-        const av = create('div','avatar'); av.textContent = (me.displayName||'U')[0].toUpperCase();
-        const name = create('div'); name.textContent = me.displayName || 'You'; name.style.marginLeft='8px';
-        const wrap = create('div'); wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.gap='8px';
-        wrap.appendChild(av); wrap.appendChild(name);
-        const signout = create('button'); signout.textContent = 'Sign out'; signout.onclick = async ()=>{ await doSignOut(); };
-        authArea.appendChild(wrap); authArea.appendChild(signout);
-      }
-    }
+    // Auth flows (compact)
+    async function googleSignIn(){ try{ await signInWithPopup(auth, new GoogleAuthProvider()); } catch(e){ console.error(e); alert('Google sign-in failed'); } }
+    async function anonSignIn(){ try{ await signInAnonymously(auth); } catch(e){ console.error(e); alert('Anonymous sign-in failed'); } }
 
-    // Ensure profile exists and load into memory
+    // Ensure profile in Firestore
     async function ensureProfile(user){
       const uRef = doc(db,'users',user.uid);
       const snap = await getDoc(uRef);
       if(!snap.exists()){
-        const base = { uid:user.uid, displayName: user.displayName || `User${user.uid.slice(0,6)}`, bio:'', createdAt: serverTimestamp() };
+        const base = { uid:user.uid, displayName: user.displayName || `User${user.uid.slice(0,6)}`, bio:'', createdAt: nowTs(), theme: 'light' };
         await setDoc(uRef, base);
         usersCache[user.uid] = base;
         return base;
       } else {
-        const data = snap.data();
-        usersCache[user.uid] = data;
-        return data;
+        const data = snap.data(); usersCache[user.uid]=data; return data;
       }
     }
 
-    // Subscribe to users collection (keeps usersCache up to date)
+    // Subscriptions
     function subscribeUsers(){
       if(usersUnsub) usersUnsub();
       usersUnsub = onSnapshot(collection(db,'users'), snap=>{
@@ -262,365 +321,232 @@
         delete usersCache[me.uid];
         computeFollowersCount();
         renderChatsPreview();
-        if(document.querySelector('.tab.active')?.id === 'tab-people') renderPeopleLists();
-      }, err => console.error('users onSnapshot', err));
-    }
-
-    // Build follower counts for suggestion ranking
-    function computeFollowersCount(){
-      // We'll query follows collection once to build counts (in-memory)
-      // Use a snapshot so counts update live
-      if(followsUnsub) followsUnsub();
-      followsUnsub = onSnapshot(collection(db,'follows'), snap=>{
-        followersCount = {};
-        snap.forEach(s=>{ const f = s.data(); followersCount[f.followingId] = (followersCount[f.followingId]||0) + 1; });
-        renderSuggestedUsers();
-      }, err => console.error('follows onSnapshot', err));
-      // Also separately subscribe to my follows (who I follow) to show Follow/Following
-      const myFollowsQ = query(collection(db,'follows'), where('followerId','==', auth.currentUser?.uid || ''));
-      onSnapshot(myFollowsQ, snap=>{
-        followsCache = new Set();
-        snap.forEach(s=>followsCache.add(s.data().followingId));
-        renderSuggestedUsers();
-        renderPeopleLists();
-        renderChatsPreview();
+        if(!peoplePanel.classList.contains('hidden')) renderPeopleLists();
       }, e=>console.error(e));
     }
 
-    // Suggested users (Instagram-like) — rank by follower count, exclude people I already follow and self
+    function computeFollowersCount(){
+      if(followsUnsub) followsUnsub();
+      followsUnsub = onSnapshot(collection(db,'follows'), snap=>{
+        followersCount = {};
+        snap.forEach(s => { const f = s.data(); followersCount[f.followingId] = (followersCount[f.followingId]||0) + 1; });
+        // also keep my follows
+        const myQ = query(collection(db,'follows'), where('followerId','==', auth.currentUser?.uid || ''));
+        onSnapshot(myQ, mySnap => { followsCache = new Set(); mySnap.forEach(ms=>followsCache.add(ms.data().followingId)); renderSuggestedUsers(); renderPeopleLists(); renderChatsPreview(); });
+      }, e=>console.error(e));
+    }
+
     function renderSuggestedUsers(){
+      suggestedList.innerHTML = '';
       const arr = Object.values(usersCache).filter(u => u.uid !== me.uid && !followsCache.has(u.uid));
       arr.sort((a,b) => (followersCount[b.uid]||0) - (followersCount[a.uid]||0));
-      suggestedList.innerHTML = '';
-      arr.slice(0,6).forEach(u=>{
+      arr.slice(0,6).forEach(u => {
         const row = create('div','user-row');
         const av = create('div','avatar'); av.textContent = (u.displayName||'U')[0].toUpperCase();
         const body = create('div','row-body');
         const name = create('div','name'); name.textContent = u.displayName || 'User';
-        const meta = create('div','meta'); meta.textContent = (followersCount[u.uid]||0) + ' followers · ' + (u.bio||'');
+        const meta = create('div','meta'); meta.textContent = (followersCount[u.uid]||0) + ' followers';
         body.appendChild(name); body.appendChild(meta);
         const btn = create('button','follow-btn'); btn.textContent = 'Follow';
-        btn.onclick = async (e)=>{ e.stopPropagation(); await toggleFollow(u.uid); };
+        btn.onclick = async e => { e.stopPropagation(); await toggleFollow(u.uid); };
         row.appendChild(av); row.appendChild(body); row.appendChild(btn);
-        row.onclick = ()=>openProfile(u.uid);
         suggestedList.appendChild(row);
       });
-      if(suggestedList.children.length===0) suggestedList.innerHTML = '<div class="meta" style="padding:12px;color:var(--muted)">No suggestions yet</div>';
+      if(!suggestedList.children.length) suggestedList.innerHTML = '<div style="padding:8px;color:var(--muted)">No suggested users yet</div>';
     }
 
-    // People lists with search & follow buttons
     function renderPeopleLists(){
       const q = (peopleSearch.value || '').trim().toLowerCase();
-      const all = Object.values(usersCache).filter(u => u.uid !== me.uid);
+      const all = Object.values(usersCache).filter(u=>u.uid !== me.uid);
       const filtered = q ? all.filter(u => (u.displayName||'').toLowerCase().includes(q) || (u.bio||'').toLowerCase().includes(q)) : all;
       filtered.sort((a,b)=> (a.displayName||'').localeCompare(b.displayName||''));
       peopleList.innerHTML = '';
-      filtered.forEach(u=>{
+      filtered.forEach(u => {
         const row = create('div','user-row');
         const av = create('div','avatar'); av.textContent = (u.displayName||'U')[0].toUpperCase();
         const body = create('div','row-body');
         const name = create('div','name'); name.textContent = u.displayName || 'User';
-        const meta = create('div','meta'); meta.textContent = (followersCount[u.uid]||0) + ' followers · ' + (u.bio||'');
+        const meta = create('div','meta'); meta.textContent = (followersCount[u.uid]||0) + ' followers';
         body.appendChild(name); body.appendChild(meta);
-        const btn = create('button','follow-btn ' + (followsCache.has(u.uid) ? 'following':''));
+        const btn = create('button','follow-btn ' + (followsCache.has(u.uid)?'following':''));
         btn.textContent = followsCache.has(u.uid) ? 'Following' : 'Follow';
-        btn.onclick = async (e)=>{ e.stopPropagation(); await toggleFollow(u.uid); };
-        const msg = create('button','tab'); msg.textContent = 'Message'; msg.onclick = (e)=>{ e.stopPropagation(); openChatWith(u); };
+        btn.onclick = async e => { e.stopPropagation(); await toggleFollow(u.uid); };
+        const msg = create('button'); msg.textContent = 'Message'; msg.onclick = e => { e.stopPropagation(); openChatWith(u); };
         const actions = create('div'); actions.style.display='flex'; actions.style.gap='8px'; actions.appendChild(btn); actions.appendChild(msg);
         row.appendChild(av); row.appendChild(body); row.appendChild(actions);
-        row.onclick = ()=>openProfile(u.uid);
         peopleList.appendChild(row);
       });
-      if(filtered.length===0) peopleList.innerHTML = '<div class="meta" style="padding:12px;color:var(--muted)">No people found</div>';
+      if(!peopleList.children.length) peopleList.innerHTML = '<div style="padding:8px;color:var(--muted)">No people found</div>';
     }
 
-    peopleSearch.addEventListener('input', renderPeopleLists);
-    clearSearch.onclick = ()=>{ peopleSearch.value=''; renderPeopleLists(); };
-
-    // Toggle follow/unfollow
-    async function toggleFollow(targetUid){
-      // If already following: delete the follow doc(s)
-      if(followsCache.has(targetUid)){
-        // find follow docs for (me -> targetUid) and delete them
-        const q = query(collection(db,'follows'), where('followerId','==', me.uid), where('followingId','==', targetUid));
-        onSnapshot(q, snapshot=>{
-          snapshot.forEach(async docSnap=>{ try{ await deleteDoc(doc(db,'follows',docSnap.id)); } catch(e){ console.error(e); } });
-        });
-        // onSnapshot of follows collection will update followsCache
+    async function toggleFollow(uid){
+      if(followsCache.has(uid)){
+        const q = query(collection(db,'follows'), where('followerId','==', me.uid), where('followingId','==', uid));
+        onSnapshot(q, snap => { snap.forEach(async s => { try{ await deleteDoc(doc(db,'follows',s.id)); } catch(e){ console.error(e); } }); });
       } else {
-        try{
-          await addDoc(collection(db,'follows'), { followerId: me.uid, followingId: targetUid, timestamp: serverTimestamp() });
-        } catch(e){ console.error('follow error', e); }
+        try{ await addDoc(collection(db,'follows'), { followerId: me.uid, followingId: uid, timestamp: serverTimestamp() }); } catch(e){ console.error(e); }
       }
     }
 
-    // Profile view (opens in left column profile panel)
-    async function openProfile(uid){
-      const target = usersCache[uid] || (await getDoc(doc(db,'users',uid)).then(s=>s.exists() ? s.data() : null));
-      if(!target) return;
-      showTab('profile');
-      // Render a focused profile card
-      myProfileCard.innerHTML = '';
-      const card = create('div');
-      const av = create('div','profile-avatar'); av.textContent = (target.displayName||'U')[0].toUpperCase();
-      const name = create('div'); name.style.fontWeight='700'; name.style.marginTop='8px'; name.textContent = target.displayName || 'User';
-      const bio = create('div','bio'); bio.textContent = target.bio || '';
-      const follow = create('button','follow-btn'); follow.textContent = followsCache.has(uid) ? 'Following' : 'Follow';
-      follow.classList.toggle('following', followsCache.has(uid));
-      follow.onclick = async ()=>{ await toggleFollow(uid); follow.textContent = followsCache.has(uid) ? 'Following' : 'Follow'; follow.classList.toggle('following', followsCache.has(uid)); };
-      const msg = create('button','send'); msg.textContent = 'Message'; msg.onclick = ()=>openChatWith(target);
-      card.appendChild(av); card.appendChild(name); card.appendChild(bio); card.appendChild(follow); card.appendChild(msg);
-      myProfileCard.appendChild(card);
-      // Pre-fill edit fields if it's current user
-      if(uid === me.uid){
-        editName.value = me.displayName || '';
-        editBio.value = me.bio || '';
-      } else {
-        editName.value = '';
-        editBio.value = '';
-      }
-    }
-
-    // Save my profile edits
-    saveEdit.onclick = async ()=>{
-      const name = (editName.value || '').trim();
-      const bio = (editBio.value || '').trim();
-      try{
-        await updateDoc(doc(db,'users',me.uid), { displayName: name, bio });
-      } catch(e){
-        console.error('save profile', e);
-      }
-    };
-    cancelEdit.onclick = ()=>{ editName.value = me.displayName || ''; editBio.value = me.bio || ''; };
-
-    // Chats preview (left list) — fast: show follow list + last message preview using lightweight query per convo
-    function renderChatsPreview(){
-      chatsPanel.innerHTML = '';
-      const uids = followsCache.size ? Array.from(followsCache) : Object.keys(usersCache).filter(id=>id!==me.uid);
-      if(uids.length === 0){ chatsPanel.innerHTML = '<div class="meta" style="padding:12px;color:var(--muted)">No chats yet</div>'; return; }
-      uids.forEach(uid=>{
-        const u = usersCache[uid];
-        if(!u) return;
-        const row = create('div','user-row');
-        const av = create('div','avatar'); av.textContent = (u.displayName||'U')[0].toUpperCase();
-        const body = create('div','row-body');
-        const name = create('div','name'); name.textContent = u.displayName || 'User';
-        const meta = create('div','meta'); meta.textContent = u.bio || '';
-        body.appendChild(name); body.appendChild(meta);
-        row.appendChild(av); row.appendChild(body);
-        row.onclick = ()=>openChatWith(u);
-        chatsPanel.appendChild(row);
-
-        // Lightweight preview: fetch last message only (limit 1 desc)
-        const convo = conversationId(me.uid, uid);
-        const q = query(collection(db,'messages'), where('conversationId','==', convo), orderBy('timestamp','desc'), limit(1));
-        onSnapshot(q, snap=>{ // updates live and fast
-          if(!snap.empty){
-            const m = snap.docs[0].data();
-            meta.textContent = (m.senderId===me.uid ? 'You: ' : '') + (m.text || '').slice(0,40) + ' · ' + (m.timestamp ? timeAgo(m.timestamp) : 'now');
-          } else {
-            meta.textContent = u.bio || '';
-          }
-        }, e=>console.error(e));
-      });
-    }
-
-    // Open chat — optimized message loading
-    async function openChatWith(userOrUid){
-      const u = typeof userOrUid === 'string' ? usersCache[userOrUid] : userOrUid;
-      if(!u) return;
-      activePeer = u;
-      chatEmpty.style.display = 'none';
-      chatWrap.classList.remove('hidden');
-      chatName.textContent = u.displayName || 'User';
-      chatBio.textContent = u.bio || '';
-      chatAvatar.textContent = (u.displayName||'U')[0].toUpperCase();
-      chatActions.innerHTML = '';
-      // Show follow/unfollow button in header like Instagram
-      const fbtn = create('button','follow-btn ' + (followsCache.has(u.uid)?'following':'')); fbtn.textContent = followsCache.has(u.uid)?'Following':'Follow';
-      fbtn.onclick = async ()=>{ await toggleFollow(u.uid); fbtn.textContent = followsCache.has(u.uid)?'Following':'Follow'; fbtn.classList.toggle('following', followsCache.has(u.uid)); };
-      chatActions.appendChild(fbtn);
-      // Subscribe to last N messages descending for speed, then render reversed (old->new)
-      subscribeToConversation(u.uid);
-    }
-
-    // Messaging: subscribe to recent messages with desc limit then stream newer messages
-    const MESSAGE_PAGE_SIZE = 30; // tweak for performance
-
-    function subscribeToConversation(peerUid){
-      // cleanup previous
-      if(messagesUnsub) messagesUnsub(); messagesUnsub = null;
-      const convo = conversationId(me.uid, peerUid);
-      // 1) Load last N messages quickly (descending). Firestore will return local cached items if persistence enabled; we don't enable persistence here.
-      const qRecentDesc = query(collection(db,'messages'), where('conversationId','==', convo), orderBy('timestamp','desc'), limit(MESSAGE_PAGE_SIZE));
-      // We'll reverse the results for display so newest appear at bottom
-      messagesEl.innerHTML = '<div class="meta" style="padding:12px;color:var(--muted)">Loading recent messages…</div>';
-      // Use onSnapshot to stream changes; it gives a fast initial snapshot and then real-time updates.
-      messagesUnsub = onSnapshot(qRecentDesc, snap=>{
-        // collect docs and reverse to chronological order
-        const docs = [];
-        snap.forEach(d => docs.push({ id: d.id, data: d.data() }));
-        docs.reverse(); // now oldest -> newest among the recent set
-        // Render these messages
-        messagesEl.innerHTML = '';
-        docs.forEach(item=>{
-          if(item.data.deleted) return;
-          const m = item.data;
-          const el = create('div','msg ' + (m.senderId === me.uid ? 'me' : 'other'));
-          const ts = m.timestamp ? formatTimestamp(m.timestamp) : '';
-          el.innerHTML = `<div>${escapeHtml(m.text||'')}</div><div class="meta-small">${ts}${m.senderId===me.uid?' · You':''}</div>`;
-          if(m.senderId === me.uid) el.ondblclick = async ()=>{ if(confirm('Delete this message?')) await markDeleted(item.id); };
-          messagesEl.appendChild(el);
-        });
-        // Auto-scroll to bottom
-        requestAnimationFrame(()=> messagesEl.scrollTop = messagesEl.scrollHeight);
-
-        // Now set up a real-time listener for newer messages arriving after the latest timestamp we have.
-        // Determine last timestamp from snapshot (if any)
-        const last = snap.docs[snap.docs.length - 1];
-        let lastTs = last && last.data().timestamp ? last.data().timestamp : null;
-        // Create a listener for messages with timestamp > lastTs (newer messages)
-        // If lastTs is null, listen to the conversation ordered asc (full) — but to avoid duplicates we can reuse the same snapshot callback to manage updates.
-        // For simplicity, we will also listen to the same query but ordered asc (newer ones will appear in snapshots as changes).
-        // Replace the existing unsub with a more comprehensive listener: order by timestamp asc (stream).
-        if(messagesUnsub) messagesUnsub(); // remove descending one
-        const qStream = query(collection(db,'messages'), where('conversationId','==', convo), orderBy('timestamp','asc'));
-        messagesUnsub = onSnapshot(qStream, streamSnap=>{
-          // streamSnap will include all messages but will be fast after initial fetch; to reduce UI work we diff client-side by id.
-          const arr = [];
-          streamSnap.forEach(d=>arr.push({ id:d.id, data:d.data() }));
-          // Render all (if performance issue arises, implement incremental diffs)
-          messagesEl.innerHTML = '';
-          arr.forEach(item=>{
-            if(item.data.deleted) return;
-            const m = item.data;
-            const el = create('div','msg ' + (m.senderId === me.uid ? 'me' : 'other'));
-            const ts = m.timestamp ? formatTimestamp(m.timestamp) : '';
-            el.innerHTML = `<div>${escapeHtml(m.text||'')}</div><div class="meta-small">${ts}${m.senderId===me.uid?' · You':''}</div>`;
-            if(m.senderId === me.uid) el.ondblclick = async ()=>{ if(confirm('Delete this message?')) await markDeleted(item.id); };
-            messagesEl.appendChild(el);
-          });
-          requestAnimationFrame(()=> messagesEl.scrollTop = messagesEl.scrollHeight);
-        }, e=>console.error('message stream error', e));
-      }, e => console.error('recent messages error', e));
-    }
-
-    // Send message with optimistic feel (UI updated via snapshot)
-    async function sendMessage(){
-      const text = (textInput.value || '').trim();
-      if(!text) return;
-      if(!activePeer){ alert('Select recipient'); return; }
-      // Only allow sending to people you follow; change as needed
-      if(!followsCache.has(activePeer.uid)){ alert('You can only message users you follow'); return; }
-      const convo = conversationId(me.uid, activePeer.uid);
-      try{
-        await addDoc(collection(db,'messages'), {
-          conversationId: convo,
-          senderId: me.uid,
-          receiverId: activePeer.uid,
-          text,
-          timestamp: serverTimestamp(),
-          deleted: false
-        });
-        textInput.value = '';
-      } catch(e){
-        console.error('send failed', e);
-        alert('Failed to send message');
-      }
-    }
-
-    // Mark message deleted server-side
-    async function markDeleted(messageId){
-      try{ await updateDoc(doc(db,'messages',messageId), { deleted: true }); } catch(e){ console.error(e); }
-    }
-
-    // Utility: time ago & timestamp format
-    function timeAgo(ts){
-      if(!ts) return '';
-      const d = ts.toDate ? ts.toDate() : new Date(ts);
-      const s = Math.floor((Date.now() - d.getTime())/1000);
-      if(s < 60) return `${s}s`; if(s < 3600) return `${Math.floor(s/60)}m`; if(s < 86400) return `${Math.floor(s/3600)}h`; return `${Math.floor(s/86400)}d`;
-    }
-    function formatTimestamp(ts){
-      if(!ts) return '';
-      const d = ts.toDate ? ts.toDate() : new Date(ts);
-      return d.toLocaleString([], {hour:'2-digit',minute:'2-digit',month:'short',day:'numeric'});
-    }
-
-    // Render my profile panel
+    // Profile rendering
     function renderMyProfile(){
       myProfileCard.innerHTML = '';
       const av = create('div','profile-avatar'); av.textContent = (me.displayName||'U')[0].toUpperCase();
       const name = create('div'); name.style.fontWeight='700'; name.textContent = me.displayName || 'You';
       const bio = create('div','bio'); bio.textContent = me.bio || '';
-      const followers = create('div','meta'); followers.textContent = `${followersCount[me.uid]||0} followers · ${Array.from(followsCache).length} following`;
-      const edit = create('button','edit-btn'); edit.textContent = 'Edit profile'; edit.onclick = ()=>{ editName.value = me.displayName || ''; editBio.value = me.bio || ''; showTab('profile'); };
-      myProfileCard.appendChild(av); myProfileCard.appendChild(name); myProfileCard.appendChild(bio); myProfileCard.appendChild(followers); myProfileCard.appendChild(edit);
+      const stats = create('div','meta'); stats.textContent = `${followersCount[me.uid]||0} followers · ${Array.from(followsCache).length} following`;
+      const editBtn = create('button'); editBtn.textContent = 'Edit profile'; editBtn.className='follow-btn';
+      editBtn.onclick = ()=> { showTab('profile'); editName.value = me.displayName || ''; editBio.value = me.bio || ''; };
+      myProfileCard.appendChild(av); myProfileCard.appendChild(name); myProfileCard.appendChild(bio); myProfileCard.appendChild(stats); myProfileCard.appendChild(editBtn);
     }
 
-    // Sign-out: unsubscribe listeners, clear in-memory caches, reset UI
-    async function doSignOut(){
-      try{ await signOut(auth); } catch(e){ console.error('signout', e); }
-      if(messagesUnsub){ messagesUnsub(); messagesUnsub = null; }
-      if(usersUnsub){ usersUnsub(); usersUnsub = null; }
-      if(followsUnsub){ followsUnsub(); followsUnsub = null; }
-      me = null; usersCache = {}; followsCache = new Set(); followersCount = {};
-      activePeer = null;
-      // reset UI
+    // Chats preview
+    function renderChatsPreview(){
       chatsPanel.innerHTML = '';
-      peopleList.innerHTML = '';
-      suggestedList.innerHTML = '';
-      myProfileCard.innerHTML = '';
-      messagesEl.innerHTML = '';
-      chatWrap.classList.add('hidden');
-      chatEmpty.style.display = 'flex';
-      renderAuthUI();
+      const uids = followsCache.size ? Array.from(followsCache) : Object.keys(usersCache).filter(id => id !== me.uid);
+      if(!uids.length){ chatsPanel.innerHTML = '<div style="padding:8px;color:var(--muted)">No chats yet</div>'; return; }
+      uids.forEach(uid => {
+        const u = usersCache[uid]; if(!u) return;
+        const row = create('div','user-row'); const av = create('div','avatar'); av.textContent = (u.displayName||'U')[0].toUpperCase();
+        const body = create('div','row-body'); const name = create('div','name'); name.textContent = u.displayName || 'User';
+        const meta = create('div','meta'); meta.textContent = u.bio || '';
+        body.appendChild(name); body.appendChild(meta); row.appendChild(av); row.appendChild(body);
+        row.onclick = ()=>openChatWith(u);
+        chatsPanel.appendChild(row);
+
+        // light preview: last message
+        const convo = conversationId(me.uid, uid);
+        const q = query(collection(db,'messages'), where('conversationId','==', convo), orderBy('timestamp','desc'), limit(1));
+        onSnapshot(q, snap => { if(!snap.empty){ const m = snap.docs[0].data(); meta.textContent = (m.senderId===me.uid?'You: ':'') + (m.text||'').slice(0,40) + ' · ' + (m.timestamp ? timeAgo(m.timestamp) : 'now'); } }, e=>console.error(e));
+      });
     }
 
-    // Bootstrapping: auth state
+    // Open chat — optimized
+    function openChatWith(u){
+      activePeer = u;
+      chatEmpty.style.display = 'none'; chatWrap.classList.remove('hidden');
+      chatName.textContent = u.displayName || 'User'; chatBio.textContent = u.bio || ''; chatAvatar.textContent = (u.displayName||'U')[0].toUpperCase();
+      chatActions.innerHTML = '';
+      const followBtn = create('button','follow-btn ' + (followsCache.has(u.uid)?'following':'')); followBtn.textContent = followsCache.has(u.uid)?'Following':'Follow';
+      followBtn.onclick = async ()=> { await toggleFollow(u.uid); followBtn.textContent = followsCache.has(u.uid)?'Following':'Follow'; followBtn.classList.toggle('following', followsCache.has(u.uid)); };
+      chatActions.appendChild(followBtn);
+      subscribeToConversation(u.uid);
+    }
+
+    // Messaging: fast load + stream
+    const MESSAGE_PAGE_SIZE = 30;
+    function subscribeToConversation(peerUid){
+      if(messagesUnsub) messagesUnsub(); messagesUnsub = null;
+      const convo = conversationId(me.uid, peerUid);
+      // Get recent messages first (desc limit)
+      const qRecentDesc = query(collection(db,'messages'), where('conversationId','==', convo), orderBy('timestamp','desc'), limit(MESSAGE_PAGE_SIZE));
+      messagesEl.innerHTML = '<div style="padding:8px;color:var(--muted)">Loading messages…</div>';
+      messagesUnsub = onSnapshot(qRecentDesc, snap => {
+        const docs = []; snap.forEach(d=>docs.push({id:d.id,data:d.data()}));
+        docs.reverse();
+        messagesEl.innerHTML = '';
+        docs.forEach(it => { if(it.data.deleted) return; const m = it.data; const el = create('div','msg ' + (m.senderId===me.uid?'me':'other')); el.innerHTML = `<div>${escapeHtml(m.text||'')}</div><div class="meta-small">${m.timestamp ? formatTimestamp(m.timestamp) : ''}${m.senderId===me.uid ? ' · You' : ''}</div>`; messagesEl.appendChild(el); });
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+
+        // Replace with full ascending stream for live updates
+        if(messagesUnsub) messagesUnsub(); messagesUnsub = null;
+        const qStream = query(collection(db,'messages'), where('conversationId','==', convo), orderBy('timestamp','asc'));
+        messagesUnsub = onSnapshot(qStream, s => {
+          messagesEl.innerHTML = '';
+          s.forEach(d => { const m = d.data(); if(m.deleted) return; const el = create('div','msg ' + (m.senderId===me.uid?'me':'other')); el.innerHTML = `<div>${escapeHtml(m.text||'')}</div><div class="meta-small">${m.timestamp ? formatTimestamp(m.timestamp) : ''}${m.senderId===me.uid ? ' · You' : ''}</div>`; messagesEl.appendChild(el); });
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+        }, e => console.error(e));
+      }, e => console.error(e));
+    }
+
+    async function sendMessage(){
+      const t = (textInput.value || '').trim();
+      if(!t) return;
+      if(!activePeer){ alert('Select a recipient'); return; }
+      if(!followsCache.has(activePeer.uid)){ alert('You can only message users you follow'); return; }
+      const convo = conversationId(me.uid, activePeer.uid);
+      try{
+        await addDoc(collection(db,'messages'), { conversationId: convo, senderId: me.uid, receiverId: activePeer.uid, text: t, timestamp: serverTimestamp(), deleted: false });
+        textInput.value = '';
+      } catch(e){ console.error(e); alert('Failed to send message'); }
+    }
+
+    async function markDeleted(id){ try{ await updateDoc(doc(db,'messages',id), { deleted:true }); } catch(e){ console.error(e); } }
+
+    // Helpers
+    function timeAgo(ts){ if(!ts) return ''; const d = ts.toDate ? ts.toDate() : new Date(ts); const s = Math.floor((Date.now() - d.getTime())/1000); if(s<60) return s+'s'; if(s<3600) return Math.floor(s/60)+'m'; if(s<86400) return Math.floor(s/3600)+'h'; return Math.floor(s/86400)+'d'; }
+    function formatTimestamp(ts){ if(!ts) return ''; const d = ts.toDate ? ts.toDate() : new Date(ts); return d.toLocaleString([], {hour:'2-digit',minute:'2-digit',month:'short',day:'numeric'}); }
+
+    // Sign out flow clears UI and memory
+    async function doSignOut(){
+      try{ await signOut(auth); } catch(e){ console.error(e); }
+      if(messagesUnsub) messagesUnsub(); if(usersUnsub) usersUnsub(); if(followsUnsub) followsUnsub();
+      me = null; usersCache = {}; followsCache = new Set(); followersCount = {}; activePeer = null;
+      // reset UI
+      profileDisplayName.textContent = 'Guest'; profileBio.textContent = 'Sign in'; profilePhoto.textContent = 'U';
+      chatsPanel.innerHTML = ''; suggestedList.innerHTML = ''; peopleList.innerHTML = ''; myProfileCard.innerHTML = ''; messagesEl.innerHTML = '';
+      chatWrap.classList.add('hidden'); chatEmpty.style.display = 'flex';
+      closeProfileMenu();
+      renderSignedOutMenu();
+    }
+
+    // Render UI when signed out
+    function renderSignedOutMenu(){
+      profileDisplayName.textContent = 'Guest'; profileBio.textContent = 'Sign in';
+      // open a minimal signin prompt inside the menu
+      profileMenu.innerHTML = '';
+      const g = create('button'); g.textContent = 'Sign in with Google'; g.onclick = googleSignIn;
+      const a = create('button'); a.textContent = 'Quick start (Anon)'; a.onclick = anonSignIn;
+      profileMenu.appendChild(g); profileMenu.appendChild(a);
+      profileMenu.classList.add('open'); profileMenu.setAttribute('aria-hidden','false');
+    }
+
+    // Auth state
     onAuthStateChanged(auth, async user => {
       if(!user){
-        // not signed in: show auth buttons
-        me = null;
-        renderAuthUI();
-        showTab('people'); // encourage discovery
+        // signed out
+        renderSignedOutMenu();
+        showTab('people');
         return;
       }
-      // signed in: ensure profile, subscribe to data, render UI
+      // signed in
       const profile = await ensureProfile(user);
       me = {...profile, uid: user.uid};
-      renderAuthUI();
-      subscribeUsers();
-      computeFollowersCount();
+      // update profile tile
+      profileDisplayName.textContent = me.displayName || 'You';
+      profileBio.textContent = me.bio || '';
+      profilePhoto.textContent = (me.displayName||'U')[0].toUpperCase();
+      // apply saved theme
+      const t = me.theme || 'light'; document.body.setAttribute('data-theme', t === 'glass' ? 'glass' : t === 'dark' ? 'dark' : 'light');
+      await subscribeAll();
+      closeProfileMenu();
       showTab('chats');
-      renderMyProfile();
-      renderChatsPreview();
     });
 
-    // Helper: fetch single doc functions imported when needed
-    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+    // Subscribe to users + follows
+    async function subscribeAll(){
+      subscribeUsers();
+      computeFollowersCount();
+      renderMyProfile();
+    }
 
-    // Quick functions to load people (ensures lists are fresh)
-    function loadPeople(){ renderSuggestedUsers(); renderPeopleLists(); }
-
-    // Theme toggle
-    themeToggle.onclick = ()=>{
-      const appRoot = document.body;
-      const current = appRoot.getAttribute('data-theme') || 'light';
-      const next = current === 'light' ? 'dark' : 'light';
-      appRoot.setAttribute('data-theme', next);
-      themeToggle.textContent = next === 'dark' ? 'Light' : 'Dark';
-      // user theme persistence can be written to Firestore under users/me if desired
-      if(me) updateDoc(doc(db,'users',me.uid), { theme: next }).catch(()=>{});
-    };
-
-    // Wire send button and keyboard
-    sendBtn.onclick = sendMessage;
+    // Wire small actions and keyboard
+    sendBtn.addEventListener('click', sendMessage);
     textInput.addEventListener('keydown', e => { if(e.key === 'Enter') sendMessage(); });
 
-    // Initial UI state
-    renderAuthUI();
-    showTab('people');
+    // Simple sign-in triggers in profile menu (when guest)
+    async function googleSignIn(){ try{ await signInWithPopup(auth,new GoogleAuthProvider()); } catch(e){ console.error(e); alert('Sign-in failed'); } }
+    async function anonSignIn(){ try{ await signInAnonymously(auth); } catch(e){ console.error(e); alert('Anon sign-in failed'); } }
+
+    // Save profile edits
+    saveEdit.addEventListener('click', async ()=> {
+      const name = (editName.value || '').trim(); const bio = (editBio.value || '').trim();
+      try{ await updateDoc(doc(db,'users',me.uid), { displayName: name, bio }); } catch(e){ console.error(e); }
+    });
+    cancelEdit.addEventListener('click', ()=> { editName.value = me.displayName || ''; editBio.value = me.bio || ''; });
+
+    // Initial UI: show minimal tile menu
+    renderSignedOutMenu();
   </script>
 </body>
 </html>
