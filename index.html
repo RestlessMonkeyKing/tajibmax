@@ -252,6 +252,7 @@
             overflow: hidden;
             flex-shrink: 0;
             transition: var(--transition);
+            position: relative;
         }
 
         .profile-card:not(.expanded) .profile-pic {
@@ -264,6 +265,22 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .status-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #34C759;
+            border: 2px solid var(--card-bg);
+            z-index: 10;
+        }
+
+        .status-indicator.offline {
+            background: #8E8E93;
         }
 
         .profile-info {
@@ -488,6 +505,7 @@
             border-radius: 10px;
             cursor: pointer;
             transition: var(--transition);
+            font-size: 12px;
         }
 
         .tab.active {
@@ -512,7 +530,7 @@
             box-shadow: 0 0 0 2px var(--primary-color);
         }
 
-        .chat-list, .user-list {
+        .chat-list, .user-list, .followed-list {
             flex: 1;
             overflow-y: auto;
         }
@@ -526,6 +544,7 @@
             cursor: pointer;
             transition: var(--transition);
             animation: slideIn 0.3s ease-out;
+            position: relative;
         }
 
         @keyframes slideIn {
@@ -555,12 +574,20 @@
             margin-right: 15px;
             overflow: hidden;
             flex-shrink: 0;
+            position: relative;
         }
 
         .chat-avatar img, .user-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .chat-avatar .status-indicator, .user-avatar .status-indicator {
+            width: 12px;
+            height: 12px;
+            bottom: 2px;
+            right: 2px;
         }
 
         .chat-info, .user-info {
@@ -670,12 +697,20 @@
             margin-right: 15px;
             overflow: hidden;
             flex-shrink: 0;
+            position: relative;
         }
 
         .chat-header-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .chat-header-avatar .status-indicator {
+            width: 10px;
+            height: 10px;
+            bottom: 1px;
+            right: 1px;
         }
 
         .chat-messages {
@@ -948,6 +983,7 @@
             <div class="profile-header">
                 <div class="profile-pic" id="profilePic">
                     <i class="fas fa-user"></i>
+                    <div class="status-indicator" id="profileStatus"></div>
                 </div>
                 <div class="profile-info">
                     <h3 id="profileName">Loading...</h3>
@@ -975,7 +1011,8 @@
             
             <div class="tabs">
                 <div class="tab active" data-tab="chats">💬 Chats</div>
-                <div class="tab" data-tab="profiles">👥 Profiles</div>
+                <div class="tab" data-tab="suggested">👥 Suggested</div>
+                <div class="tab" data-tab="followed">❤️ Followed</div>
                 <div class="tab" data-tab="me">🙍‍♂️ Me</div>
             </div>
             
@@ -988,12 +1025,17 @@
             <div class="user-list" id="userList" style="display: none;">
                 <!-- User items will be dynamically added here -->
             </div>
+            
+            <div class="followed-list" id="followedList" style="display: none;">
+                <!-- Followed user items will be dynamically added here -->
+            </div>
         </div>
         
         <div class="chat-area">
             <div class="chat-header">
                 <div class="chat-header-avatar">
                     <i class="fas fa-user-friends"></i>
+                    <div class="status-indicator offline"></div>
                 </div>
                 <div>
                     <h3>Select a conversation</h3>
@@ -1090,6 +1132,7 @@
         const profilePic = document.getElementById('profilePic');
         const profileName = document.getElementById('profileName');
         const profileBio = document.getElementById('profileBio');
+        const profileStatus = document.getElementById('profileStatus');
         const followerCount = document.getElementById('followerCount');
         const followingCount = document.getElementById('followingCount');
         const editProfileBtn = document.getElementById('editProfileBtn');
@@ -1097,6 +1140,7 @@
         const tabs = document.querySelectorAll('.tab');
         const chatList = document.getElementById('chatList');
         const userList = document.getElementById('userList');
+        const followedList = document.getElementById('followedList');
         const chatMessages = document.getElementById('chatMessages');
         const editProfileModal = document.getElementById('editProfileModal');
         const closeModal = document.getElementById('closeModal');
@@ -1194,14 +1238,22 @@
                 if (tab.dataset.tab === 'chats') {
                     chatList.style.display = 'block';
                     userList.style.display = 'none';
+                    followedList.style.display = 'none';
                     loadChats();
-                } else if (tab.dataset.tab === 'profiles') {
+                } else if (tab.dataset.tab === 'suggested') {
                     chatList.style.display = 'none';
                     userList.style.display = 'block';
+                    followedList.style.display = 'none';
                     loadUsers();
+                } else if (tab.dataset.tab === 'followed') {
+                    chatList.style.display = 'none';
+                    userList.style.display = 'none';
+                    followedList.style.display = 'block';
+                    loadFollowedUsers();
                 } else if (tab.dataset.tab === 'me') {
                     chatList.style.display = 'block';
                     userList.style.display = 'none';
+                    followedList.style.display = 'none';
                     // Show user's own profile info
                 }
             });
@@ -1246,6 +1298,11 @@
 
         // Logout functionality
         logoutBtn.addEventListener('click', () => {
+            // Set user offline before signing out
+            if (currentUser) {
+                updateUserOnlineStatus(currentUser.uid, false);
+            }
+            
             signOut(auth).then(() => {
                 // Reset UI
                 currentUser = null;
@@ -1266,6 +1323,9 @@
                 // Show app, hide login
                 loginScreen.style.display = 'none';
                 appContainer.style.display = 'flex';
+                
+                // Set user online
+                updateUserOnlineStatus(user.uid, true);
                 
                 // Check if user profile exists, create if not
                 checkAndCreateUserProfile(user);
@@ -1309,6 +1369,8 @@
                     photoURL: user.photoURL || '',
                     followers: 0,
                     following: 0,
+                    isOnline: true,
+                    lastSeen: serverTimestamp(),
                     createdAt: serverTimestamp(),
                     theme: 'light'
                 });
@@ -1322,7 +1384,14 @@
                 
                 // Update profile picture if available
                 if (userData.photoURL) {
-                    profilePic.innerHTML = `<img src="${userData.photoURL}" alt="Profile">`;
+                    profilePic.innerHTML = `<img src="${userData.photoURL}" alt="Profile"><div class="status-indicator" id="profileStatus"></div>`;
+                }
+                
+                // Update online status
+                if (userData.isOnline) {
+                    profileStatus.classList.remove('offline');
+                } else {
+                    profileStatus.classList.add('offline');
                 }
             }
         }
@@ -1339,6 +1408,14 @@
             const userDocRef = doc(db, 'users', uid);
             await updateDoc(userDocRef, {
                 theme: theme
+            });
+        }
+
+        async function updateUserOnlineStatus(uid, isOnline) {
+            const userDocRef = doc(db, 'users', uid);
+            await updateDoc(userDocRef, {
+                isOnline: isOnline,
+                lastSeen: serverTimestamp()
             });
         }
 
@@ -1374,6 +1451,7 @@
                     }
                 });
                 loadUsers();
+                loadFollowedUsers();
             });
             
             // Listen for follows
@@ -1389,6 +1467,7 @@
                 });
                 followingCount.textContent = follows.length;
                 loadUsers();
+                loadFollowedUsers();
             });
             
             // Listen for user profile updates
@@ -1413,7 +1492,7 @@
             // Create a query for messages where current user is either sender or receiver
             const messagesQuery = query(
                 collection(db, 'messages'),
-                where('senderId', '==', currentUser.uid),
+                where('senderId', 'in', [currentUser.uid, ...users.map(u => u.id)]),
                 orderBy('timestamp', 'asc')
             );
             
@@ -1466,7 +1545,7 @@
         function updateProfileUI(user) {
             profileName.textContent = user.displayName || 'User';
             if (user.photoURL) {
-                profilePic.innerHTML = `<img src="${user.photoURL}" alt="Profile">`;
+                profilePic.innerHTML = `<img src="${user.photoURL}" alt="Profile"><div class="status-indicator" id="profileStatus"></div>`;
             }
         }
 
@@ -1492,6 +1571,7 @@
                 userElement.innerHTML = `
                     <div class="user-avatar">
                         ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
+                        <div class="status-indicator ${user.isOnline ? '' : 'offline'}"></div>
                     </div>
                     <div class="user-info">
                         <h4>${user.displayName}</h4>
@@ -1537,6 +1617,74 @@
                         document.querySelector('[data-tab="chats"]').classList.add('active');
                         chatList.style.display = 'block';
                         userList.style.display = 'none';
+                        followedList.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        function loadFollowedUsers() {
+            followedList.innerHTML = '';
+            
+            const followedUsers = users.filter(user => 
+                follows.some(follow => follow.followingId === user.id)
+            );
+            
+            if (followedUsers.length === 0) {
+                followedList.innerHTML = '<div class="user-item">You are not following anyone yet.</div>';
+                return;
+            }
+            
+            followedUsers.forEach(user => {
+                // Limit bio to 5 words for user list to prevent clutter
+                const shortBio = user.bio ? 
+                    user.bio.split(' ').slice(0, 5).join(' ') + (user.bio.split(' ').length > 5 ? '...' : '') : 
+                    'No bio yet';
+                
+                const userElement = document.createElement('div');
+                userElement.className = 'user-item';
+                
+                userElement.innerHTML = `
+                    <div class="user-avatar">
+                        ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
+                        <div class="status-indicator ${user.isOnline ? '' : 'offline'}"></div>
+                    </div>
+                    <div class="user-info">
+                        <h4>${user.displayName}</h4>
+                        <p>${shortBio}</p>
+                    </div>
+                    <div class="user-actions">
+                        <button class="message-btn" data-userid="${user.id}">Message</button>
+                        <button class="follow-btn following" data-userid="${user.id}">Unfollow</button>
+                    </div>
+                `;
+                
+                followedList.appendChild(userElement);
+            });
+            
+            // Add event listeners to follow buttons
+            document.querySelectorAll('.follow-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const userId = button.dataset.userid;
+                    unfollowUser(userId);
+                });
+            });
+            
+            // Add event listeners to message buttons
+            document.querySelectorAll('.message-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const userId = button.dataset.userid;
+                    const user = users.find(u => u.id === userId);
+                    if (user) {
+                        openChat(userId, user);
+                        // Switch to chats tab
+                        tabs.forEach(t => t.classList.remove('active'));
+                        document.querySelector('[data-tab="chats"]').classList.add('active');
+                        chatList.style.display = 'block';
+                        userList.style.display = 'none';
+                        followedList.style.display = 'none';
                     }
                 });
             });
@@ -1584,6 +1732,7 @@
                 chatElement.innerHTML = `
                     <div class="chat-avatar">
                         ${chat.user && chat.user.photoURL ? `<img src="${chat.user.photoURL}" alt="${chat.user.displayName}">` : '<i class="fas fa-user"></i>'}
+                        <div class="status-indicator ${chat.user && chat.user.isOnline ? '' : 'offline'}"></div>
                     </div>
                     <div class="chat-info">
                         <h4>${chat.user ? chat.user.displayName : 'Unknown User'}</h4>
@@ -1607,10 +1756,11 @@
             chatHeader.innerHTML = `
                 <div class="chat-header-avatar">
                     ${user && user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
+                    <div class="status-indicator ${user && user.isOnline ? '' : 'offline'}"></div>
                 </div>
                 <div>
                     <h3>${user ? user.displayName : 'Unknown User'}</h3>
-                    <p>Online</p>
+                    <p>${user && user.isOnline ? 'Online' : 'Offline'}</p>
                 </div>
             `;
             
