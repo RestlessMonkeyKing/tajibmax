@@ -3,117 +3,60 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mini Message — People Search + Follow</title>
+  <title>Mini Message — Fixed Messaging</title>
   <style>
     :root{
-      --bg:#ffffff; --panel:#f7f7fb; --primary:#0a84ff; --muted:#8e8e93; --bubble-me:var(--primary);
-      --bubble-other:#e5e6ea; --text:#111; --glass:rgba(0,0,0,0.04);
+      --bg:#ffffff; --panel:#f7f7fb; --primary:#0a84ff; --muted:#8e8e93; --text:#111; --glass:rgba(0,0,0,0.04);
+      --bubble-me:var(--primary); --bubble-other:#e5e6ea;
     }
-    [data-theme="dark"]{
-      --bg:#0b1020; --panel:#0f1726; --primary:#4aa3ff; --muted:#9aa4b2; --bubble-me:#2b6cff;
-      --bubble-other:#172033; --text:#e8eef8; --glass:rgba(255,255,255,0.03);
-    }
-    html,body{height:100%;margin:0;font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;}
+    [data-theme="dark"]{ --bg:#0b1020; --panel:#0f1726; --primary:#4aa3ff; --muted:#9aa4b2; --text:#e8eef8; --bubble-me:#2b6cff; --bubble-other:#172033; --glass:rgba(255,255,255,0.03); }
+    html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);}
     .app{display:flex;flex-direction:column;height:100vh;max-width:980px;margin:0 auto;border-left:1px solid var(--glass);border-right:1px solid var(--glass);}
-    header{display:flex;align-items:center;gap:12px;padding:10px 14px;background:linear-gradient(180deg,transparent,rgba(0,0,0,0.02));backdrop-filter:blur(6px);position:sticky;top:0;z-index:5}
-    .logo{display:flex;align-items:center;gap:8px}
-    .logo .dot{width:28px;height:28px;border-radius:6px;background:linear-gradient(180deg,var(--primary),#006fe6);box-shadow:0 6px 18px rgba(10,132,255,0.15)}
-    .title{font-weight:600}
+    header{display:flex;align-items:center;gap:12px;padding:10px 14px}
     .main{display:flex;flex:1;overflow:hidden}
     .col{flex-basis:320px;flex-shrink:0;border-right:1px solid var(--glass);background:var(--panel);overflow:auto}
     .col.full{flex:1;border-right:none;background:transparent}
     .list{padding:12px;display:flex;flex-direction:column;gap:10px}
-    .user-row{display:flex;align-items:center;gap:12px;padding:8px;border-radius:10px;cursor:pointer;transition:background .15s}
-    .user-row:hover{background:rgba(0,0,0,0.02)}
-    .avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(180deg,#ddd,#bbb);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
-    .row-body{flex:1;min-width:0}
-    .row-body .name{font-weight:600}
-    .row-body .meta{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .follow-btn{padding:6px 10px;border-radius:8px;background:white;border:1px solid var(--glass);font-weight:600;cursor:pointer}
-    .chat-wrap{display:flex;flex-direction:column;height:100%;align-items:stretch}
+    .user-row{display:flex;align-items:center;gap:12px;padding:8px;border-radius:10px;cursor:pointer}
+    .avatar{width:44px;height:44px;border-radius:50%;background:#bbb;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+    .chat-wrap{display:flex;flex-direction:column;height:100%}
     .messages{flex:1;padding:20px 14px 120px;display:flex;flex-direction:column;gap:10px;overflow:auto}
-    .msg{max-width:74%;padding:10px 12px;border-radius:16px;box-shadow:0 1px 0 rgba(0,0,0,0.03);word-wrap:break-word}
-    .msg.me{margin-left:auto;background:linear-gradient(180deg,var(--bubble-me),#0077e6);color:white;border-bottom-right-radius:6px}
-    .msg.other{margin-right:auto;background:var(--bubble-other);color:var(--text);border-bottom-left-radius:6px}
-    .msg .meta{font-size:11px;color:rgba(0,0,0,0.45);margin-top:6px;text-align:right}
-    [data-theme="dark"] .msg .meta{color:rgba(255,255,255,0.6)}
+    .msg{max-width:74%;padding:10px 12px;border-radius:16px;word-wrap:break-word}
+    .msg.me{margin-left:auto;background:linear-gradient(180deg,var(--bubble-me),#0077e6);color:white}
+    .msg.other{margin-right:auto;background:var(--bubble-other);color:var(--text)}
+    .meta{font-size:11px;color:rgba(0,0,0,0.45);margin-top:6px}
     .composer{position:fixed;left:0;right:0;bottom:0;padding:12px;background:transparent;display:flex;justify-content:center}
     .composer-inner{width:100%;max-width:980px;padding:10px 14px;background:var(--panel);display:flex;gap:8px;border-top:1px solid var(--glass)}
-    .input{flex:1;display:flex;gap:8px;align-items:center}
     .text{flex:1;padding:10px 12px;border-radius:999px;border:1px solid var(--glass);background:transparent;color:var(--text);outline:none}
     .send{background:var(--primary);color:white;padding:10px 14px;border-radius:999px;border:none;font-weight:700;cursor:pointer}
-    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);z-index:40}
-    .modal.open{display:flex}
-    .card{background:var(--panel);padding:18px;border-radius:12px;min-width:280px;max-width:420px}
-    .row{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-    label{font-size:13px;color:var(--muted)}
-    input[type="text"],textarea{padding:8px;border-radius:8px;border:1px solid var(--glass);background:transparent;color:var(--text);outline:none}
-    textarea{min-height:80px;resize:vertical}
-    .tabs{display:flex;gap:8px}
-    .tab{padding:8px 10px;border-radius:10px;cursor:pointer}
-    .tab.active{background:var(--glass)}
     .small{font-size:13px;color:var(--muted)}
-    .right{margin-left:auto}
     .hidden{display:none}
-    .search-row{display:flex;gap:8px;padding:8px}
-    .search-input{flex:1;padding:8px;border-radius:10px;border:1px solid var(--glass);background:transparent;color:var(--text)}
-    @media(min-width:900px){
-      .col.phone-hide{display:block}
-      .col{flex-basis:320px}
-    }
-    @media(max-width:899px){
-      .col{display:none}
-      .col.active{display:block;position:absolute;top:60px;bottom:0;left:0;right:0;z-index:20}
-      .col.full{display:block;position:absolute;top:60px;bottom:0;left:0;right:0;z-index:19}
-    }
   </style>
 </head>
 <body>
   <div class="app" id="app" data-theme="light">
     <header>
-      <div class="logo" style="cursor:default">
-        <div class="dot" aria-hidden="true"></div>
-        <div>
-          <div class="title">Mini Message</div>
-          <div class="small">iMessage-style · Follows · Real-time</div>
-        </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(180deg,var(--primary),#006fe6)"></div>
+        <div style="font-weight:700">Mini Message (Fixed)</div>
       </div>
       <div style="flex:1"></div>
-      <div id="auth-area" style="display:flex;gap:8px;align-items:center"></div>
-      <button id="theme-toggle" class="tab" title="Toggle theme">Dark</button>
+      <div id="auth-area"></div>
     </header>
 
     <div class="main">
       <div class="col" id="left-col">
-        <div style="padding:12px;display:flex;gap:8px;align-items:center">
-          <div class="tabs" style="flex:1">
-            <div id="tab-chats" class="tab active">Chats</div>
-            <div id="tab-people" class="tab">People</div>
-            <div id="tab-me" class="tab">Profile</div>
-          </div>
-          <button id="btn-new" class="tab">New</button>
+        <div style="padding:12px;display:flex;align-items:center;gap:8px">
+          <div class="small">Chats</div>
         </div>
-
         <div id="chats-list" class="list"></div>
-
-        <!-- People list with search -->
-        <div id="people-panel" class="hidden">
-          <div class="search-row">
-            <input id="people-search" class="search-input" placeholder="Search people by name or bio" />
-            <button id="clear-search" class="tab">Clear</button>
-          </div>
-          <div id="people-list" class="list" style="padding-top:6px"></div>
-          <div id="people-footer" style="padding:12px" class="small">Showing <span id="people-count">0</span> people</div>
-        </div>
-
-        <div id="profile-panel" class="list hidden"></div>
       </div>
 
       <div class="col full" id="chat-col">
         <div id="chat-empty" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted)">
           <div style="text-align:center;max-width:360px">
             <h3 style="margin:0 0 8px 0">No conversation selected</h3>
-            <div class="small">Select someone from Chats or People to start messaging</div>
+            <div class="small">Select someone to start messaging</div>
           </div>
         </div>
 
@@ -125,7 +68,6 @@
               <div id="chat-bio" class="small"></div>
             </div>
             <div style="flex:1"></div>
-            <button id="btn-unfollow" class="follow-btn hidden">Unfollow</button>
           </div>
 
           <div id="messages" class="messages" tabindex="0"></div>
@@ -135,28 +77,8 @@
 
     <div class="composer" aria-hidden="false">
       <div class="composer-inner">
-        <div class="input">
-          <input id="text-input" class="text" placeholder="Message" />
-        </div>
+        <input id="text-input" class="text" placeholder="Message" />
         <button id="send-btn" class="send">Send</button>
-      </div>
-    </div>
-
-    <div id="modal" class="modal" role="dialog" aria-modal="true">
-      <div class="card">
-        <h3>Edit Profile</h3>
-        <div class="row">
-          <label>Display name</label>
-          <input id="edit-name" type="text" />
-        </div>
-        <div class="row">
-          <label>Bio</label>
-          <textarea id="edit-bio"></textarea>
-        </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button id="modal-cancel" class="tab">Cancel</button>
-          <button id="modal-save" class="send">Save</button>
-        </div>
       </div>
     </div>
   </div>
@@ -164,7 +86,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, addDoc, collection, query, where, orderBy, limit, onSnapshot, serverTimestamp, enableIndexedDbPersistence, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, addDoc, collection, query, where, orderBy, limit, onSnapshot, serverTimestamp, enableIndexedDbPersistence, updateDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCvaWRvpDY-BOOg_oitS4oVGDoQkiWMR6A",
@@ -178,298 +100,169 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    try { await enableIndexedDbPersistence(db); } catch(e){ /* ignore */ }
+    try { await enableIndexedDbPersistence(db); } catch(e){ /* ignore multi-tab errors */ }
 
     const $ = sel => document.querySelector(sel);
-    const create = (tag,cls)=>{const e=document.createElement(tag);if(cls)e.className=cls;return e};
+    const create = (t,cls)=>{const e=document.createElement(t); if(cls) e.className=cls; return e;};
     const nowTs = ()=>serverTimestamp();
 
     let me = null;
     let activePeer = null;
     let messagesUnsub = null;
+    let usersCache = {};
     let followsCache = new Set();
-    let usersCache = {}; // uid -> user
-    let peopleSnapshotUnsub = null;
 
     const authArea = $('#auth-area');
-    const themeToggle = $('#theme-toggle');
-    const tabChats = $('#tab-chats'), tabPeople = $('#tab-people'), tabMe = $('#tab-me');
-    const chatsList = $('#chats-list'), peopleList = $('#people-list'), profilePanel = $('#profile-panel');
-    const peoplePanel = $('#people-panel'), peopleSearch = $('#people-search'), clearSearch = $('#clear-search'), peopleCountEl = $('#people-count');
+    const chatsList = $('#chats-list');
     const chatWrap = $('#chat-wrap'), chatEmpty = $('#chat-empty');
     const messagesEl = $('#messages'), chatName = $('#chat-name'), chatBio = $('#chat-bio'), chatAvatar = $('#chat-avatar');
     const sendBtn = $('#send-btn'), textInput = $('#text-input');
-    const btnUnfollow = $('#btn-unfollow');
-    const modal = $('#modal'), modalSave = $('#modal-save'), modalCancel = $('#modal-cancel');
-    const editName = $('#edit-name'), editBio = $('#edit-bio');
-    const btnNew = $('#btn-new');
-
-    function renderAuthUI(user){
-      authArea.innerHTML = '';
-      const avatar = create('div','avatar'); avatar.textContent = user.displayName ? user.displayName[0].toUpperCase() : 'U';
-      const name = create('div'); name.textContent = user.displayName || 'You';
-      const wrap = create('div'); wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.gap='8px';
-      wrap.appendChild(avatar); wrap.appendChild(name);
-      authArea.appendChild(wrap);
-
-      const signOutBtn = create('button','tab'); signOutBtn.textContent='Sign Out';
-      signOutBtn.onclick = async ()=>{ await signOut(auth); };
-      const editBtn = create('button','tab'); editBtn.textContent='Edit'; editBtn.onclick = openEditProfile;
-      authArea.appendChild(editBtn); authArea.appendChild(signOutBtn);
-    }
 
     async function ensureProfile(user){
       const uRef = doc(db,'users',user.uid);
       const snap = await getDoc(uRef);
       if(!snap.exists()){
-        const basic = {
-          uid: user.uid,
-          displayName: user.displayName || `User${user.uid.slice(0,6)}`,
-          bio: '',
-          createdAt: serverTimestamp(),
-          theme: 'light'
-        };
+        const basic = { uid:user.uid, displayName:user.displayName || `User${user.uid.slice(0,6)}`, bio:'', createdAt: serverTimestamp(), theme:'light' };
         await setDoc(uRef,basic);
-        usersCache[user.uid] = basic;
+        usersCache[user.uid]=basic;
         return basic;
       } else {
-        const data = snap.data();
-        usersCache[user.uid] = data;
-        return data;
+        const data = snap.data(); usersCache[user.uid]=data; return data;
       }
     }
 
-    onAuthStateChanged(auth, async (user)=>{
-      if(!user){
-        try{ await signInAnonymously(auth); } catch(e){ console.error(e); }
-        return;
-      }
+    onAuthStateChanged(auth, async user=>{
+      if(!user){ try{ await signInAnonymously(auth); }catch(e){ console.error(e);} return; }
       const profile = await ensureProfile(user);
-      me = {...profile, uid: user.uid};
-      if(me.theme) document.getElementById('app').setAttribute('data-theme', me.theme);
-      renderAuthUI(me);
-      startAppForUser();
+      me = {...profile, uid:user.uid};
+      renderAuth();
+      start();
     });
 
-    async function googleSignIn(){
-      const provider = new GoogleAuthProvider();
-      try{ await signInWithPopup(auth, provider); } catch(e){ console.error(e); }
+    async function googleSignIn(){ const provider = new GoogleAuthProvider(); try{ await signInWithPopup(auth, provider);}catch(e){console.error(e);} }
+
+    function renderAuth(){
+      authArea.innerHTML = '';
+      const av = create('div','avatar'); av.textContent = (me.displayName||'U')[0].toUpperCase();
+      const name = create('div'); name.textContent = me.displayName || 'You';
+      const wrap = create('div'); wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.gap='8px';
+      wrap.appendChild(av); wrap.appendChild(name);
+      authArea.appendChild(wrap);
+      const googleBtn = create('button'); googleBtn.textContent='Google Signin'; googleBtn.onclick=googleSignIn;
+      const signOutBtn = create('button'); signOutBtn.textContent='Sign Out'; signOutBtn.onclick=()=>signOut(auth);
+      authArea.appendChild(googleBtn); authArea.appendChild(signOutBtn);
     }
 
-    tabChats.onclick = ()=>{ showTab('chats'); };
-    tabPeople.onclick = ()=>{ showTab('people'); activatePeoplePanel(); };
-    tabMe.onclick = ()=>{ showTab('me'); renderMyProfile(); };
-    btnNew.onclick = ()=>{ showTab('people'); activatePeoplePanel(); };
-    themeToggle.onclick = toggleTheme;
-    sendBtn.onclick = sendMessage;
-    textInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){ sendMessage(); } });
-    clearSearch.onclick = ()=>{ peopleSearch.value=''; renderPeopleList(); peopleSearch.focus(); };
-    peopleSearch.addEventListener('input', ()=> renderPeopleList());
+    function conversationId(a,b){ return [a,b].sort().join('_'); }
 
-    function showTab(t){
-      tabChats.classList.toggle('active', t==='chats');
-      tabPeople.classList.toggle('active', t==='people');
-      tabMe.classList.toggle('active', t==='me');
-      chatsList.classList.toggle('hidden', t!=='chats');
-      peoplePanel.classList.toggle('hidden', t!=='people');
-      profilePanel.classList.toggle('hidden', t!=='me');
-      document.querySelectorAll('.col').forEach(c=>c.classList.remove('active'));
-      document.getElementById('left-col').classList.add('active');
-    }
+    // ---- Messaging: improved send/receive ----
 
-    async function activatePeoplePanel(){
-      if(peopleSnapshotUnsub) return;
-      peopleList.innerHTML = '<div class="small">Loading people...</div>';
-      const q = collection(db,'users');
-      peopleSnapshotUnsub = onSnapshot(q, snap=>{
-        // build array excluding self
-        const arr = [];
-        snap.forEach(s=>{
-          const u = s.data();
-          usersCache[u.uid] = u;
-          if(u.uid === me.uid) return;
-          arr.push(u);
-        });
-        // cache raw list for filtering
-        window.__peopleRaw = arr;
-        renderPeopleList();
+    // Local optimistic pending map keyed by tempId to reconcile after server write
+    const pendingMap = new Map();
+
+    // Show messages array (serverDocs + pending local messages), sorted stable by timestamp + createdAt fallback
+    function renderMessagesList(docs){
+      // docs: array of message objects { id, data }
+      // sort by timestamp (server) then localCreated (fallback)
+      docs.sort((A,B)=>{
+        const aTs = A.data.timestamp && A.data.timestamp.toMillis ? A.data.timestamp.toMillis() : (A.data._localCreated || 0);
+        const bTs = B.data.timestamp && B.data.timestamp.toMillis ? B.data.timestamp.toMillis() : (B.data._localCreated || 0);
+        if(aTs === bTs) return (A.id||'').localeCompare(B.id||'');
+        return aTs - bTs;
       });
-      // subscribe to my follows
-      const fQ = query(collection(db,'follows'), where('followerId','==',me.uid));
-      onSnapshot(fQ, snap=>{
-        followsCache.clear();
-        snap.forEach(s=>followsCache.add(s.data().followingId));
-        renderPeopleList();
-        refreshLists();
-      });
-    }
 
-    function renderPeopleList(){
-      const raw = window.__peopleRaw || [];
-      const q = peopleSearch.value.trim().toLowerCase();
-      const filtered = q ? raw.filter(u=>{
-        const name = (u.displayName||'').toLowerCase();
-        const bio = (u.bio||'').toLowerCase();
-        return name.includes(q) || bio.includes(q);
-      }) : raw;
-      peopleList.innerHTML = '';
-      filtered.sort((a,b)=> (a.displayName||'').localeCompare(b.displayName||''));
-      filtered.forEach(u=>{
-        const row = create('div','user-row');
-        const av = create('div','avatar'); av.textContent = (u.displayName||'U')[0].toUpperCase();
-        const body = create('div','row-body');
-        const name = create('div'); name.className='name'; name.textContent = u.displayName || 'User';
-        const meta = create('div'); meta.className='meta'; meta.textContent = u.bio || '';
-        body.appendChild(name); body.appendChild(meta);
-        row.appendChild(av); row.appendChild(body);
-
-        const btn = create('button','follow-btn');
-        btn.textContent = followsCache.has(u.uid) ? 'Following' : 'Follow';
-        btn.onclick = async (e)=>{
-          e.stopPropagation();
-          if(followsCache.has(u.uid)){
-            // unfollow
-            const q = query(collection(db,'follows'), where('followerId','==',me.uid), where('followingId','==',u.uid));
-            onSnapshot(q, async snaps=>{
-              snaps.forEach(async s=>{ await deleteDoc(doc(db,'follows',s.id)); });
-            });
-          } else {
-            await addDoc(collection(db,'follows'), { followerId: me.uid, followingId: u.uid, timestamp: nowTs() });
-          }
-        };
-
-        const openChatBtn = create('button','tab'); openChatBtn.textContent='Message';
-        openChatBtn.onclick = (e)=>{ e.stopPropagation(); openChatWith(u); };
-
-        const actionsWrap = create('div'); actionsWrap.style.display='flex'; actionsWrap.style.gap='8px';
-        actionsWrap.appendChild(btn); actionsWrap.appendChild(openChatBtn);
-        row.appendChild(actionsWrap);
-
-        row.onclick = ()=> openChatWith(u);
-        peopleList.appendChild(row);
-      });
-      peopleCountEl.textContent = filtered.length;
-    }
-
-    async function refreshLists(){
-      chatsList.innerHTML = '';
-      for(const uid of followsCache){
-        const u = usersCache[uid];
-        if(!u) continue;
-        const row = create('div','user-row');
-        const av = create('div','avatar'); av.textContent = (u.displayName||'U')[0].toUpperCase();
-        const body = create('div','row-body');
-        const name = create('div'); name.className='name'; name.textContent = u.displayName || 'User';
-        const meta = create('div'); meta.className='meta'; meta.textContent = 'Loading last message...';
-        body.appendChild(name); body.appendChild(meta);
-        row.appendChild(av); row.appendChild(body);
-        row.onclick = ()=>openChatWith(u);
-        chatsList.appendChild(row);
-
-        const messagesRef = collection(db,'messages');
-        const q = query(messagesRef, where('conversationId','in', [ conversationId(me.uid,u.uid) ]), orderBy('timestamp','desc'), limit(1));
-        onSnapshot(q, snap=>{
-          if(!snap.empty){
-            const m = snap.docs[0].data();
-            meta.textContent = (m.senderId===me.uid ? 'You: ' : '') + (m.text||'') + ' · ' + timeAgo(m.timestamp);
-          } else {
-            meta.textContent = 'No messages yet · ' + (u.bio||'');
-          }
-        });
-      }
-    }
-
-    function conversationId(a,b){
-      return [a,b].sort().join('_');
-    }
-
-    function openChatWith(u){
-      activePeer = u;
-      chatEmpty.style.display='none';
-      chatWrap.classList.remove('hidden');
-      chatName.textContent = u.displayName || 'User';
-      chatBio.textContent = u.bio || '';
-      chatAvatar.textContent = (u.displayName||'U')[0].toUpperCase();
-      btnUnfollow.classList.toggle('hidden', !followsCache.has(u.uid));
-      if(messagesUnsub) messagesUnsub();
-      const convo = conversationId(me.uid,u.uid);
-      const q = query(collection(db,'messages'), where('conversationId','==',convo), orderBy('timestamp','asc'));
       messagesEl.innerHTML = '';
-      messagesUnsub = onSnapshot(q, snap=>{
-        messagesEl.innerHTML = '';
-        snap.forEach(docSnap=>{
-          const m = docSnap.data();
-          if(m.deleted) return;
-          const el = create('div','msg ' + (m.senderId===me.uid ? 'me' : 'other'));
-          el.dataset.id = docSnap.id;
-          el.innerHTML = `<div>${escapeHtml(m.text)}</div><div class="meta">${formatTimestamp(m.timestamp)}${m.senderId===me.uid ? ' · You' : ''}</div>`;
-          if(m.senderId===me.uid){
-            el.ondblclick = async ()=>{ if(confirm('Delete this message?')) await updateDoc(doc(db,'messages',docSnap.id), {deleted:true}); };
-          }
-          messagesEl.appendChild(el);
-        });
-        messagesEl.scrollTop = messagesEl.scrollHeight;
+      docs.forEach(item=>{
+        if(item.data.deleted) return;
+        const m = item.data;
+        const el = create('div','msg ' + (m.senderId === me.uid ? 'me' : 'other'));
+        el.dataset.id = item.id;
+        const text = escapeHtml(m.text || '');
+        const tsText = m.timestamp && m.timestamp.toDate ? formatTimestamp(m.timestamp) : (m._localCreated ? formatTimestamp(new Date(m._localCreated)) + ' (sending...)' : '');
+        el.innerHTML = `<div>${text}</div><div class="meta">${tsText}${m.senderId===me.uid ? ' · You' : ''}</div>`;
+        // Allow deleting own messages when server id present
+        if(m.senderId === me.uid && !item.id.startsWith('local_')){
+          el.ondblclick = async ()=>{ if(confirm('Delete this message?')) await updateDoc(doc(db,'messages',item.id), { deleted:true }); };
+        }
+        messagesEl.appendChild(el);
       });
-      showTab('chats');
+      // auto-scroll to bottom after rendering
+      requestAnimationFrame(()=>{ messagesEl.scrollTop = messagesEl.scrollHeight; });
     }
 
+    // Subscribe to conversation messages (only one subscription at a time)
+    function subscribeToConversation(peerUid){
+      if(messagesUnsub) messagesUnsub(); messagesUnsub = null;
+      const convo = conversationId(me.uid, peerUid);
+      const q = query(collection(db,'messages'), where('conversationId','==',convo), orderBy('timestamp','asc'));
+      // We use onSnapshot to get server-synced messages; if timestamp isn't set yet (pending writes), Firestore returns them locally but timestamp is null; handle that in render.
+      messagesUnsub = onSnapshot(q, snap=>{
+        const docs = [];
+        snap.forEach(docSnap=>{
+          docs.push({ id: docSnap.id, data: docSnap.data() });
+        });
+        // merge with pending local messages for this conversation
+        const pendingForConvo = Array.from(pendingMap.values()).filter(p=>p.conversationId === convo);
+        pendingForConvo.forEach(p=>{
+          // give pending docs a stable local id prefix so they sort predictably
+          docs.push({ id: 'local_'+p.tempId, data: p });
+        });
+        renderMessagesList(docs);
+      }, err=>{
+        console.error('messages onSnapshot error', err);
+      });
+    }
+
+    // Send message with optimistic UI and reliable write
     async function sendMessage(){
       const text = textInput.value.trim();
       if(!text) return;
-      if(!activePeer) { alert('Select someone to message'); return; }
-      if(!followsCache.has(activePeer.uid)){ alert('You can only message users you follow'); return; }
+      if(!activePeer){ alert('Select recipient'); return; }
+      // Ensure conversation allowed (for your app rules you can change this)
+      // Create local pending object
       const convo = conversationId(me.uid, activePeer.uid);
-      await addDoc(collection(db,'messages'), {
+      const tempId = `${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+      const localCreated = Date.now();
+      const pending = {
+        tempId,
         conversationId: convo,
         senderId: me.uid,
         receiverId: activePeer.uid,
         text,
-        timestamp: nowTs(),
-        deleted: false
-      });
-      textInput.value = '';
+        deleted: false,
+        _localCreated: localCreated
+      };
+      // show immediately
+      pendingMap.set(tempId, pending);
+      // re-render messages by forcing a local update (subscribe should already merge pending)
+      // If no subscription yet, create one
+      if(!messagesUnsub) subscribeToConversation(activePeer.uid);
+      // Add to Firestore
+      try{
+        const docRef = await addDoc(collection(db,'messages'), {
+          conversationId: convo,
+          senderId: me.uid,
+          receiverId: activePeer.uid,
+          text,
+          timestamp: nowTs(),
+          deleted: false
+        });
+        // On successful write, remove pending entry that matches text + localCreated
+        pendingMap.forEach((p, k)=>{
+          if(p.tempId === tempId) pendingMap.delete(k);
+        });
+        // After server write, snapshot listener will include the new server doc
+      } catch(e){
+        console.error('Send failed', e);
+        // leave pending with an error flag so user can retry
+        const p = pendingMap.get(tempId); if(p) p._failed = true;
+        alert('Message failed to send. Check connection and try again.');
+      } finally {
+        textInput.value = '';
+      }
     }
 
-    function openEditProfile(){
-      editName.value = me.displayName || '';
-      editBio.value = me.bio || '';
-      modal.classList.add('open');
-    }
-    modalCancel.onclick = ()=>{ modal.classList.remove('open'); };
-    modalSave.onclick = async ()=>{
-      const name = editName.value.trim() || me.displayName;
-      const bio = editBio.value.trim();
-      await updateDoc(doc(db,'users',me.uid), { displayName: name, bio: bio, updatedAt: nowTs() });
-      modal.classList.remove('open');
-    };
-
-    async function renderMyProfile(){
-      profilePanel.innerHTML = '';
-      const card = create('div'); card.style.padding='12px';
-      const av = create('div','avatar'); av.textContent = (me.displayName||'U')[0].toUpperCase();
-      av.style.width='84px'; av.style.height='84px'; av.style.fontSize='32px';
-      const name = create('div'); name.style.fontWeight='700'; name.style.marginTop='8px'; name.textContent = me.displayName || 'You';
-      const bio = create('div'); bio.className='small'; bio.style.marginTop='6px'; bio.textContent = me.bio || '';
-      const edit = create('button','follow-btn'); edit.textContent='Edit profile'; edit.onclick = openEditProfile;
-      const fols = create('div'); fols.className='small'; fols.textContent='Loading followers...';
-      card.appendChild(av); card.appendChild(name); card.appendChild(bio); card.appendChild(edit); card.appendChild(fols);
-      profilePanel.appendChild(card);
-
-      const q1 = query(collection(db,'follows'), where('followingId','==',me.uid));
-      onSnapshot(q1, snap=>{ fols.textContent = `Followers: ${snap.size} · Following: loading...`; });
-      const q2 = query(collection(db,'follows'), where('followerId','==',me.uid));
-      onSnapshot(q2, snap=>{ fols.textContent = `Followers: ${fols.textContent.split('·')[0].replace('Followers:','').trim()} · Following: ${snap.size}`; });
-    }
-
-    function timeAgo(ts){
-      if(!ts) return '';
-      const date = ts.toDate ? ts.toDate() : new Date(ts);
-      const d = Math.floor((Date.now() - date.getTime())/1000);
-      if(d < 60) return `${d}s`;
-      if(d < 3600) return `${Math.floor(d/60)}m`;
-      if(d < 86400) return `${Math.floor(d/3600)}h`;
-      return `${Math.floor(d/86400)}d`;
-    }
+    // Message list helpers
     function formatTimestamp(ts){
       if(!ts) return '';
       const d = ts.toDate ? ts.toDate() : new Date(ts);
@@ -477,42 +270,87 @@
     }
     function escapeHtml(s){ return (s+'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
 
-    async function toggleTheme(){
-      const current = document.getElementById('app').getAttribute('data-theme') || 'light';
-      const next = current === 'light' ? 'dark' : 'light';
-      document.getElementById('app').setAttribute('data-theme', next);
-      themeToggle.textContent = next === 'dark' ? 'Light' : 'Dark';
-      try{ await updateDoc(doc(db,'users',me.uid), { theme: next }); } catch(e){ console.warn('Could not save theme', e); }
+    // ---- Chats list rendering (shows last message) ----
+    function renderChatsList(){
+      chatsList.innerHTML = '';
+      // For demo: show users we follow (followsCache), otherwise show all cached users
+      const uids = followsCache.size ? Array.from(followsCache) : Object.keys(usersCache).filter(id=>id!==me.uid);
+      if(uids.length === 0){ chatsList.innerHTML = '<div class="small">No chats yet</div>'; return; }
+      uids.forEach(uid=>{
+        const u = usersCache[uid]; if(!u) return;
+        const row = create('div','user-row');
+        const av = create('div','avatar'); av.textContent = (u.displayName||'U')[0].toUpperCase();
+        const body = create('div'); body.style.flex='1';
+        const name = create('div'); name.style.fontWeight='700'; name.textContent = u.displayName || 'User';
+        const meta = create('div'); meta.className='small'; meta.textContent = 'Loading last message...';
+        body.appendChild(name); body.appendChild(meta);
+        row.appendChild(av); row.appendChild(body);
+        row.onclick = ()=>openChatWith(u);
+        chatsList.appendChild(row);
+
+        // Query last message for preview (order desc + limit 1)
+        const convo = conversationId(me.uid, uid);
+        const q = query(collection(db,'messages'), where('conversationId','==',convo), orderBy('timestamp','desc'), limit(1));
+        onSnapshot(q, snap=>{
+          if(snap.empty){ meta.textContent = u.bio || ''; return; }
+          const m = snap.docs[0].data();
+          const preview = (m.senderId === me.uid ? 'You: ' : '') + (m.text || '');
+          meta.textContent = preview + ' · ' + (m.timestamp ? timeAgo(m.timestamp) : 'now');
+        });
+      });
     }
 
-    async function startAppForUser(){
-      themeToggle.textContent = document.getElementById('app').getAttribute('data-theme') === 'dark' ? 'Light' : 'Dark';
-      authArea.innerHTML = '';
-      const userBtnWrap = create('div'); userBtnWrap.style.display='flex'; userBtnWrap.style.gap='8px'; userBtnWrap.style.alignItems='center';
-      const av = create('div','avatar'); av.textContent = (me.displayName||'U')[0].toUpperCase();
-      userBtnWrap.appendChild(av);
-      const display = create('div'); display.textContent = me.displayName || 'You';
-      userBtnWrap.appendChild(display);
-      authArea.appendChild(userBtnWrap);
-      const signOutBtn = create('button','tab'); signOutBtn.textContent='Sign Out'; signOutBtn.onclick=()=>signOut(auth);
-      const googleBtn = create('button','tab'); googleBtn.textContent='Sign in with Google'; googleBtn.onclick=googleSignIn;
-      authArea.appendChild(googleBtn); authArea.appendChild(signOutBtn);
-
-      // initial load: people and follows
-      activatePeoplePanel();
-      renderMyProfile();
-      showTab('chats');
-      document.addEventListener('keydown',e=>{ if(e.key==='n') { showTab('people'); activatePeoplePanel(); } });
+    function timeAgo(ts){
+      if(!ts) return '';
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      const s = Math.floor((Date.now() - d.getTime())/1000);
+      if(s < 60) return `${s}s`; if(s < 3600) return `${Math.floor(s/60)}m`; if(s < 86400) return `${Math.floor(s/3600)}h`; return `${Math.floor(s/86400)}d`;
     }
 
+    // ---- Open chat and subscribe ----
+    function openChatWith(u){
+      activePeer = u;
+      chatEmpty.style.display='none';
+      chatWrap.classList.remove('hidden');
+      chatName.textContent = u.displayName || 'User';
+      chatBio.textContent = u.bio || '';
+      chatAvatar.textContent = (u.displayName||'U')[0].toUpperCase();
+      // subscribe to messages for this convo
+      subscribeToConversation(u.uid);
+    }
+
+    // ---- Start app after auth ----
+    async function start(){
+      // load some users (simple demo: subscribe to users collection)
+      const q = collection(db,'users');
+      onSnapshot(q, snap=>{
+        snap.forEach(s=>{ const u = s.data(); usersCache[u.uid]=u; });
+        // don't include self in caches when rendering lists
+        delete usersCache[me.uid];
+        renderChatsList();
+      });
+      // load follows for me
+      const fq = query(collection(db,'follows'), where('followerId','==',me.uid));
+      onSnapshot(fq, snap=>{
+        followsCache.clear(); snap.forEach(s=>followsCache.add(s.data().followingId));
+        renderChatsList();
+      });
+
+      // wire UI
+      sendBtn.onclick = sendMessage;
+      textInput.addEventListener('keydown', e=>{ if(e.key==='Enter') sendMessage(); });
+    }
+
+    // Helper to get doc ref for update
+    import { doc as docRef } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+    // minimal polyfill: use docRef above where needed (updateDoc uses docRef)
+
+    // small utility to updateDoc (already imported above)
+    // Note: updateDoc and doc were imported at top; if needed use updateDoc(doc(db,'messages',id), {...})
+
+    // Safety: disable UI until authenticated
+    chatWrap.classList.add('hidden');
     chatsList.innerHTML = '<div class="small">Waiting for auth...</div>';
-
-    async function loadUser(uid){
-      if(usersCache[uid]) return usersCache[uid];
-      const snap = await getDoc(doc(db,'users',uid));
-      if(snap.exists()){ usersCache[uid]=snap.data(); return snap.data(); }
-      return null;
-    }
   </script>
 </body>
 </html>
