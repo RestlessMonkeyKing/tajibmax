@@ -3,9 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mini Message — iMessage + Following (Firebase)</title>
+  <title>Mini Message — People Search + Follow</title>
   <style>
-    /* Minimal SF-like font fallback, pastel palette, mobile-first */
     :root{
       --bg:#ffffff; --panel:#f7f7fb; --primary:#0a84ff; --muted:#8e8e93; --bubble-me:var(--primary);
       --bubble-other:#e5e6ea; --text:#111; --glass:rgba(0,0,0,0.04);
@@ -15,17 +14,14 @@
       --bubble-other:#172033; --text:#e8eef8; --glass:rgba(255,255,255,0.03);
     }
     html,body{height:100%;margin:0;font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;}
-    /* App shell */
     .app{display:flex;flex-direction:column;height:100vh;max-width:980px;margin:0 auto;border-left:1px solid var(--glass);border-right:1px solid var(--glass);}
     header{display:flex;align-items:center;gap:12px;padding:10px 14px;background:linear-gradient(180deg,transparent,rgba(0,0,0,0.02));backdrop-filter:blur(6px);position:sticky;top:0;z-index:5}
     .logo{display:flex;align-items:center;gap:8px}
     .logo .dot{width:28px;height:28px;border-radius:6px;background:linear-gradient(180deg,var(--primary),#006fe6);box-shadow:0 6px 18px rgba(10,132,255,0.15)}
     .title{font-weight:600}
-    /* Content area: left column (tabs) on wide screens, single column on mobile */
     .main{display:flex;flex:1;overflow:hidden}
     .col{flex-basis:320px;flex-shrink:0;border-right:1px solid var(--glass);background:var(--panel);overflow:auto}
     .col.full{flex:1;border-right:none;background:transparent}
-    /* Chats/People list */
     .list{padding:12px;display:flex;flex-direction:column;gap:10px}
     .user-row{display:flex;align-items:center;gap:12px;padding:8px;border-radius:10px;cursor:pointer;transition:background .15s}
     .user-row:hover{background:rgba(0,0,0,0.02)}
@@ -34,7 +30,6 @@
     .row-body .name{font-weight:600}
     .row-body .meta{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .follow-btn{padding:6px 10px;border-radius:8px;background:white;border:1px solid var(--glass);font-weight:600;cursor:pointer}
-    /* Chat area */
     .chat-wrap{display:flex;flex-direction:column;height:100%;align-items:stretch}
     .messages{flex:1;padding:20px 14px 120px;display:flex;flex-direction:column;gap:10px;overflow:auto}
     .msg{max-width:74%;padding:10px 12px;border-radius:16px;box-shadow:0 1px 0 rgba(0,0,0,0.03);word-wrap:break-word}
@@ -42,13 +37,11 @@
     .msg.other{margin-right:auto;background:var(--bubble-other);color:var(--text);border-bottom-left-radius:6px}
     .msg .meta{font-size:11px;color:rgba(0,0,0,0.45);margin-top:6px;text-align:right}
     [data-theme="dark"] .msg .meta{color:rgba(255,255,255,0.6)}
-    /* Input */
     .composer{position:fixed;left:0;right:0;bottom:0;padding:12px;background:transparent;display:flex;justify-content:center}
     .composer-inner{width:100%;max-width:980px;padding:10px 14px;background:var(--panel);display:flex;gap:8px;border-top:1px solid var(--glass)}
     .input{flex:1;display:flex;gap:8px;align-items:center}
     .text{flex:1;padding:10px 12px;border-radius:999px;border:1px solid var(--glass);background:transparent;color:var(--text);outline:none}
     .send{background:var(--primary);color:white;padding:10px 14px;border-radius:999px;border:none;font-weight:700;cursor:pointer}
-    /* Profile editor modal */
     .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);z-index:40}
     .modal.open{display:flex}
     .card{background:var(--panel);padding:18px;border-radius:12px;min-width:280px;max-width:420px}
@@ -56,14 +49,14 @@
     label{font-size:13px;color:var(--muted)}
     input[type="text"],textarea{padding:8px;border-radius:8px;border:1px solid var(--glass);background:transparent;color:var(--text);outline:none}
     textarea{min-height:80px;resize:vertical}
-    /* Top nav tabs (mobile) */
     .tabs{display:flex;gap:8px}
     .tab{padding:8px 10px;border-radius:10px;cursor:pointer}
     .tab.active{background:var(--glass)}
-    /* Utilities */
     .small{font-size:13px;color:var(--muted)}
     .right{margin-left:auto}
     .hidden{display:none}
+    .search-row{display:flex;gap:8px;padding:8px}
+    .search-input{flex:1;padding:8px;border-radius:10px;border:1px solid var(--glass);background:transparent;color:var(--text)}
     @media(min-width:900px){
       .col.phone-hide{display:block}
       .col{flex-basis:320px}
@@ -91,7 +84,6 @@
     </header>
 
     <div class="main">
-      <!-- Left: Chats/People -->
       <div class="col" id="left-col">
         <div style="padding:12px;display:flex;gap:8px;align-items:center">
           <div class="tabs" style="flex:1">
@@ -103,11 +95,20 @@
         </div>
 
         <div id="chats-list" class="list"></div>
-        <div id="people-list" class="list hidden"></div>
+
+        <!-- People list with search -->
+        <div id="people-panel" class="hidden">
+          <div class="search-row">
+            <input id="people-search" class="search-input" placeholder="Search people by name or bio" />
+            <button id="clear-search" class="tab">Clear</button>
+          </div>
+          <div id="people-list" class="list" style="padding-top:6px"></div>
+          <div id="people-footer" style="padding:12px" class="small">Showing <span id="people-count">0</span> people</div>
+        </div>
+
         <div id="profile-panel" class="list hidden"></div>
       </div>
 
-      <!-- Right: Chat area -->
       <div class="col full" id="chat-col">
         <div id="chat-empty" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted)">
           <div style="text-align:center;max-width:360px">
@@ -132,7 +133,6 @@
       </div>
     </div>
 
-    <!-- Composer (fixed) -->
     <div class="composer" aria-hidden="false">
       <div class="composer-inner">
         <div class="input">
@@ -142,7 +142,6 @@
       </div>
     </div>
 
-    <!-- Profile modal -->
     <div id="modal" class="modal" role="dialog" aria-modal="true">
       <div class="card">
         <h3>Edit Profile</h3>
@@ -163,15 +162,6 @@
   </div>
 
   <script type="module">
-    /* ===============================
-       Firebase SDK (ES modules) setup
-       ===============================
-       Uses provided firebaseConfig.
-       All data collections:
-         users (profiles)
-         follows (followerId, followingId, timestamp)
-         messages (conversationId, senderId, receiverId, text, timestamp, deleted:false)
-    */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInAnonymously, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, addDoc, collection, query, where, orderBy, limit, onSnapshot, serverTimestamp, enableIndexedDbPersistence, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
@@ -188,25 +178,24 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    try { await enableIndexedDbPersistence(db); } catch(e){ /* ignore if multi-tab */ }
+    try { await enableIndexedDbPersistence(db); } catch(e){ /* ignore */ }
 
-    /* Simple utility */
     const $ = sel => document.querySelector(sel);
     const create = (tag,cls)=>{const e=document.createElement(tag);if(cls)e.className=cls;return e};
     const nowTs = ()=>serverTimestamp();
 
-    /* App state */
-    let me = null;               // current user object {uid, displayName, photoURL, bio, theme}
-    let activePeer = null;       // {uid, displayName, bio}
+    let me = null;
+    let activePeer = null;
     let messagesUnsub = null;
-    let followsCache = new Set(); // uids I follow
-    let usersCache = {};         // uid -> profile
+    let followsCache = new Set();
+    let usersCache = {}; // uid -> user
+    let peopleSnapshotUnsub = null;
 
-    /* Elements */
     const authArea = $('#auth-area');
     const themeToggle = $('#theme-toggle');
     const tabChats = $('#tab-chats'), tabPeople = $('#tab-people'), tabMe = $('#tab-me');
     const chatsList = $('#chats-list'), peopleList = $('#people-list'), profilePanel = $('#profile-panel');
+    const peoplePanel = $('#people-panel'), peopleSearch = $('#people-search'), clearSearch = $('#clear-search'), peopleCountEl = $('#people-count');
     const chatWrap = $('#chat-wrap'), chatEmpty = $('#chat-empty');
     const messagesEl = $('#messages'), chatName = $('#chat-name'), chatBio = $('#chat-bio'), chatAvatar = $('#chat-avatar');
     const sendBtn = $('#send-btn'), textInput = $('#text-input');
@@ -215,13 +204,9 @@
     const editName = $('#edit-name'), editBio = $('#edit-bio');
     const btnNew = $('#btn-new');
 
-    /* ---------------------
-       Auth / Profile sync
-       --------------------- */
     function renderAuthUI(user){
       authArea.innerHTML = '';
       const avatar = create('div','avatar'); avatar.textContent = user.displayName ? user.displayName[0].toUpperCase() : 'U';
-      avatar.title = user.displayName || 'You';
       const name = create('div'); name.textContent = user.displayName || 'You';
       const wrap = create('div'); wrap.style.display='flex'; wrap.style.alignItems='center'; wrap.style.gap='8px';
       wrap.appendChild(avatar); wrap.appendChild(name);
@@ -256,11 +241,9 @@
 
     onAuthStateChanged(auth, async (user)=>{
       if(!user){
-        // auto sign-in anonymously for quick start
         try{ await signInAnonymously(auth); } catch(e){ console.error(e); }
         return;
       }
-      // load or create profile
       const profile = await ensureProfile(user);
       me = {...profile, uid: user.uid};
       if(me.theme) document.getElementById('app').setAttribute('data-theme', me.theme);
@@ -268,103 +251,107 @@
       startAppForUser();
     });
 
-    /* Google sign-in helper (optional) */
     async function googleSignIn(){
       const provider = new GoogleAuthProvider();
-      try{
-        await signInWithPopup(auth, provider);
-      } catch(e){ console.error(e); }
+      try{ await signInWithPopup(auth, provider); } catch(e){ console.error(e); }
     }
 
-    /* ---------------------
-       UI interactions
-       --------------------- */
     tabChats.onclick = ()=>{ showTab('chats'); };
-    tabPeople.onclick = ()=>{ showTab('people'); loadAllUsers(); };
+    tabPeople.onclick = ()=>{ showTab('people'); activatePeoplePanel(); };
     tabMe.onclick = ()=>{ showTab('me'); renderMyProfile(); };
-    btnNew.onclick = ()=>{ showTab('people'); };
+    btnNew.onclick = ()=>{ showTab('people'); activatePeoplePanel(); };
     themeToggle.onclick = toggleTheme;
     sendBtn.onclick = sendMessage;
     textInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){ sendMessage(); } });
+    clearSearch.onclick = ()=>{ peopleSearch.value=''; renderPeopleList(); peopleSearch.focus(); };
+    peopleSearch.addEventListener('input', ()=> renderPeopleList());
 
     function showTab(t){
       tabChats.classList.toggle('active', t==='chats');
       tabPeople.classList.toggle('active', t==='people');
       tabMe.classList.toggle('active', t==='me');
       chatsList.classList.toggle('hidden', t!=='chats');
-      peopleList.classList.toggle('hidden', t!=='people');
+      peoplePanel.classList.toggle('hidden', t!=='people');
       profilePanel.classList.toggle('hidden', t!=='me');
-      // mobile behaviours
       document.querySelectorAll('.col').forEach(c=>c.classList.remove('active'));
-      if(t==='chats') document.getElementById('left-col').classList.add('active');
-      if(t==='people') document.getElementById('left-col').classList.add('active');
-      if(t==='me') document.getElementById('left-col').classList.add('active');
+      document.getElementById('left-col').classList.add('active');
     }
 
-    /* ---------------------
-       Users & Follows
-       --------------------- */
-    async function loadAllUsers(){
-      peopleList.innerHTML = '<div class="small">Loading users...</div>';
+    async function activatePeoplePanel(){
+      if(peopleSnapshotUnsub) return;
+      peopleList.innerHTML = '<div class="small">Loading people...</div>';
       const q = collection(db,'users');
-      // lightweight listing: use onSnapshot for live updates
-      onSnapshot(q, snap=>{
-        peopleList.innerHTML = '';
-        snap.forEach(docSnap=>{
-          const u = docSnap.data();
+      peopleSnapshotUnsub = onSnapshot(q, snap=>{
+        // build array excluding self
+        const arr = [];
+        snap.forEach(s=>{
+          const u = s.data();
           usersCache[u.uid] = u;
-          if(u.uid === me.uid) return; // don't show self in People list
-          const row = renderUserRow(u, true);
-          peopleList.appendChild(row);
+          if(u.uid === me.uid) return;
+          arr.push(u);
         });
+        // cache raw list for filtering
+        window.__peopleRaw = arr;
+        renderPeopleList();
       });
-      // load follows for me
+      // subscribe to my follows
       const fQ = query(collection(db,'follows'), where('followerId','==',me.uid));
       onSnapshot(fQ, snap=>{
         followsCache.clear();
         snap.forEach(s=>followsCache.add(s.data().followingId));
+        renderPeopleList();
         refreshLists();
       });
-      // chats list uses follows to show conversations, refresh
-      refreshLists();
     }
 
-    function renderUserRow(u, actions){
-      const row = create('div','user-row');
-      const av = create('div','avatar'); av.textContent = (u.displayName||'U')[0].toUpperCase();
-      const body = create('div','row-body');
-      const name = create('div'); name.className='name'; name.textContent = u.displayName || 'User';
-      const meta = create('div'); meta.className='meta'; meta.textContent = u.bio || '';
-      body.appendChild(name); body.appendChild(meta);
-      row.appendChild(av); row.appendChild(body);
+    function renderPeopleList(){
+      const raw = window.__peopleRaw || [];
+      const q = peopleSearch.value.trim().toLowerCase();
+      const filtered = q ? raw.filter(u=>{
+        const name = (u.displayName||'').toLowerCase();
+        const bio = (u.bio||'').toLowerCase();
+        return name.includes(q) || bio.includes(q);
+      }) : raw;
+      peopleList.innerHTML = '';
+      filtered.sort((a,b)=> (a.displayName||'').localeCompare(b.displayName||''));
+      filtered.forEach(u=>{
+        const row = create('div','user-row');
+        const av = create('div','avatar'); av.textContent = (u.displayName||'U')[0].toUpperCase();
+        const body = create('div','row-body');
+        const name = create('div'); name.className='name'; name.textContent = u.displayName || 'User';
+        const meta = create('div'); meta.className='meta'; meta.textContent = u.bio || '';
+        body.appendChild(name); body.appendChild(meta);
+        row.appendChild(av); row.appendChild(body);
 
-      // follow/unfollow button
-      if(actions){
-        const btn = create('button','follow-btn'); btn.textContent = followsCache.has(u.uid) ? 'Following' : 'Follow';
+        const btn = create('button','follow-btn');
+        btn.textContent = followsCache.has(u.uid) ? 'Following' : 'Follow';
         btn.onclick = async (e)=>{
           e.stopPropagation();
           if(followsCache.has(u.uid)){
-            // unfollow: delete follow doc (find it)
+            // unfollow
             const q = query(collection(db,'follows'), where('followerId','==',me.uid), where('followingId','==',u.uid));
             onSnapshot(q, async snaps=>{
-              snaps.forEach(async s=>{
-                await deleteDoc(doc(db,'follows',s.id));
-              });
+              snaps.forEach(async s=>{ await deleteDoc(doc(db,'follows',s.id)); });
             });
           } else {
-            await addDoc(collection(db,'follows'), {followerId:me.uid, followingId:u.uid, timestamp:nowTs()});
+            await addDoc(collection(db,'follows'), { followerId: me.uid, followingId: u.uid, timestamp: nowTs() });
           }
         };
-        row.appendChild(btn);
-      }
 
-      row.onclick = ()=>{ openChatWith(u); };
+        const openChatBtn = create('button','tab'); openChatBtn.textContent='Message';
+        openChatBtn.onclick = (e)=>{ e.stopPropagation(); openChatWith(u); };
 
-      return row;
+        const actionsWrap = create('div'); actionsWrap.style.display='flex'; actionsWrap.style.gap='8px';
+        actionsWrap.appendChild(btn); actionsWrap.appendChild(openChatBtn);
+        row.appendChild(actionsWrap);
+
+        row.onclick = ()=> openChatWith(u);
+        peopleList.appendChild(row);
+      });
+      peopleCountEl.textContent = filtered.length;
     }
 
     async function refreshLists(){
-      // Chats list: conversations with followed users
       chatsList.innerHTML = '';
       for(const uid of followsCache){
         const u = usersCache[uid];
@@ -379,7 +366,6 @@
         row.onclick = ()=>openChatWith(u);
         chatsList.appendChild(row);
 
-        // load last message
         const messagesRef = collection(db,'messages');
         const q = query(messagesRef, where('conversationId','in', [ conversationId(me.uid,u.uid) ]), orderBy('timestamp','desc'), limit(1));
         onSnapshot(q, snap=>{
@@ -397,21 +383,15 @@
       return [a,b].sort().join('_');
     }
 
-    /* ---------------------
-       Chat lifecycle
-       --------------------- */
     function openChatWith(u){
       activePeer = u;
       chatEmpty.style.display='none';
       chatWrap.classList.remove('hidden');
-      chatWrap.classList.add('open');
       chatName.textContent = u.displayName || 'User';
       chatBio.textContent = u.bio || '';
       chatAvatar.textContent = (u.displayName||'U')[0].toUpperCase();
       btnUnfollow.classList.toggle('hidden', !followsCache.has(u.uid));
-      // unsubscribe previous
       if(messagesUnsub) messagesUnsub();
-      // subscribe to conversation messages
       const convo = conversationId(me.uid,u.uid);
       const q = query(collection(db,'messages'), where('conversationId','==',convo), orderBy('timestamp','asc'));
       messagesEl.innerHTML = '';
@@ -423,19 +403,16 @@
           const el = create('div','msg ' + (m.senderId===me.uid ? 'me' : 'other'));
           el.dataset.id = docSnap.id;
           el.innerHTML = `<div>${escapeHtml(m.text)}</div><div class="meta">${formatTimestamp(m.timestamp)}${m.senderId===me.uid ? ' · You' : ''}</div>`;
-          // allow deleting own messages via long-press / double click
           if(m.senderId===me.uid){
             el.ondblclick = async ()=>{ if(confirm('Delete this message?')) await updateDoc(doc(db,'messages',docSnap.id), {deleted:true}); };
           }
           messagesEl.appendChild(el);
         });
-        // auto-scroll
         messagesEl.scrollTop = messagesEl.scrollHeight;
       });
       showTab('chats');
     }
 
-    /* Send message (only allowed if you follow peer) */
     async function sendMessage(){
       const text = textInput.value.trim();
       if(!text) return;
@@ -453,9 +430,6 @@
       textInput.value = '';
     }
 
-    /* ---------------------
-       Profile editing
-       --------------------- */
     function openEditProfile(){
       editName.value = me.displayName || '';
       editBio.value = me.bio || '';
@@ -469,7 +443,6 @@
       modal.classList.remove('open');
     };
 
-    /* Render my profile panel */
     async function renderMyProfile(){
       profilePanel.innerHTML = '';
       const card = create('div'); card.style.padding='12px';
@@ -478,23 +451,16 @@
       const name = create('div'); name.style.fontWeight='700'; name.style.marginTop='8px'; name.textContent = me.displayName || 'You';
       const bio = create('div'); bio.className='small'; bio.style.marginTop='6px'; bio.textContent = me.bio || '';
       const edit = create('button','follow-btn'); edit.textContent='Edit profile'; edit.onclick = openEditProfile;
-      // follower/following counts (approx: query counts)
       const fols = create('div'); fols.className='small'; fols.textContent='Loading followers...';
       card.appendChild(av); card.appendChild(name); card.appendChild(bio); card.appendChild(edit); card.appendChild(fols);
       profilePanel.appendChild(card);
 
-      // load follower/following counts
       const q1 = query(collection(db,'follows'), where('followingId','==',me.uid));
       onSnapshot(q1, snap=>{ fols.textContent = `Followers: ${snap.size} · Following: loading...`; });
       const q2 = query(collection(db,'follows'), where('followerId','==',me.uid));
-      onSnapshot(q2, snap=>{
-        fols.textContent = `Followers: ${fols.textContent.split('·')[0].replace('Followers:','').trim()} · Following: ${snap.size}`;
-      });
+      onSnapshot(q2, snap=>{ fols.textContent = `Followers: ${fols.textContent.split('·')[0].replace('Followers:','').trim()} · Following: ${snap.size}`; });
     }
 
-    /* ---------------------
-       Helpers
-       --------------------- */
     function timeAgo(ts){
       if(!ts) return '';
       const date = ts.toDate ? ts.toDate() : new Date(ts);
@@ -511,7 +477,6 @@
     }
     function escapeHtml(s){ return (s+'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
 
-    /* Theme toggle saved per-user */
     async function toggleTheme(){
       const current = document.getElementById('app').getAttribute('data-theme') || 'light';
       const next = current === 'light' ? 'dark' : 'light';
@@ -520,27 +485,8 @@
       try{ await updateDoc(doc(db,'users',me.uid), { theme: next }); } catch(e){ console.warn('Could not save theme', e); }
     }
 
-    /* Delete message (example helper) */
-    async function deleteMessage(messageId){
-      await updateDoc(doc(db,'messages',messageId), { deleted:true });
-    }
-
-    /* Security note added in comments:
-       Firestore rules should enforce:
-         - only authenticated users can write
-         - users can only modify their own user doc
-         - follows: followerId must equal request.auth.uid
-         - messages: senderId must equal request.auth.uid and conversationId calculated from sender/receiver
-       This file does not include rules; add them in Firebase console.
-    */
-
-    /* ---------------------
-       Start app flows
-       --------------------- */
     async function startAppForUser(){
-      // show theme
       themeToggle.textContent = document.getElementById('app').getAttribute('data-theme') === 'dark' ? 'Light' : 'Dark';
-      // simple auth controls: if anonymous, show Google sign-in button
       authArea.innerHTML = '';
       const userBtnWrap = create('div'); userBtnWrap.style.display='flex'; userBtnWrap.style.gap='8px'; userBtnWrap.style.alignItems='center';
       const av = create('div','avatar'); av.textContent = (me.displayName||'U')[0].toUpperCase();
@@ -548,38 +494,25 @@
       const display = create('div'); display.textContent = me.displayName || 'You';
       userBtnWrap.appendChild(display);
       authArea.appendChild(userBtnWrap);
-      // Sign in/ out
       const signOutBtn = create('button','tab'); signOutBtn.textContent='Sign Out'; signOutBtn.onclick=()=>signOut(auth);
       const googleBtn = create('button','tab'); googleBtn.textContent='Sign in with Google'; googleBtn.onclick=googleSignIn;
-      authArea.appendChild(googleBtn);
-      authArea.appendChild(signOutBtn);
+      authArea.appendChild(googleBtn); authArea.appendChild(signOutBtn);
 
-      // load follows and users
-      loadAllUsers();
+      // initial load: people and follows
+      activatePeoplePanel();
       renderMyProfile();
       showTab('chats');
-
-      // small keyboard shortcut for new message (N)
-      document.addEventListener('keydown',e=>{ if(e.key==='n') { showTab('people'); } });
+      document.addEventListener('keydown',e=>{ if(e.key==='n') { showTab('people'); activatePeoplePanel(); } });
     }
 
-    /* ==========================
-       Initial lightweight boot
-       ========================== */
-    // Prevent UI actions until auth available
-    chatWrap.classList.add('hidden');
     chatsList.innerHTML = '<div class="small">Waiting for auth...</div>';
 
-    // Simple utility to fetch a user by uid (cached)
     async function loadUser(uid){
       if(usersCache[uid]) return usersCache[uid];
       const snap = await getDoc(doc(db,'users',uid));
       if(snap.exists()){ usersCache[uid]=snap.data(); return snap.data(); }
       return null;
     }
-
-    // Unobtrusive: load initial users list for discoverability
-    (async ()=>{ /* nothing immediate */ })();
   </script>
 </body>
 </html>
