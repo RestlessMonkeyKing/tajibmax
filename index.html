@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>iMessage Social</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary-color: #007AFF;
@@ -27,8 +27,7 @@
             --glass-border: rgba(255, 255, 255, 0.1);
         }
 
-        /* Liquid Glass theme updated to match LiquidGlass.space examples:
-           layered radial gradient, stronger blur, inner highlight, subtle noise */
+        /* Liquid glass updated to requested style */
         [data-theme="liquid"] {
             --bg-color: radial-gradient(1200px 600px at 10% 20%, rgba(102,126,234,0.20) 0%, rgba(118,75,162,0.12) 20%, rgba(118,75,162,0.08) 40%, rgba(255,255,255,0) 100%), linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --card-bg: rgba(255, 255, 255, 0.06);
@@ -61,16 +60,12 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
 
-        html, body { height: 100%; }
-
         body {
             background: var(--bg-color);
             color: var(--text-color);
             transition: var(--transition);
             min-height: 100vh;
             overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
         /* Login Screen */
@@ -92,31 +87,20 @@
 
         .login-card {
             background: var(--glass-bg);
-            backdrop-filter: blur(20px) saturate(120%);
+            backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: var(--border-radius);
             padding: 40px;
             box-shadow: var(--shadow);
-            max-width: 420px;
+            max-width: 400px;
             width: 100%;
             transform: translateY(0);
             transition: var(--transition);
-            position: relative;
-            overflow: hidden;
         }
 
-        /* subtle highlight strip (liquid feel) */
-        .login-card::before {
-            content: '';
-            position: absolute;
-            left: -40%;
-            top: -60%;
-            width: 220%;
-            height: 220%;
-            background: radial-gradient(30% 20% at 10% 10%, rgba(255,255,255,0.06), transparent 15%),
-                        linear-gradient(120deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
-            transform: rotate(-20deg);
-            pointer-events: none;
+        .login-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(31, 38, 135, 0.5);
         }
 
         .app-logo {
@@ -226,7 +210,7 @@
             width: 60px;
             height: 60px;
             background: var(--glass-bg);
-            backdrop-filter: blur(20px) saturate(120%);
+            backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: 50%;
             padding: 0;
@@ -397,7 +381,7 @@
             height: 50px;
             border-radius: 50%;
             background: var(--glass-bg);
-            backdrop-filter: blur(20px) saturate(120%);
+            backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             display: flex;
             align-items: center;
@@ -487,7 +471,7 @@
         .sidebar {
             width: 300px;
             background: var(--glass-bg);
-            backdrop-filter: blur(20px) saturate(120%);
+            backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: var(--border-radius);
             padding: 20px;
@@ -686,7 +670,7 @@
             display: flex;
             flex-direction: column;
             background: var(--glass-bg);
-            backdrop-filter: blur(20px) saturate(120%);
+            backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
@@ -854,7 +838,7 @@
 
         .modal-content {
             background: var(--glass-bg);
-            backdrop-filter: blur(20px) saturate(120%);
+            backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: var(--border-radius);
             padding: 30px;
@@ -1056,8 +1040,8 @@
                     <div class="status-indicator offline"></div>
                 </div>
                 <div>
-                    <h3>Select a conversation</h3>
-                    <p>Start chatting with friends</p>
+                    <h3 id="chatHeaderTitle">Select a conversation</h3>
+                    <p id="chatHeaderSubtitle">Start chatting with friends</p>
                 </div>
             </div>
             
@@ -1166,12 +1150,11 @@
         const editName = document.getElementById('editName');
         const editBio = document.getElementById('editBio');
         const wordCount = document.getElementById('wordCount');
-
-        // Make messageInput and sendBtn mutable so handlers can be safely removed/attached
         let messageInput = document.querySelector('.message-input');
         let sendBtn = document.querySelector('.send-btn');
-
         const themeOptions = document.querySelectorAll('.theme-option');
+        const chatHeaderTitle = document.getElementById('chatHeaderTitle');
+        const chatHeaderSubtitle = document.getElementById('chatHeaderSubtitle');
 
         // Current user data
         let currentUser = null;
@@ -1180,14 +1163,29 @@
         let chats = [];
         let follows = [];
         let currentChatUser = null;
-        let messageListenerUnsubscribe = null;
-        // Keep separate unsubscribes for sender/receiver listeners
-        let _messagesUnsubSender = null;
-        let _messagesUnsubReceiver = null;
 
-        // Keep references to current handlers so we can remove them before re-adding
-        let __currentSendHandler = null;
-        let __currentKeyHandler = null;
+        // conversation listeners (per-conversation)
+        let _convoUnsubSender = null;
+        let _convoUnsubReceiver = null;
+
+        // stable send handlers
+        let __sendHandler = null;
+        let __keyHandler = null;
+
+        // helpers
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return String(unsafe).replace(/[&<"'>]/g, (m) => {
+                switch (m) {
+                    case '&': return '&amp;';
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '"': return '&quot;';
+                    case "'": return '&#039;';
+                    default: return m;
+                }
+            });
+        }
 
         // Profile card hover behavior
         let profileCardTimeout;
@@ -1220,7 +1218,7 @@
             option.addEventListener('click', () => {
                 const theme = option.dataset.theme;
                 setTheme(theme);
-                
+
                 // Update active theme indicator
                 themeOptions.forEach(opt => opt.classList.remove('active'));
                 option.classList.add('active');
@@ -1232,9 +1230,9 @@
             const words = editBio.value.trim().split(/\s+/).filter(word => word.length > 0);
             const wordLimit = 10;
             const remaining = wordLimit - words.length;
-            
+
             wordCount.textContent = remaining;
-            
+
             if (remaining < 0) {
                 wordCount.style.color = '#FF3B30';
                 // Truncate to 10 words
@@ -1262,7 +1260,7 @@
             tab.addEventListener('click', () => {
                 tabs.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
-                
+
                 if (tab.dataset.tab === 'chats') {
                     chatList.style.display = 'block';
                     userList.style.display = 'none';
@@ -1291,11 +1289,11 @@
         editProfileBtn.addEventListener('click', () => {
             editName.value = profileName.textContent;
             editBio.value = profileBio.textContent;
-            
+
             // Update word count
             const words = editBio.value.trim().split(/\s+/).filter(word => word.length > 0);
             wordCount.textContent = 10 - words.length;
-            
+
             editProfileModal.style.display = 'flex';
         });
 
@@ -1306,39 +1304,40 @@
         saveProfileBtn.addEventListener('click', () => {
             const newName = editName.value;
             let newBio = editBio.value;
-            
+
             // Limit bio to 10 words
             const words = newBio.trim().split(/\s+/).filter(word => word.length > 0);
             if (words.length > 10) {
                 newBio = words.slice(0, 10).join(' ');
             }
-            
+
             profileName.textContent = newName;
             profileBio.textContent = newBio;
-            
+
             // Update user profile in Firestore
             if (currentUser) {
                 updateUserProfile(currentUser.uid, newName, newBio);
             }
-            
+
             editProfileModal.style.display = 'none';
         });
 
         // Logout functionality
-        logoutBtn.addEventListener('click', () => {
+        logoutBtn.addEventListener('click', async () => {
             // Set user offline before signing out
             if (currentUser) {
-                updateUserOnlineStatus(currentUser.uid, false);
+                await updateUserOnlineStatus(currentUser.uid, false).catch(()=>{});
             }
-            
+
+            // cleanup conversation listeners
+            if (_convoUnsubSender) { _convoUnsubSender(); _convoUnsubSender = null; }
+            if (_convoUnsubReceiver) { _convoUnsubReceiver(); _convoUnsubReceiver = null; }
+
             signOut(auth).then(() => {
                 // Reset UI
                 currentUser = null;
                 loginScreen.style.display = 'flex';
                 appContainer.style.display = 'none';
-                // Unsubscribe message listeners if any
-                if (_messagesUnsubSender) { _messagesUnsubSender(); _messagesUnsubSender = null; }
-                if (_messagesUnsubReceiver) { _messagesUnsubReceiver(); _messagesUnsubReceiver = null; }
             }).catch((error) => {
                 console.error('Logout error:', error);
             });
@@ -1350,23 +1349,23 @@
                 // User is signed in
                 currentUser = user;
                 console.log('User signed in:', user);
-                
+
                 // Show app, hide login
                 loginScreen.style.display = 'none';
                 appContainer.style.display = 'flex';
-                
+
                 // Set user online
                 updateUserOnlineStatus(user.uid, true);
-                
+
                 // Check if user profile exists, create if not
                 checkAndCreateUserProfile(user);
-                
+
                 // Load user theme
                 loadUserTheme(user.uid);
-                
+
                 // Set up real-time listeners
                 setupFirestoreListeners(user.uid);
-                
+
                 // Update profile UI
                 updateProfileUI(user);
             } else {
@@ -1380,7 +1379,7 @@
         function setTheme(theme) {
             currentTheme = theme;
             document.body.setAttribute('data-theme', theme);
-            
+
             // Save theme to Firestore if user is logged in
             if (currentUser) {
                 updateUserTheme(currentUser.uid, theme);
@@ -1391,7 +1390,7 @@
         async function checkAndCreateUserProfile(user) {
             const userDocRef = doc(db, 'users', user.uid);
             const userDoc = await getDoc(userDocRef);
-            
+
             if (!userDoc.exists()) {
                 // Create new user profile
                 await setDoc(userDocRef, {
@@ -1412,12 +1411,12 @@
                 profileBio.textContent = userData.bio;
                 followerCount.textContent = userData.followers || 0;
                 followingCount.textContent = userData.following || 0;
-                
+
                 // Update profile picture if available
                 if (userData.photoURL) {
                     profilePic.innerHTML = `<img src="${userData.photoURL}" alt="Profile"><div class="status-indicator" id="profileStatus"></div>`;
                 }
-                
+
                 // Update online status
                 if (userData.isOnline) {
                     profileStatus.classList.remove('offline');
@@ -1453,12 +1452,12 @@
         async function loadUserTheme(uid) {
             const userDocRef = doc(db, 'users', uid);
             const userDoc = await getDoc(userDocRef);
-            
+
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 if (userData.theme) {
                     setTheme(userData.theme);
-                    
+
                     // Update active theme indicator
                     themeOptions.forEach(option => {
                         if (option.dataset.theme === userData.theme) {
@@ -1484,13 +1483,13 @@
                 loadUsers();
                 loadFollowedUsers();
             });
-            
+
             // Listen for follows
             const followsQuery = query(
                 collection(db, 'follows'),
                 where('followerId', '==', uid)
             );
-            
+
             onSnapshot(followsQuery, (snapshot) => {
                 follows = [];
                 snapshot.forEach(doc => {
@@ -1500,7 +1499,7 @@
                 loadUsers();
                 loadFollowedUsers();
             });
-            
+
             // Listen for user profile updates
             const userDocRef = doc(db, 'users', uid);
             onSnapshot(userDocRef, (doc) => {
@@ -1509,68 +1508,8 @@
                     followerCount.textContent = userData.followers || 0;
                 }
             });
-            
-            // Set up initial message listener for all user messages
-            setupMessageListener();
-        }
 
-        // Messaging: robust real-time approach without cloning nodes
-        function setupMessageListener() {
-            // Clean up previous listeners
-            if (_messagesUnsubSender) { _messagesUnsubSender(); _messagesUnsubSender = null; }
-            if (_messagesUnsubReceiver) { _messagesUnsubReceiver(); _messagesUnsubReceiver = null; }
-
-            const messageMap = new Map();
-
-            // Listen for messages where current user is sender
-            const qSender = query(
-                collection(db, 'messages'),
-                where('senderId', '==', currentUser.uid),
-                orderBy('timestamp', 'asc')
-            );
-
-            _messagesUnsubSender = onSnapshot(qSender, (snapshot) => {
-                snapshot.forEach(docSnap => {
-                    messageMap.set(docSnap.id, { id: docSnap.id, ...docSnap.data() });
-                });
-
-                chats = Array.from(messageMap.values()).sort((a,b) => {
-                    const ta = a.timestamp && a.timestamp.toMillis ? a.timestamp.toMillis() : 0;
-                    const tb = b.timestamp && b.timestamp.toMillis ? b.timestamp.toMillis() : 0;
-                    return ta - tb;
-                });
-
-                loadChats();
-                if (currentChatUser) loadChatMessages(currentChatUser.id);
-            });
-
-            // Listen for messages where current user is receiver (live check for recipients)
-            const qReceiver = query(
-                collection(db, 'messages'),
-                where('receiverId', '==', currentUser.uid),
-                orderBy('timestamp', 'asc')
-            );
-
-            _messagesUnsubReceiver = onSnapshot(qReceiver, (snapshot) => {
-                snapshot.forEach(docSnap => {
-                    messageMap.set(docSnap.id, { id: docSnap.id, ...docSnap.data() });
-                });
-
-                chats = Array.from(messageMap.values()).sort((a,b) => {
-                    const ta = a.timestamp && a.timestamp.toMillis ? a.timestamp.toMillis() : 0;
-                    const tb = b.timestamp && b.timestamp.toMillis ? b.timestamp.toMillis() : 0;
-                    return ta - tb;
-                });
-
-                loadChats();
-                if (currentChatUser) loadChatMessages(currentChatUser.id);
-            });
-
-            // Combined unsubscribe
-            messageListenerUnsubscribe = () => {
-                if (_messagesUnsubSender) { _messagesUnsubSender(); _messagesUnsubSender = null; }
-                if (_messagesUnsubReceiver) { _messagesUnsubReceiver(); _messagesUnsubReceiver = null; }
-            };
+            // No global message listener here: receiving is handled per-conversation via openChat()
         }
 
         function updateProfileUI(user) {
@@ -1582,23 +1521,23 @@
 
         function loadUsers() {
             userList.innerHTML = '';
-            
+
             if (users.length === 0) {
                 userList.innerHTML = '<div class="user-item">No other users found.</div>';
                 return;
             }
-            
+
             users.forEach(user => {
                 const isFollowing = follows.some(follow => follow.followingId === user.id);
-                
+
                 // Limit bio to 5 words for user list to prevent clutter
-                const shortBio = user.bio ? 
-                    user.bio.split(' ').slice(0, 5).join(' ') + (user.bio.split(' ').length > 5 ? '...' : '') : 
+                const shortBio = user.bio ?
+                    user.bio.split(' ').slice(0, 5).join(' ') + (user.bio.split(' ').length > 5 ? '...' : '') :
                     'No bio yet';
-                
+
                 const userElement = document.createElement('div');
                 userElement.className = 'user-item';
-                
+
                 userElement.innerHTML = `
                     <div class="user-avatar">
                         ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
@@ -1609,24 +1548,24 @@
                         <p>${shortBio}</p>
                     </div>
                     <div class="user-actions">
-                        ${isFollowing ? 
+                        ${isFollowing ?
                             `<button class="message-btn" data-userid="${user.id}">Message</button>
-                             <button class="follow-btn following" data-userid="${user.id}">Unfollow</button>` : 
+                             <button class="follow-btn following" data-userid="${user.id}">Unfollow</button>` :
                             `<button class="follow-btn" data-userid="${user.id}">Follow</button>`
                         }
                     </div>
                 `;
-                
+
                 userList.appendChild(userElement);
             });
-            
+
             // Add event listeners to follow buttons
             document.querySelectorAll('.follow-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const userId = button.dataset.userid;
                     const isFollowing = button.classList.contains('following');
-                    
+
                     if (isFollowing) {
                         unfollowUser(userId);
                     } else {
@@ -1634,7 +1573,7 @@
                     }
                 });
             });
-            
+
             // Add event listeners to message buttons
             document.querySelectorAll('.message-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
@@ -1656,24 +1595,24 @@
 
         function loadFollowedUsers() {
             followedList.innerHTML = '';
-            
-            const followedUsers = users.filter(user => 
+
+            const followedUsers = users.filter(user =>
                 follows.some(follow => follow.followingId === user.id)
             );
-            
+
             if (followedUsers.length === 0) {
                 followedList.innerHTML = '<div class="user-item">You are not following anyone yet.</div>';
                 return;
             }
-            
+
             followedUsers.forEach(user => {
-                const shortBio = user.bio ? 
-                    user.bio.split(' ').slice(0, 5).join(' ') + (user.bio.split(' ').length > 5 ? '...' : '') : 
+                const shortBio = user.bio ?
+                    user.bio.split(' ').slice(0, 5).join(' ') + (user.bio.split(' ').length > 5 ? '...' : '') :
                     'No bio yet';
-                
+
                 const userElement = document.createElement('div');
                 userElement.className = 'user-item';
-                
+
                 userElement.innerHTML = `
                     <div class="user-avatar">
                         ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
@@ -1688,10 +1627,10 @@
                         <button class="follow-btn following" data-userid="${user.id}">Unfollow</button>
                     </div>
                 `;
-                
+
                 followedList.appendChild(userElement);
             });
-            
+
             // Add event listeners to follow buttons
             document.querySelectorAll('.follow-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
@@ -1700,7 +1639,7 @@
                     unfollowUser(userId);
                 });
             });
-            
+
             // Add event listeners to message buttons
             document.querySelectorAll('.message-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
@@ -1722,209 +1661,136 @@
 
         function loadChats() {
             chatList.innerHTML = '';
-            
-            if (chats.length === 0) {
-                chatList.innerHTML = '<div class="chat-item">No conversations yet. Follow users to start chatting!</div>';
-                return;
-            }
-            
-            // Group chats by conversation and get the latest message for each
-            const chatMap = new Map();
-            
-            chats.forEach(chat => {
-                // Determine the other user in the conversation
-                const otherUserId = chat.senderId === currentUser.uid ? chat.receiverId : chat.senderId;
-                const otherUser = users.find(user => user.id === otherUserId);
-                
-                if (!chatMap.has(otherUserId)) {
-                    chatMap.set(otherUserId, {
-                        user: otherUser,
-                        lastMessage: chat.text,
-                        timestamp: chat.timestamp
-                    });
-                } else {
-                    // Update if this message is more recent
-                    const existingChat = chatMap.get(otherUserId);
-                    if (chat.timestamp && existingChat.timestamp && 
-                        chat.timestamp.toDate() > existingChat.timestamp.toDate()) {
-                        existingChat.lastMessage = chat.text;
-                        existingChat.timestamp = chat.timestamp;
+
+            // Lightweight surface: show followed users + recent message activity
+            const listed = new Map();
+
+            // Add followed users
+            follows.forEach(f => {
+                const u = users.find(x => x.id === f.followingId);
+                if (u) listed.set(u.id, { user: u, lastMessage: 'Say hi!' });
+            });
+
+            // Query recent messages to surface chat items
+            const recentQuery = query(collection(db, 'messages'), orderBy('timestamp', 'desc'));
+            onSnapshot(recentQuery, snap => {
+                snap.docs.forEach(d => {
+                    const m = { id: d.id, ...d.data() };
+                    if (!currentUser) return;
+                    const other = m.senderId === currentUser.uid ? m.receiverId : m.senderId;
+                    if (!other) return;
+                    if (!listed.has(other)) {
+                        const u = users.find(x => x.id === other);
+                        listed.set(other, { user: u || null, lastMessage: m.text || '' });
+                    } else {
+                        const entry = listed.get(other);
+                        entry.lastMessage = entry.lastMessage || m.text;
+                        listed.set(other, entry);
                     }
-                }
-            });
-            
-            chatMap.forEach((chat, userId) => {
-                const chatElement = document.createElement('div');
-                chatElement.className = 'chat-item';
-                if (currentChatUser && currentChatUser.id === userId) {
-                    chatElement.classList.add('active');
-                }
-                chatElement.innerHTML = `
-                    <div class="chat-avatar">
-                        ${chat.user && chat.user.photoURL ? `<img src="${chat.user.photoURL}" alt="${chat.user.displayName}">` : '<i class="fas fa-user"></i>'}
-                        <div class="status-indicator ${chat.user && chat.user.isOnline ? '' : 'offline'}"></div>
-                    </div>
-                    <div class="chat-info">
-                        <h4>${chat.user ? chat.user.displayName : 'Unknown User'}</h4>
-                        <p class="last-message">${chat.lastMessage}</p>
-                    </div>
-                `;
-                
-                chatElement.addEventListener('click', () => {
-                    openChat(userId, chat.user);
                 });
-                
-                chatList.appendChild(chatElement);
-            });
-        }
 
-        function openChat(userId, user) {
-            currentChatUser = { id: userId, ...user };
-            
-            // Update chat header
-            const chatHeader = document.querySelector('.chat-header');
-            chatHeader.innerHTML = `
-                <div class="chat-header-avatar">
-                    ${user && user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
-                    <div class="status-indicator ${user && user.isOnline ? '' : 'offline'}"></div>
-                </div>
-                <div>
-                    <h3>${user ? user.displayName : 'Unknown User'}</h3>
-                    <p>${user && user.isOnline ? 'Online' : 'Offline'}</p>
-                </div>
-            `;
-            
-            // Load messages for this chat
-            loadChatMessages(userId);
-            
-            // Update active chat in sidebar
-            document.querySelectorAll('.chat-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Find and activate the corresponding chat item
-            const chatItems = document.querySelectorAll('.chat-item');
-            for (let i = 0; i < chatItems.length; i++) {
-                const avatar = chatItems[i].querySelector('.chat-avatar img, .chat-avatar i');
-                if (avatar) {
-                    // This is a simplified check - in a real app, you'd have a better way to identify the chat
-                    chatItems[i].classList.add('active');
-                    break;
+                if (listed.size === 0) {
+                    chatList.innerHTML = '<div class="chat-item">No conversations yet. Follow users to start chatting!</div>';
+                    return;
                 }
-            }
+
+                chatList.innerHTML = '';
+                listed.forEach((val, userId) => {
+                    const chatElement = document.createElement('div');
+                    chatElement.className = 'chat-item';
+                    chatElement.innerHTML = `<div class="chat-avatar">${val.user && val.user.photoURL ? `<img src="${val.user.photoURL}">` : '<i class="fas fa-user"></i>'}<div class="status-indicator ${val.user && val.user.isOnline ? '' : 'offline'}"></div></div><div class="chat-info"><h4>${val.user ? val.user.displayName : 'Unknown User'}</h4><p class="last-message">${val.lastMessage}</p></div>`;
+                    chatElement.addEventListener('click', () => openChat(userId, val.user || { displayName: 'Unknown User' }));
+                    chatList.appendChild(chatElement);
+                });
+            }, err => { console.error(err); });
         }
 
-        function loadChatMessages(userId) {
-            const chatMessagesContainer = document.getElementById('chatMessages');
-            chatMessagesContainer.innerHTML = '';
-            
-            // Filter messages for this specific conversation and sort
-            const userChats = chats.filter(chat => 
-                (chat.senderId === currentUser.uid && chat.receiverId === userId) ||
-                (chat.senderId === userId && chat.receiverId === currentUser.uid)
-            ).sort((a,b) => {
+        // Open chat: set up per-conversation Firestore listeners (sender==me && sender==them)
+        function openChat(userId, user) {
+            // cleanup previous listeners
+            if (_convoUnsubSender) { _convoUnsubSender(); _convoUnsubSender = null; }
+            if (_convoUnsubReceiver) { _convoUnsubReceiver(); _convoUnsubReceiver = null; }
+
+            currentChatUser = { id: userId, ...user };
+
+            // update header
+            const headerAvatar = document.querySelector('.chat-header-avatar');
+            headerAvatar.innerHTML = user && user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>';
+            if (headerAvatar.querySelector('.status-indicator')) headerAvatar.querySelector('.status-indicator').classList.toggle('offline', !(user && user.isOnline));
+            chatHeaderTitle.textContent = user ? user.displayName : 'Unknown User';
+            chatHeaderSubtitle.textContent = (user && user.isOnline) ? 'Online' : 'Offline';
+
+            // show loading
+            chatMessages.innerHTML = `<div class="message received">Loading messages...<div class="message-time">Just now</div></div>`;
+
+            // convo map keyed by doc id
+            const convoMap = new Map();
+
+            // Listener A: messages I sent to them
+            const qA = query(collection(db, 'messages'), where('senderId', '==', currentUser.uid), where('receiverId', '==', userId), orderBy('timestamp', 'asc'));
+            _convoUnsubSender = onSnapshot(qA, snap => {
+                snap.forEach(ds => convoMap.set(ds.id, { id: ds.id, ...ds.data() }));
+                renderConversationFromMap(convoMap);
+            }, err => console.error('convo sender listen error', err));
+
+            // Listener B: messages they sent to me
+            const qB = query(collection(db, 'messages'), where('senderId', '==', userId), where('receiverId', '==', currentUser.uid), orderBy('timestamp', 'asc'));
+            _convoUnsubReceiver = onSnapshot(qB, snap => {
+                snap.forEach(ds => convoMap.set(ds.id, { id: ds.id, ...ds.data() }));
+                renderConversationFromMap(convoMap);
+            }, err => console.error('convo receiver listen error', err));
+
+            // bind send handler for this conversation (stable attach)
+            bindSendHandlerForConversation(userId);
+        }
+
+        function renderConversationFromMap(map) {
+            const arr = Array.from(map.values()).sort((a, b) => {
                 const ta = a.timestamp && a.timestamp.toMillis ? a.timestamp.toMillis() : 0;
                 const tb = b.timestamp && b.timestamp.toMillis ? b.timestamp.toMillis() : 0;
                 return ta - tb;
             });
-            
-            if (userChats.length === 0) {
-                chatMessagesContainer.innerHTML = `
-                    <div class="message received">
-                        Start a conversation with ${currentChatUser ? currentChatUser.displayName : 'this user'}!
-                        <div class="message-time">Just now</div>
-                    </div>
-                `;
-            } else {
-                userChats.forEach(chat => {
-                    const messageElement = document.createElement('div');
-                    messageElement.className = `message ${chat.senderId === currentUser.uid ? 'sent' : 'received'}`;
-                    
-                    const timestamp = chat.timestamp ? chat.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now';
-                    
-                    // escape text to avoid HTML injection
-                    const safeText = String(chat.text || '').replace(/[&<>"']/g, (m) => {
-                        switch (m) {
-                            case '&': return '&amp;';
-                            case '<': return '&lt;';
-                            case '>': return '&gt;';
-                            case '"': return '&quot;';
-                            case "'": return '&#039;';
-                            default: return m;
-                        }
-                    });
 
-                    messageElement.innerHTML = `
-                        ${safeText}
-                        <div class="message-time">${timestamp}</div>
-                    `;
-                    
-                    chatMessagesContainer.appendChild(messageElement);
+            chatMessages.innerHTML = '';
+            if (arr.length === 0) {
+                chatMessages.innerHTML = `<div class="message received">Start a conversation with ${currentChatUser ? currentChatUser.displayName : 'this user'}!<div class="message-time">Just now</div></div>`;
+            } else {
+                arr.forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = 'message ' + (m.senderId === currentUser.uid ? 'sent' : 'received');
+                    const ts = m.timestamp ? (m.timestamp.toDate ? m.timestamp.toDate() : new Date()) : new Date();
+                    div.innerHTML = `${escapeHtml(m.text || '')}<div class="message-time">${ts.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>`;
+                    chatMessages.appendChild(div);
                 });
             }
-            
-            // Scroll to bottom
-            chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-            
-            // Set up message sending for this user using safe handler attach/remove
-            setupMessageSending(userId);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        function setupMessageSending(userId) {
-            // Remove previous handlers if present
-            if (__currentSendHandler && sendBtn) {
-                sendBtn.removeEventListener('click', __currentSendHandler);
-                __currentSendHandler = null;
-            }
-            if (__currentKeyHandler && messageInput) {
-                messageInput.removeEventListener('keypress', __currentKeyHandler);
-                __currentKeyHandler = null;
-            }
+        // bind send handler for conversation (stable attach)
+        function bindSendHandlerForConversation(receiverId) {
+            if (__sendHandler) sendBtn.removeEventListener('click', __sendHandler);
+            if (__keyHandler) messageInput.removeEventListener('keypress', __keyHandler);
 
-            // Define handlers
-            __currentSendHandler = () => {
-                sendMessage(userId);
-            };
+            __sendHandler = () => sendMessage(receiverId);
+            __keyHandler = (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(receiverId); } };
 
-            __currentKeyHandler = (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    sendMessage(userId);
-                }
-            };
-
-            // Attach handlers
-            sendBtn.addEventListener('click', __currentSendHandler);
-            messageInput.addEventListener('keypress', __currentKeyHandler);
+            sendBtn.addEventListener('click', __sendHandler);
+            messageInput.addEventListener('keypress', __keyHandler);
         }
 
         async function sendMessage(receiverId) {
-            const messageText = messageInput.value.trim();
-            
+            const messageText = (messageInput.value || '').trim();
+
             if (messageText && currentUser) {
                 try {
-                    // Optimistic UI append
-                    const chatMessagesContainer = document.getElementById('chatMessages');
+                    // optimistic UI append
                     const tempDiv = document.createElement('div');
                     tempDiv.className = 'message sent';
                     const now = new Date();
-                    const safeText = String(messageText).replace(/[&<>"']/g, (m) => {
-                        switch (m) {
-                            case '&': return '&amp;';
-                            case '<': return '&lt;';
-                            case '>': return '&gt;';
-                            case '"': return '&quot;';
-                            case "'": return '&#039;';
-                            default: return m;
-                        }
-                    });
-                    tempDiv.innerHTML = `
-                        ${safeText}
-                        <div class="message-time">${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-                    `;
-                    chatMessagesContainer.appendChild(tempDiv);
-                    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-                    
+                    tempDiv.innerHTML = `${escapeHtml(messageText)}<div class="message-time">${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>`;
+                    chatMessages.appendChild(tempDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+
                     // Store message in Firestore with timestamp, sender, receiver
                     await addDoc(collection(db, 'messages'), {
                         senderId: currentUser.uid,
@@ -1932,7 +1798,7 @@
                         text: messageText,
                         timestamp: serverTimestamp()
                     });
-                    
+
                     // Clear input after send
                     messageInput.value = '';
                 } catch (error) {
@@ -1943,7 +1809,7 @@
 
         async function followUser(userId) {
             if (!currentUser) return;
-            
+
             try {
                 // Add follow relationship
                 await addDoc(collection(db, 'follows'), {
@@ -1951,22 +1817,22 @@
                     followingId: userId,
                     timestamp: serverTimestamp()
                 });
-                
+
                 // Update follower count for the followed user
                 const userDocRef = doc(db, 'users', userId);
                 const userDoc = await getDoc(userDocRef);
-                
+
                 if (userDoc.exists()) {
                     const userData = userDoc.data();
                     await updateDoc(userDocRef, {
                         followers: (userData.followers || 0) + 1
                     });
                 }
-                
+
                 // Update following count for current user
                 const currentUserDocRef = doc(db, 'users', currentUser.uid);
                 const currentUserDoc = await getDoc(currentUserDocRef);
-                
+
                 if (currentUserDoc.exists()) {
                     const currentUserData = currentUserDoc.data();
                     await updateDoc(currentUserDocRef, {
@@ -1980,7 +1846,7 @@
 
         async function unfollowUser(userId) {
             if (!currentUser) return;
-            
+
             try {
                 // Find and delete follow relationship
                 const followsQuery = query(
@@ -1988,28 +1854,28 @@
                     where('followerId', '==', currentUser.uid),
                     where('followingId', '==', userId)
                 );
-                
+
                 const querySnapshot = await getDocs(followsQuery);
                 querySnapshot.forEach(async (followDoc) => {
                     // Delete the follow document
                     await deleteDoc(doc(db, 'follows', followDoc.id));
                 });
-                
+
                 // Update follower count for the unfollowed user
                 const userDocRef = doc(db, 'users', userId);
                 const userDoc = await getDoc(userDocRef);
-                
+
                 if (userDoc.exists()) {
                     const userData = userDoc.data();
                     await updateDoc(userDocRef, {
                         followers: Math.max(0, (userData.followers || 0) - 1)
                     });
                 }
-                
+
                 // Update following count for current user
                 const currentUserDocRef = doc(db, 'users', currentUser.uid);
                 const currentUserDoc = await getDoc(currentUserDocRef);
-                
+
                 if (currentUserDoc.exists()) {
                     const currentUserData = currentUserDoc.data();
                     await updateDoc(currentUserDocRef, {
