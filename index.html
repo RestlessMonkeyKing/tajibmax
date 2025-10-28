@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>iMessage Social</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
     <style>
         :root {
             --primary-color: #007AFF;
@@ -27,12 +27,15 @@
             --glass-border: rgba(255, 255, 255, 0.1);
         }
 
+        /* Liquid Glass theme updated to match LiquidGlass.space examples:
+           layered radial gradient, stronger blur, inner highlight, subtle noise */
         [data-theme="liquid"] {
-            --bg-color: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --card-bg: rgba(255, 255, 255, 0.15);
+            --bg-color: radial-gradient(1200px 600px at 10% 20%, rgba(102,126,234,0.20) 0%, rgba(118,75,162,0.12) 20%, rgba(118,75,162,0.08) 40%, rgba(255,255,255,0) 100%), linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: rgba(255, 255, 255, 0.06);
             --text-color: #FFFFFF;
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
+            --glass-bg: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+            --glass-border: rgba(255,255,255,0.08);
+            --shadow: 0 12px 40px rgba(20,18,50,0.45);
         }
 
         [data-theme="sunset"] {
@@ -58,12 +61,16 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
 
+        html, body { height: 100%; }
+
         body {
             background: var(--bg-color);
             color: var(--text-color);
             transition: var(--transition);
             min-height: 100vh;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         /* Login Screen */
@@ -85,20 +92,31 @@
 
         .login-card {
             background: var(--glass-bg);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px) saturate(120%);
             border: 1px solid var(--glass-border);
             border-radius: var(--border-radius);
             padding: 40px;
             box-shadow: var(--shadow);
-            max-width: 400px;
+            max-width: 420px;
             width: 100%;
             transform: translateY(0);
             transition: var(--transition);
+            position: relative;
+            overflow: hidden;
         }
 
-        .login-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 60px rgba(31, 38, 135, 0.5);
+        /* subtle highlight strip (liquid feel) */
+        .login-card::before {
+            content: '';
+            position: absolute;
+            left: -40%;
+            top: -60%;
+            width: 220%;
+            height: 220%;
+            background: radial-gradient(30% 20% at 10% 10%, rgba(255,255,255,0.06), transparent 15%),
+                        linear-gradient(120deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+            transform: rotate(-20deg);
+            pointer-events: none;
         }
 
         .app-logo {
@@ -208,7 +226,7 @@
             width: 60px;
             height: 60px;
             background: var(--glass-bg);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px) saturate(120%);
             border: 1px solid var(--glass-border);
             border-radius: 50%;
             padding: 0;
@@ -379,7 +397,7 @@
             height: 50px;
             border-radius: 50%;
             background: var(--glass-bg);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px) saturate(120%);
             border: 1px solid var(--glass-border);
             display: flex;
             align-items: center;
@@ -469,7 +487,7 @@
         .sidebar {
             width: 300px;
             background: var(--glass-bg);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px) saturate(120%);
             border: 1px solid var(--glass-border);
             border-radius: var(--border-radius);
             padding: 20px;
@@ -668,7 +686,7 @@
             display: flex;
             flex-direction: column;
             background: var(--glass-bg);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px) saturate(120%);
             border: 1px solid var(--glass-border);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
@@ -836,7 +854,7 @@
 
         .modal-content {
             background: var(--glass-bg);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px) saturate(120%);
             border: 1px solid var(--glass-border);
             border-radius: var(--border-radius);
             padding: 30px;
@@ -1148,8 +1166,11 @@
         const editName = document.getElementById('editName');
         const editBio = document.getElementById('editBio');
         const wordCount = document.getElementById('wordCount');
-        const messageInput = document.querySelector('.message-input');
+
+        // Make messageInput and sendBtn mutable so handlers can be safely removed/attached
+        let messageInput = document.querySelector('.message-input');
         let sendBtn = document.querySelector('.send-btn');
+
         const themeOptions = document.querySelectorAll('.theme-option');
 
         // Current user data
@@ -1160,9 +1181,13 @@
         let follows = [];
         let currentChatUser = null;
         let messageListenerUnsubscribe = null;
-        // We'll store two unsub functions when listening to messages
+        // Keep separate unsubscribes for sender/receiver listeners
         let _messagesUnsubSender = null;
         let _messagesUnsubReceiver = null;
+
+        // Keep references to current handlers so we can remove them before re-adding
+        let __currentSendHandler = null;
+        let __currentKeyHandler = null;
 
         // Profile card hover behavior
         let profileCardTimeout;
@@ -1489,16 +1514,15 @@
             setupMessageListener();
         }
 
-        // Messaging: NEW robust real-time approach
+        // Messaging: robust real-time approach without cloning nodes
         function setupMessageListener() {
-            // Clean up any previous listeners
+            // Clean up previous listeners
             if (_messagesUnsubSender) { _messagesUnsubSender(); _messagesUnsubSender = null; }
             if (_messagesUnsubReceiver) { _messagesUnsubReceiver(); _messagesUnsubReceiver = null; }
 
-            // We'll maintain a local map to avoid duplicates
             const messageMap = new Map();
 
-            // 1) Listen for messages where current user is the sender
+            // Listen for messages where current user is sender
             const qSender = query(
                 collection(db, 'messages'),
                 where('senderId', '==', currentUser.uid),
@@ -1510,19 +1534,17 @@
                     messageMap.set(docSnap.id, { id: docSnap.id, ...docSnap.data() });
                 });
 
-                // Merge map into chats array (sorted)
                 chats = Array.from(messageMap.values()).sort((a,b) => {
                     const ta = a.timestamp && a.timestamp.toMillis ? a.timestamp.toMillis() : 0;
                     const tb = b.timestamp && b.timestamp.toMillis ? b.timestamp.toMillis() : 0;
                     return ta - tb;
                 });
 
-                // Update UI lists and active chat messages
                 loadChats();
                 if (currentChatUser) loadChatMessages(currentChatUser.id);
             });
 
-            // 2) Listen for messages where current user is the receiver — this ensures recipients are always live checking
+            // Listen for messages where current user is receiver (live check for recipients)
             const qReceiver = query(
                 collection(db, 'messages'),
                 where('receiverId', '==', currentUser.uid),
@@ -1534,19 +1556,17 @@
                     messageMap.set(docSnap.id, { id: docSnap.id, ...docSnap.data() });
                 });
 
-                // Merge map into chats array (sorted)
                 chats = Array.from(messageMap.values()).sort((a,b) => {
                     const ta = a.timestamp && a.timestamp.toMillis ? a.timestamp.toMillis() : 0;
                     const tb = b.timestamp && b.timestamp.toMillis ? b.timestamp.toMillis() : 0;
                     return ta - tb;
                 });
 
-                // Update UI lists and active chat messages
                 loadChats();
                 if (currentChatUser) loadChatMessages(currentChatUser.id);
             });
 
-            // Save a combined unsubscribe that cleans both
+            // Combined unsubscribe
             messageListenerUnsubscribe = () => {
                 if (_messagesUnsubSender) { _messagesUnsubSender(); _messagesUnsubSender = null; }
                 if (_messagesUnsubReceiver) { _messagesUnsubReceiver(); _messagesUnsubReceiver = null; }
@@ -1798,7 +1818,7 @@
             const chatMessagesContainer = document.getElementById('chatMessages');
             chatMessagesContainer.innerHTML = '';
             
-            // Filter messages for this specific conversation
+            // Filter messages for this specific conversation and sort
             const userChats = chats.filter(chat => 
                 (chat.senderId === currentUser.uid && chat.receiverId === userId) ||
                 (chat.senderId === userId && chat.receiverId === currentUser.uid)
@@ -1846,34 +1866,36 @@
             // Scroll to bottom
             chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
             
-            // Set up message sending for this user
+            // Set up message sending for this user using safe handler attach/remove
             setupMessageSending(userId);
         }
 
         function setupMessageSending(userId) {
-            // Remove previous click handler safely by replacing with a no-op then reassigning
-            // (This preserves the original DOM structure and styles)
-            const newSendBtn = sendBtn.cloneNode(true);
-            sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
-            sendBtn = newSendBtn;
-            
-            // Click handler
-            sendBtn.addEventListener('click', () => {
+            // Remove previous handlers if present
+            if (__currentSendHandler && sendBtn) {
+                sendBtn.removeEventListener('click', __currentSendHandler);
+                __currentSendHandler = null;
+            }
+            if (__currentKeyHandler && messageInput) {
+                messageInput.removeEventListener('keypress', __currentKeyHandler);
+                __currentKeyHandler = null;
+            }
+
+            // Define handlers
+            __currentSendHandler = () => {
                 sendMessage(userId);
-            });
-            
-            // Keypress handler for Enter
-            // Remove previous keypress by cloning input as well to avoid stacked listeners
-            const newMessageInput = messageInput.cloneNode(true);
-            messageInput.parentNode.replaceChild(newMessageInput, messageInput);
-            // reassign messageInput reference used elsewhere
-            messageInput = newMessageInput;
-            messageInput.addEventListener('keypress', (e) => {
+            };
+
+            __currentKeyHandler = (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     sendMessage(userId);
                 }
-            });
+            };
+
+            // Attach handlers
+            sendBtn.addEventListener('click', __currentSendHandler);
+            messageInput.addEventListener('keypress', __currentKeyHandler);
         }
 
         async function sendMessage(receiverId) {
