@@ -1145,7 +1145,8 @@
             setDoc,
             getDoc,
             getDocs,
-            deleteDoc
+            deleteDoc,
+            limit // *** NEW: Import limit for chat query ***
         } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
 
         // Firebase configuration
@@ -1198,14 +1199,17 @@
         // Current user data
         let currentUser = null;
         let currentTheme = 'light';
-        let users = [];
-        let chats = [];
+        let users = []; // Local cache of user profiles
         let follows = [];
         let currentChatUser = null;
+        let currentChatId = null; // *** NEW: Store the active chat ID ***
+        
+        // *** NEW: Single listener for the active chat's message subcollection ***
+        let _convoUnsub = null;
+        
+        // *** NEW: Listener for the user's chat list ***
+        let _chatListUnsub = null;
 
-        // conversation listeners (per-conversation)
-        let _convoUnsubSender = null;
-        let _convoUnsubReceiver = null;
 
         // stable send handlers
         let __sendHandler = null;
@@ -1304,7 +1308,7 @@
                     chatList.style.display = 'block';
                     userList.style.display = 'none';
                     followedList.style.display = 'none';
-                    loadChats();
+                    // loadChats() is now handled by a persistent listener
                 } else if (tab.dataset.tab === 'suggested') {
                     chatList.style.display = 'none';
                     userList.style.display = 'block';
@@ -1368,13 +1372,18 @@
                 await updateUserOnlineStatus(currentUser.uid, false).catch(()=>{});
             }
 
-            // cleanup conversation listeners
-            if (_convoUnsubSender) { _convoUnsubSender(); _convoUnsubSender = null; }
-            if (_convoUnsubReceiver) { _convoUnsubReceiver(); _convoUnsubReceiver = null; }
+            // *** REFACTORED: cleanup ALL listeners ***
+            if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
+            if (_chatListUnsub) { _chatListUnsub(); _chatListUnsub = null; }
+            // (other global listeners like users, follows, etc. should also be unsubscribed here if they were stored)
 
             signOut(auth).then(() => {
                 // Reset UI
                 currentUser = null;
+                currentChatId = null;
+                currentChatUser = null;
+                users = [];
+                follows = [];
                 loginScreen.style.display = 'flex';
                 appContainer.style.display = 'none';
             }).catch((error) => {
@@ -1510,17 +1519,18 @@
         }
 
         function setupFirestoreListeners(uid) {
-            // Listen for users
+            // Listen for users (to populate local cache)
             const usersQuery = collection(db, 'users');
             onSnapshot(usersQuery, (snapshot) => {
                 users = [];
                 snapshot.forEach(doc => {
-                    if (doc.id !== uid) { // Exclude current user
-                        users.push({ id: doc.id, ...doc.data() });
-                    }
+                    users.push({ id: doc.id, ...doc.data() });
                 });
+                
+                // Once users are loaded, refresh lists that depend on them
                 loadUsers();
                 loadFollowedUsers();
+                loadChats(); // Reload chats to ensure user data is fresh
             });
 
             // Listen for follows
@@ -1535,11 +1545,13 @@
                     follows.push({ id: doc.id, ...doc.data() });
                 });
                 followingCount.textContent = follows.length;
+                
+                // Refresh lists that depend on follow data
                 loadUsers();
                 loadFollowedUsers();
             });
 
-            // Listen for user profile updates
+            // Listen for user profile updates (self)
             const userDocRef = doc(db, 'users', uid);
             onSnapshot(userDocRef, (doc) => {
                 if (doc.exists()) {
@@ -1547,8 +1559,9 @@
                     followerCount.textContent = userData.followers || 0;
                 }
             });
-
-            // No global message listener here: receiving is handled per-conversation via openChat()
+            
+            // *** REFACTORED: Set up persistent listener for chat list ***
+            loadChats();
         }
 
         function updateProfileUI(user) {
@@ -1560,13 +1573,15 @@
 
         function loadUsers() {
             userList.innerHTML = '';
+            
+            const otherUsers = users.filter(u => u.id !== currentUser.uid);
 
-            if (users.length === 0) {
+            if (otherUsers.length === 0) {
                 userList.innerHTML = '<div class="user-item">No other users found.</div>';
                 return;
             }
 
-            users.forEach(user => {
+            otherUsers.forEach(user => {
                 const isFollowing = follows.some(follow => follow.followingId === user.id);
 
                 // Limit bio to 5 words for user list to prevent clutter
@@ -1698,59 +1713,120 @@
             });
         }
 
+        // *** REFACTORED: Load chat list from 'chats' collection ***
         function loadChats() {
-            chatList.innerHTML = '';
+            if (!currentUser) return;
+            
+            // Clean up old listener if it exists
+            if (_chatListUnsub) { _chatListUnsub(); }
 
-            // Lightweight surface: show followed users + recent message activity
-            const listed = new Map();
-
-            // Add followed users
-            follows.forEach(f => {
-                const u = users.find(x => x.id === f.followingId);
-                if (u) listed.set(u.id, { user: u, lastMessage: 'Say hi!' });
-            });
-
-            // Query recent messages to surface chat items
-            const recentQuery = query(collection(db, 'messages'), orderBy('timestamp', 'desc'));
-            onSnapshot(recentQuery, snap => {
-                snap.docs.forEach(d => {
-                    const m = { id: d.id, ...d.data() };
-                    if (!currentUser) return;
-                    const other = m.senderId === currentUser.uid ? m.receiverId : m.senderId;
-                    if (!other) return;
-                    if (!listed.has(other)) {
-                        const u = users.find(x => x.id === other);
-                        listed.set(other, { user: u || null, lastMessage: m.text || '' });
-                    } else {
-                        const entry = listed.get(other);
-                        entry.lastMessage = entry.lastMessage || m.text;
-                        listed.set(other, entry);
-                    }
-                });
-
-                if (listed.size === 0) {
+            const chatsQuery = query(
+                collection(db, 'chats'), 
+                where('members', 'array-contains', currentUser.uid),
+                orderBy('lastMessage.timestamp', 'desc')
+            );
+            
+            _chatListUnsub = onSnapshot(chatsQuery, (snapshot) => {
+                chatList.innerHTML = ''; // Clear list on each update
+                
+                if (snapshot.empty) {
                     chatList.innerHTML = '<div class="chat-item">No conversations yet. Follow users to start chatting!</div>';
                     return;
                 }
 
-                chatList.innerHTML = '';
-                listed.forEach((val, userId) => {
+                snapshot.forEach(doc => {
+                    const chatData = doc.data();
+                    
+                    // Find the *other* user's ID
+                    const otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
+                    
+                    // Find the other user's profile from our local cache
+                    const user = users.find(u => u.id === otherUserId);
+                    
+                    const displayName = user ? user.displayName : 'Unknown User';
+                    const photoURL = user ? user.photoURL : null;
+                    const isOnline = user ? user.isOnline : false;
+                    const lastMessage = chatData.lastMessage ? chatData.lastMessage.text : 'Say hi!';
+
                     const chatElement = document.createElement('div');
                     chatElement.className = 'chat-item';
-                    chatElement.innerHTML = `<div class="chat-avatar">${val.user && val.user.photoURL ? `<img src="${val.user.photoURL}">` : '<i class="fas fa-user"></i>'}<div class="status-indicator ${val.user && val.user.isOnline ? '' : 'offline'}"></div></div><div class="chat-info"><h4>${val.user ? val.user.displayName : 'Unknown User'}</h4><p class="last-message">${val.lastMessage}</p></div>`;
-                    chatElement.addEventListener('click', () => openChat(userId, val.user || { displayName: 'Unknown User' }));
+                    chatElement.innerHTML = `
+                        <div class="chat-avatar">
+                            ${photoURL ? `<img src="${photoURL}">` : '<i class="fas fa-user"></i>'}
+                            <div class="status-indicator ${isOnline ? '' : 'offline'}"></div>
+                        </div>
+                        <div class="chat-info">
+                            <h4>${displayName}</h4>
+                            <p class="last-message">${escapeHtml(lastMessage)}</p>
+                        </div>
+                    `;
+                    
+                    // Add click listener to open this chat
+                    chatElement.addEventListener('click', () => {
+                        if (user) {
+                            openChat(user.id, user);
+                        }
+                    });
+                    
                     chatList.appendChild(chatElement);
                 });
-            }, err => { console.error(err); });
+            }, err => { 
+                console.error("Error listening to chat list:", err); 
+            });
+        }
+        
+        // *** NEW: Helper function to find or create a chat document ***
+        async function getOrCreateChat(otherUserId) {
+            if (!currentUser) return null;
+            
+            const chatsRef = collection(db, 'chats');
+            
+            // Query for an existing chat between these two users
+            // Firestore limitation: can't query for two 'array-contains'
+            // So we query for one, and filter in the client
+            const q = query(chatsRef, where('members', 'array-contains', currentUser.uid));
+            
+            const querySnapshot = await getDocs(q);
+            let existingChat = null;
+            
+            querySnapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.members && data.members.includes(otherUserId)) {
+                    existingChat = { id: doc.id, ...data };
+                }
+            });
+
+            if (existingChat) {
+                return existingChat.id; // Return existing chat ID
+            }
+            
+            // No chat exists, so create one
+            console.log(`Creating new chat for ${currentUser.uid} and ${otherUserId}`);
+            const newChatDoc = await addDoc(chatsRef, {
+                members: [currentUser.uid, otherUserId],
+                lastMessage: {
+                    text: 'Chat created',
+                    timestamp: serverTimestamp()
+                }
+            });
+            
+            return newChatDoc.id; // Return new chat ID
         }
 
-        // Open chat: set up per-conversation Firestore listeners (sender==me && sender==them)
-        function openChat(userId, user) {
+        // *** REFACTORED: openChat now listens to a subcollection ***
+        async function openChat(userId, user) {
             // cleanup previous listeners
-            if (_convoUnsubSender) { _convoUnsubSender(); _convoUnsubSender = null; }
-            if (_convoUnsubReceiver) { _convoUnsubReceiver(); _convoUnsubReceiver = null; }
+            if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
 
             currentChatUser = { id: userId, ...user };
+            
+            // Find or create the chat ID
+            const chatId = await getOrCreateChat(userId);
+            if (!chatId) {
+                console.error("Could not get or create chat ID");
+                return;
+            }
+            currentChatId = chatId; // Store the active chat ID
 
             // update header
             const headerAvatar = document.querySelector('.chat-header-avatar');
@@ -1762,61 +1838,46 @@
             // show loading
             chatMessages.innerHTML = `<div class="message received"><div class="message-meta">Loading messages...<span class="message-time">Just now</span></div></div>`;
 
-            // convo map keyed by doc id
-            const convoMap = new Map();
+            // *** NEW: Create a single listener for the chat's 'messages' subcollection ***
+            const messagesQuery = query(
+                collection(db, 'chats', currentChatId, 'messages'),
+                orderBy('timestamp', 'asc')
+            );
+            
+            _convoUnsub = onSnapshot(messagesQuery, (snapshot) => {
+                renderConversation(snapshot);
+            }, err => console.error('Error listening to messages:', err));
 
-            // Listener A: messages I sent to them
-            const qA = query(collection(db, 'messages'), where('senderId', '==', currentUser.uid), where('receiverId', '==', userId), orderBy('timestamp', 'asc'));
-            _convoUnsubSender = onSnapshot(qA, snap => {
-                snap.forEach(ds => convoMap.set(ds.id, { id: ds.id, ...ds.data() }));
-                renderConversationFromMap(convoMap);
-            }, err => console.error('convo sender listen error', err));
-
-            // Listener B: messages they sent to me
-            const qB = query(collection(db, 'messages'), where('senderId', '==', userId), where('receiverId', '==', currentUser.uid), orderBy('timestamp', 'asc'));
-            _convoUnsubReceiver = onSnapshot(qB, snap => {
-                snap.forEach(ds => convoMap.set(ds.id, { id: ds.id, ...ds.data() }));
-                renderConversationFromMap(convoMap);
-            }, err => console.error('convo receiver listen error', err));
 
             // bind send handler for this conversation (stable attach)
-            bindSendHandlerForConversation(userId);
+            bindSendHandlerForConversation(userId, currentChatId);
             
-            // *** NEW: Mark messages as read when opening chat ***
-            markMessagesAsRead(userId);
+            // Mark messages as read when opening chat
+            markMessagesAsRead(userId, currentChatId);
         }
 
-        function renderConversationFromMap(map) {
-            const arr = Array.from(map.values()).sort((a, b) => {
-                const ta = a.timestamp && a.timestamp.toMillis ? a.timestamp.toMillis() : 0;
-                const tb = b.timestamp && b.timestamp.toMillis ? b.timestamp.toMillis() : 0;
-                return ta - tb;
-            });
-
-            chatMessages.innerHTML = '';
-            if (arr.length === 0) {
+        // *** REFACTORED: Simplified render function ***
+        function renderConversation(snapshot) {
+            chatMessages.innerHTML = ''; // Clear messages
+            
+            if (snapshot.empty) {
                 chatMessages.innerHTML = `<div class="message received">Start a conversation with ${currentChatUser ? currentChatUser.displayName : 'this user'}!<div class="message-meta"><span class="message-time">Just now</span></div></div>`;
             } else {
-                arr.forEach(m => {
+                snapshot.forEach(doc => {
+                    const m = doc.data();
                     const div = document.createElement('div');
                     div.className = 'message ' + (m.senderId === currentUser.uid ? 'sent' : 'received');
                     const ts = m.timestamp ? (m.timestamp.toDate ? m.timestamp.toDate() : new Date()) : new Date();
 
                     let ticksHtml = '';
                     if (m.senderId === currentUser.uid) {
-                        // *** NEW: Check read status for ticks ***
+                        // Check read status for ticks
                         if (m.isRead) {
                             // Read: 2 white ticks
-                            ticksHtml = `
-                            <span class="message-ticks read">
-                                <i class="fas fa-check-double"></i>
-                            </span>`;
+                            ticksHtml = `<span class="message-ticks read"><i class="fas fa-check-double"></i></span>`;
                         } else {
                             // Delivered (but not read): 2 grey ticks
-                            ticksHtml = `
-                            <span class="message-ticks delivered">
-                                <i class="fas fa-check-double"></i>
-                            </span>`;
+                            ticksHtml = `<span class="message-ticks delivered"><i class="fas fa-check-double"></i></span>`;
                         }
                     }
 
@@ -1833,28 +1894,33 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        // bind send handler for conversation (stable attach)
-        function bindSendHandlerForConversation(receiverId) {
+        // *** REFACTORED: bindSendHandler now passes chatId ***
+        function bindSendHandlerForConversation(receiverId, chatId) {
             if (__sendHandler) sendBtn.removeEventListener('click', __sendHandler);
             if (__keyHandler) messageInput.removeEventListener('keypress', __keyHandler);
 
-            __sendHandler = () => sendMessage(receiverId);
-            __keyHandler = (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(receiverId); } };
+            __sendHandler = () => sendMessage(receiverId, chatId);
+            __keyHandler = (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(receiverId, chatId); } };
 
             sendBtn.addEventListener('click', __sendHandler);
             messageInput.addEventListener('keypress', __keyHandler);
         }
 
-        async function sendMessage(receiverId) {
+        // *** REFACTORED: sendMessage now writes to a subcollection ***
+        async function sendMessage(receiverId, chatId) {
+            if (!chatId) {
+                console.error("No active chat ID, cannot send message.");
+                return;
+            }
+            
             const messageText = (messageInput.value || '').trim();
 
             if (messageText && currentUser) {
                 try {
-                    // optimistic UI append
+                    // optimistic UI append (remains the same)
                     const tempDiv = document.createElement('div');
                     tempDiv.className = 'message sent';
                     const now = new Date();
-                    // *** NEW: Add meta wrapper and "delivered" ticks to optimistic UI ***
                     tempDiv.innerHTML = `
                         ${escapeHtml(messageText)}
                         <div class="message-meta">
@@ -1866,14 +1932,24 @@
                     `;
                     chatMessages.appendChild(tempDiv);
                     chatMessages.scrollTop = chatMessages.scrollHeight;
-
-                    // Store message in Firestore with timestamp, sender, receiver
-                    await addDoc(collection(db, 'messages'), {
+                    
+                    const messageData = {
                         senderId: currentUser.uid,
-                        receiverId: receiverId,
+                        receiverId: receiverId, // Still useful for 'mark as read' logic
                         text: messageText,
                         timestamp: serverTimestamp(),
-                        isRead: false // *** NEW: Add isRead status ***
+                        isRead: false
+                    };
+
+                    // *** NEW: Add to the 'messages' subcollection ***
+                    await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
+
+                    // *** NEW: Update the 'lastMessage' on the parent chat doc ***
+                    await updateDoc(doc(db, 'chats', chatId), {
+                        lastMessage: {
+                            text: messageText,
+                            timestamp: messageData.timestamp
+                        }
                     });
 
                     // Clear input after send
@@ -1884,13 +1960,13 @@
             }
         }
         
-        // *** NEW: Function to mark messages as read ***
-        async function markMessagesAsRead(senderId) {
-            if (!currentUser) return;
+        // *** REFACTORED: markMessagesAsRead now queries the subcollection ***
+        async function markMessagesAsRead(senderId, chatId) {
+            if (!currentUser || !chatId) return;
 
-            // Query for unread messages from this sender
+            // Query for unread messages from this sender *in this specific chat*
             const unreadQuery = query(
-                collection(db, 'messages'),
+                collection(db, 'chats', chatId, 'messages'),
                 where('senderId', '==', senderId),
                 where('receiverId', '==', currentUser.uid),
                 where('isRead', '==', false)
@@ -1899,7 +1975,6 @@
             try {
                 const querySnapshot = await getDocs(unreadQuery);
                 
-                // Use individual updates (batch write is also an option but not imported)
                 const updates = [];
                 querySnapshot.forEach((doc) => {
                     updates.push(updateDoc(doc.ref, { isRead: true }));
