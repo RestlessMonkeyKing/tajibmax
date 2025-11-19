@@ -201,7 +201,6 @@
             animation: fadeIn 0.5s ease-out;
         }
         
-        /* === NEW: Top Right Controls Wrapper === */
         .top-right-controls {
             position: absolute;
             top: 20px;
@@ -211,9 +210,8 @@
             z-index: 100;
         }
         
-        /* === REFACTORED: Profile Card === */
         .profile-card {
-            position: relative; /* Changed from absolute */
+            position: relative; 
             width: 60px;
             height: 60px;
             background: var(--glass-bg);
@@ -246,13 +244,11 @@
             opacity: 1;
         }
         
-        /* === NEW: Avatar Wrapper (for status indicator) === */
         .avatar-wrapper {
             position: relative;
             flex-shrink: 0;
         }
         
-        /* === REFACTORED: Profile Pic === */
         .profile-pic {
             width: 60px;
             height: 60px;
@@ -281,11 +277,10 @@
             object-fit: cover;
         }
 
-        /* === REFACTORED: Status Indicator (no longer child) === */
         .status-indicator {
             position: absolute;
             bottom: 2px;
-            right: 2px; /* 17px with margin-right */
+            right: 2px; 
             width: 14px;
             height: 14px;
             border-radius: 50%;
@@ -293,11 +288,11 @@
             border: 2px solid var(--card-bg);
             z-index: 10;
         }
-        /* Specific adjustment for profile card wrapper */
+        
         .profile-pic-wrapper .status-indicator {
             right: 17px; 
         }
-        /* Adjustment for non-expanded card */
+        
         .profile-card:not(.expanded) .profile-pic-wrapper .status-indicator {
             right: 2px;
             bottom: 2px;
@@ -337,11 +332,11 @@
         }
         
         .profile-stats > div {
-            cursor: pointer; /* Make stats clickable */
+            cursor: pointer; 
         }
 
         .profile-card.expanded .profile-stats,
-        .chat-header.expanded .profile-stats { /* ADDED chat-header */
+        .chat-header.expanded .profile-stats { 
             opacity: 1;
         }
 
@@ -399,11 +394,10 @@
             color: var(--primary-color);
         }
 
-        /* === REFACTORED: Theme Selector === */
         .theme-selector {
-            position: relative; /* Changed from absolute */
-            width: 60px; /* NEW */
-            height: 60px; /* NEW */
+            position: relative; 
+            width: 60px; 
+            height: 60px; 
             border-radius: 50%;
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
@@ -419,7 +413,7 @@
 
         .theme-selector.expanded {
             width: 200px;
-            border-radius: 30px; /* Updated */
+            border-radius: 30px; 
             padding: 0 10px;
         }
 
@@ -534,7 +528,6 @@
             font-size: 12px;
         }
         
-        /* NEW: Hide helper tabs */
         .tab[data-tab="followers"] {
             display: none;
         }
@@ -561,7 +554,7 @@
             box-shadow: 0 0 0 2px var(--primary-color);
         }
 
-        .chat-list, .user-list, .followed-list, .follower-list { /* ADDED follower-list */
+        .chat-list, .user-list, .followed-list, .follower-list { 
             flex: 1;
             overflow-y: auto;
         }
@@ -605,7 +598,7 @@
             margin-right: 15px;
             overflow: hidden;
             flex-shrink: 0;
-            position: relative; /* Kept for child elements if any */
+            position: relative; 
         }
 
         .chat-avatar img, .user-avatar img {
@@ -621,7 +614,6 @@
             right: 2px;
         }
         
-        /* Status indicator on list items */
         .chat-item .avatar-wrapper .status-indicator,
         .user-item .avatar-wrapper .status-indicator {
             right: 17px;
@@ -714,22 +706,21 @@
             transition: var(--transition);
         }
 
-        /* === REFACTORED: Chat Header (to be expandable) === */
         .chat-header {
             padding: 20px;
             border-bottom: 1px solid var(--glass-border);
             transition: var(--transition);
             overflow: hidden;
             cursor: pointer;
-            height: 81px; /* Default height */
+            height: 81px; 
         }
         
         .chat-header.expanded {
-            height: 147px; /* Expanded height */
+            height: 147px; 
         }
         
         .chat-header .profile-header {
-            opacity: 1; /* Always visible */
+            opacity: 1; 
             margin-bottom: 15px;
         }
 
@@ -754,7 +745,6 @@
             object-fit: cover;
         }
         
-        /* Status indicator on chat header */
         .chat-header .avatar-wrapper .status-indicator {
             width: 10px;
             height: 10px;
@@ -771,6 +761,23 @@
             flex-direction: column;
         }
 
+        /* === NEW: Day Separator === */
+        .date-separator {
+            align-self: center;
+            background: rgba(142, 142, 147, 0.2);
+            color: var(--text-color);
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 12px;
+            border-radius: 12px;
+            margin: 10px 0;
+            opacity: 0.8;
+        }
+        [data-theme="dark"] .date-separator {
+             background: rgba(142, 142, 147, 0.4);
+        }
+
+
         .message {
             max-width: 70%;
             padding: 12px 16px;
@@ -781,7 +788,6 @@
             animation: messageAppear 0.3s ease-out;
         }
         
-        /* === NEW: Styles for Media Messages === */
         .message img {
             max-width: 300px;
             width: 100%;
@@ -797,7 +803,7 @@
         .message .media-caption {
             margin-top: 5px;
         }
-        /* Make media message bubbles less padded */
+        
         .message.has-media {
             padding: 8px;
         }
@@ -845,28 +851,24 @@
 
         .message-time {
             margin-top: 0;
-            text-align: left; /* Reset from old rule */
+            text-align: left; 
         }
         
-        /* Add space only if ticks are present */
         .message.sent .message-time {
             margin-right: 5px;
         }
         
-        /* === REFACTORED: Ticks System === */
         .message-ticks {
             font-size: 12px;
         }
         
-        /* 1 grey tick (pending) or 2 grey ticks (delivered) */
         .message.sent .message-ticks.pending,
         .message.sent .message-ticks.delivered {
             color: rgba(255, 255, 255, 0.7);
         }
 
-        /* 2 blue ticks (read) */
         .message.sent .message-ticks.read {
-            color: #40C6FF; /* WhatsApp-style blue */
+            color: #40C6FF; 
         }
         
         [data-theme="dark"] .message.sent .message-ticks.pending,
@@ -878,13 +880,116 @@
              color: #40C6FF;
         }
 
-        .message-input-container {
-            padding: 20px;
+        /* === MODIFIED: Message Input Area === */
+        .message-input-area {
             border-top: 1px solid var(--glass-border);
             display: flex;
-            align-items: center; /* Vertically center items */
-            gap: 10px;
+            flex-direction: column;
+            background: var(--card-bg); /* Use card-bg for consistency */
+            backdrop-filter: blur(20px);
         }
+
+        /* === NEW: Media Preview === */
+        .media-preview {
+            display: none; /* Hidden by default */
+            padding: 10px 20px 5px 20px;
+            position: relative;
+            background: rgba(0,0,0,0.05);
+        }
+        [data-theme="dark"] .media-preview {
+             background: rgba(255,255,255,0.05);
+        }
+
+        .media-preview.active {
+            display: block;
+        }
+
+        #previewContent img, #previewContent audio {
+            max-width: 150px;
+            max-height: 100px;
+            border-radius: 10px;
+        }
+        
+        #previewContent audio {
+            max-width: 100%;
+        }
+
+        .remove-media-btn {
+            position: absolute;
+            top: 5px;
+            right: 15px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.4);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .message-input-container {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center; 
+            gap: 10px;
+            transition: var(--transition);
+        }
+
+        /* === NEW: Voice Recorder UI === */
+        .voice-recorder-ui {
+            display: none; /* Hidden by default */
+            height: 0;
+            opacity: 0;
+            padding: 0;
+            transition: var(--transition);
+            background: var(--card-bg);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .voice-recorder-ui.active {
+            display: flex;
+            height: 74px; /* Same as input container */
+            opacity: 1;
+            padding: 15px 20px;
+        }
+
+        #voiceWaveCanvas {
+            flex: 1;
+            height: 44px; /* Match input height */
+            background: rgba(0,0,0,0.05);
+            border-radius: 22px;
+        }
+        [data-theme="dark"] #voiceWaveCanvas {
+             background: rgba(255,255,255,0.05);
+        }
+        
+        #stopRecordBtn {
+            font-size: 28px;
+            color: #FF3B30;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        #stopRecordBtn:hover {
+            transform: scale(1.1);
+        }
+        
+        #recordTimer {
+            font-size: 14px;
+            font-variant-numeric: tabular-nums;
+            color: #FF3B30;
+            font-weight: 600;
+        }
+        /* === END NEW === */
+
 
         .message-input {
             flex: 1;
@@ -915,7 +1020,7 @@
             transition: var(--transition);
             position: relative;
             overflow: hidden;
-            flex-shrink: 0; /* Prevent buttons from shrinking */
+            flex-shrink: 0; 
         }
 
         .send-btn::after {
@@ -941,22 +1046,6 @@
             box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
         }
         
-        /* === NEW: Recording Status Style === */
-        .recording-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #FF3B30;
-            font-weight: 600;
-            font-size: 14px;
-            flex: 1; /* Take up the input space */
-            padding: 0 10px;
-        }
-        .recording-status #stopRecordBtn {
-            font-size: 24px;
-            cursor: pointer;
-        }
-
         /* Edit Profile Modal */
         .modal {
             display: none;
@@ -1161,9 +1250,9 @@
             <div class="app-title-bar">iMessage Social</div>
             
             <div class="tabs">
-                <div class="tab active" data-tab="chats">💬 Chats</div>
-                <div class="tab" data-tab="suggested">👥 Suggested</div>
-                <div class="tab" data-tab="followed">❤️ Followed</div>
+                <div class="tab active" data-tab="chats">町 Chats</div>
+                <div class="tab" data-tab="suggested">則 Suggested</div>
+                <div class="tab" data-tab="followed">笶､ｸFollowed</div>
                 <div class="tab" data-tab="followers">Followers</div>
             </div>
             
@@ -1217,30 +1306,43 @@
                 </div>
             </div>
             
-            <div class="message-input-container" id="messageInputContainer">
-                <!-- NEW: Upload and Record Buttons -->
-                <button class="send-btn" id="uploadBtn" title="Send Image" style="background-color: #5856D6;">
-                    <i class="fas fa-paperclip"></i>
-                </button>
-                <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+            <!-- === MODIFIED: New Input Area Structure === -->
+            <div class="message-input-area">
                 
-                <button class="send-btn" id="recordBtn" title="Send Voice Note" style="background-color: #FF2D55;">
-                    <i class="fas fa-microphone"></i>
-                </button>
-                
-                <!-- NEW: Recording Status Indicator -->
-                <div class="recording-status" id="recordingStatus" style="display: none;">
+                <!-- NEW: Media Preview -->
+                <div class="media-preview" id="mediaPreview">
+                    <div id="previewContent">
+                        <!-- e.g., <img src="..." alt="Preview"> -->
+                        <!-- e.g., <audio controls src="..."></audio> -->
+                    </div>
+                    <button class="remove-media-btn" id="removeMediaBtn">&times;</button>
+                </div>
+
+                <!-- NEW: Voice Recorder UI -->
+                <div class="voice-recorder-ui" id="voiceRecorderUI">
                     <i class="fas fa-stop-circle" id="stopRecordBtn"></i>
-                    <span>Recording...</span>
                     <span id="recordTimer">0:00</span>
+                    <canvas id="voiceWaveCanvas"></canvas>
                 </div>
                 
-                <!-- Original Input and Send Button -->
-                <input type="text" class="message-input" placeholder="Type a message...">
-                <button class="send-btn" id="sendBtn">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
+                <!-- Original Input Container -->
+                <div class="message-input-container" id="messageInputContainer">
+                    <button class="send-btn" id="uploadBtn" title="Send Image" style="background-color: #5856D6;">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+                    <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                    
+                    <button class="send-btn" id="recordBtn" title="Send Voice Note" style="background-color: #FF2D55;">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    
+                    <input type="text" class="message-input" placeholder="Type a message...">
+                    <button class="send-btn" id="sendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
             </div>
+            <!-- === END MODIFIED === -->
         </div>
     </div>
 
@@ -1264,7 +1366,7 @@
     </div>
 
     <script type="module">
-        // Import Firebase modules
+        // Import Firebase modules (using user's specified version)
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
         import { 
             getAuth, 
@@ -1291,7 +1393,6 @@
             limit
         } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
         
-        // === NEW: Import Realtime Database (RTDB) for Presence ===
         import { 
             getDatabase, 
             ref, 
@@ -1301,7 +1402,6 @@
             onValue 
         } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js';
 
-        // === NEW: Import Firebase Storage ===
         import {
             getStorage,
             ref as storageRef,
@@ -1309,7 +1409,7 @@
             getDownloadURL
         } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-storage.js';
 
-        // Firebase configuration
+        // Firebase configuration (using user's config)
         const firebaseConfig = {
             apiKey: "AIzaSyCvaWRvpDY-BOOg_oitS4oVGDoQkiWMR6A",
             authDomain: "windowsassistant-36760.firebaseapp.com",
@@ -1317,7 +1417,6 @@
             storageBucket: "windowsassistant-36760.firebasestorage.app",
             messagingSenderId: "125638102938",
             appId: "1:125638102938:web:42e36690e0b74096003423",
-            // === NEW: Add RTDB URL ===
             databaseURL: "https://windowsassistant-36760-default-rtdb.firebaseio.com",
         };
 
@@ -1325,8 +1424,8 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const rtdb = getDatabase(app); // === NEW: Init RTDB ===
-        const storage = getStorage(app); // === NEW: Init Storage ===
+        const rtdb = getDatabase(app); 
+        const storage = getStorage(app); 
         const provider = new GoogleAuthProvider();
 
         // DOM Elements
@@ -1349,12 +1448,12 @@
         const chatList = document.getElementById('chatList');
         const userList = document.getElementById('userList');
         const followedList = document.getElementById('followedList');
-        const followerList = document.getElementById('followerList'); // === NEW ===
-        const chatHeader = document.getElementById('chatHeader'); // === NEW ===
+        const followerList = document.getElementById('followerList'); 
+        const chatHeader = document.getElementById('chatHeader'); 
         const chatHeaderTitle = document.getElementById('chatHeaderTitle');
         const chatHeaderSubtitle = document.getElementById('chatHeaderSubtitle');
-        const chatFollowerCount = document.getElementById('chatFollowerCount'); // === NEW ===
-        const chatFollowingCount = document.getElementById('chatFollowingCount'); // === NEW ===
+        const chatFollowerCount = document.getElementById('chatFollowerCount'); 
+        const chatFollowingCount = document.getElementById('chatFollowingCount'); 
         const chatMessages = document.getElementById('chatMessages');
         const editProfileModal = document.getElementById('editProfileModal');
         const closeModal = document.getElementById('closeModal');
@@ -1363,39 +1462,57 @@
         const editBio = document.getElementById('editBio');
         const wordCount = document.getElementById('wordCount');
         
-        // === NEW: Media DOM Elements ===
+        // === MODIFIED: Media DOM Elements ===
         const messageInputContainer = document.getElementById('messageInputContainer');
         const uploadBtn = document.getElementById('uploadBtn');
         const imageUpload = document.getElementById('imageUpload');
         const recordBtn = document.getElementById('recordBtn');
-        const recordingStatus = document.getElementById('recordingStatus');
+        
+        // === NEW: Voice Recorder & Preview UI Elements ===
+        const voiceRecorderUI = document.getElementById('voiceRecorderUI');
+        const voiceWaveCanvas = document.getElementById('voiceWaveCanvas');
         const recordTimer = document.getElementById('recordTimer');
-        const stopRecordBtn = document.getElementById('stopRecordBtn');
+        const stopRecordBtn = document.getElementById('stopRecordBtn'); // This is the new stop button in the UI
+        
+        const mediaPreview = document.getElementById('mediaPreview');
+        const previewContent = document.getElementById('previewContent');
+        const removeMediaBtn = document.getElementById('removeMediaBtn');
 
         let messageInput = document.querySelector('.message-input');
-        let sendBtn = document.getElementById('sendBtn'); // === UPDATED: Use ID
+        let sendBtn = document.getElementById('sendBtn'); 
         const themeOptions = document.querySelectorAll('.theme-option');
 
         // Current user data
         let currentUser = null;
         let currentTheme = 'light';
-        let users = []; // Local cache of user profiles
+        let users = []; 
         let follows = [];
-        let followers = []; // === NEW: Local cache of followers ===
+        let followers = []; 
         let currentChatUser = null;
         let currentChatId = null;
         
-        // === NEW: Media Recorder Variables ===
+        // === NEW: Media & Recording Variables ===
         let mediaRecorder;
         let audioChunks = [];
         let recordTimerInterval;
-        let mediaStream; // To stop tracks
+        let mediaStream;
+        
+        // --- NEW: Pending Media for Preview ---
+        let pendingMediaBlob = null;
+        let pendingMediaType = null;
+        
+        // --- NEW: Audio Visualization ---
+        let audioContext;
+        let analyser;
+        let canvasContext;
+        let animationFrameId;
+        let dataArray;
 
         let _convoUnsub = null;
         let _chatListUnsub = null;
-        let _usersUnsub = null; // === NEW: Store user listener
-        let _followsUnsub = null; // === NEW: Store follows listener
-        let _followersUnsub = null; // === NEW: Store followers listener
+        let _usersUnsub = null; 
+        let _followsUnsub = null; 
+        let _followersUnsub = null; 
 
         // stable send handlers
         let __sendHandler = null;
@@ -1414,6 +1531,21 @@
                     default: return m;
                 }
             });
+        }
+        
+        // === NEW: Date Formatting Helper ===
+        function formatDateSeparator(date) {
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            if (date.toDateString() === today.toDateString()) {
+                return 'Today';
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+            } else {
+                return date.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
+            }
         }
 
         // Profile card hover behavior
@@ -1442,7 +1574,6 @@
             }, 300);
         });
         
-        // === NEW: Chat Header hover behavior ===
         let chatHeaderTimeout;
         chatHeader.addEventListener('mouseenter', () => {
             clearTimeout(chatHeaderTimeout);
@@ -1496,13 +1627,11 @@
                 tabs.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 
-                // Hide all lists
                 chatList.style.display = 'none';
                 userList.style.display = 'none';
                 followedList.style.display = 'none';
-                followerList.style.display = 'none'; // === NEW ===
+                followerList.style.display = 'none'; 
 
-                // Show the correct list
                 if (tab.dataset.tab === 'chats') {
                     chatList.style.display = 'block';
                 } else if (tab.dataset.tab === 'suggested') {
@@ -1511,14 +1640,13 @@
                 } else if (tab.dataset.tab === 'followed') {
                     followedList.style.display = 'block';
                     loadFollowedUsers();
-                } else if (tab.dataset.tab === 'followers') { // === NEW ===
+                } else if (tab.dataset.tab === 'followers') { 
                     followerList.style.display = 'block';
                     loadFollowers();
                 }
             });
         });
         
-        // === NEW: Clickable Stats ===
         followersBtn.addEventListener('click', () => {
             document.querySelector('[data-tab="followers"]').click();
         });
@@ -1558,7 +1686,6 @@
         // Logout functionality
         logoutBtn.addEventListener('click', async () => {
             if (currentUser) {
-                // === NEW: Manually set offline in RTDB and Firestore before sign-out ===
                 const userStatusRef = ref(rtdb, 'status/' + currentUser.uid);
                 await set(userStatusRef, { 
                     state: 'offline', 
@@ -1567,7 +1694,6 @@
                 await updateUserOnlineStatus(currentUser.uid, false).catch(()=>{});
             }
 
-            // cleanup ALL listeners
             if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
             if (_chatListUnsub) { _chatListUnsub(); _chatListUnsub = null; }
             if (_usersUnsub) { _usersUnsub(); _usersUnsub = null; }
@@ -1575,7 +1701,6 @@
             if (_followersUnsub) { _followersUnsub(); _followersUnsub = null; }
 
             signOut(auth).then(() => {
-                // Reset UI
                 currentUser = null;
                 currentChatId = null;
                 currentChatUser = null;
@@ -1592,27 +1717,22 @@
         // Firebase Authentication State Observer
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // User is signed in
                 currentUser = user;
                 console.log('User signed in:', user);
                 loginScreen.style.display = 'none';
                 appContainer.style.display = 'flex';
 
-                // === NEW: Set up Realtime Database Presence ===
                 setupPresence(user.uid);
-
                 checkAndCreateUserProfile(user);
                 loadUserTheme(user.uid);
                 setupFirestoreListeners(user.uid);
                 updateProfileUI(user);
             } else {
-                // User is signed out
                 loginScreen.style.display = 'flex';
                 appContainer.style.display = 'none';
             }
         });
         
-        // === NEW: Presence System Function ===
         function setupPresence(uid) {
             const userStatusRef = ref(rtdb, 'status/' + uid);
             const connectedRef = ref(rtdb, '.info/connected');
@@ -1628,23 +1748,16 @@
 
             onValue(connectedRef, (snap) => {
                 if (snap.val() === false) {
-                    // Not connected, but don't set offline here.
-                    // onDisconnect will handle it.
                     return;
                 }
                 
-                // Connection is established
                 onDisconnect(userStatusRef).set(isOfflineForRTDB).then(() => {
-                    // Now that onDisconnect is set, set current status to online
                     set(userStatusRef, isOnlineForRTDB);
-                    
-                    // Also update Firestore
                     updateUserOnlineStatus(uid, true);
                 });
             });
         }
         
-        // === NEW: Sync RTDB Status changes to Firestore ===
         function syncPresence() {
             const statusRef = ref(rtdb, 'status/');
             onValue(statusRef, (snapshot) => {
@@ -1655,10 +1768,8 @@
                     const status = childSnapshot.val();
                     const isOnline = status.state === 'online';
                     
-                    // Find user in local cache
                     const localUser = users.find(u => u.id === uid);
                     
-                    // Update Firestore if status is different
                     if (localUser && localUser.isOnline !== isOnline) {
                         const userDocRef = doc(db, 'users', uid);
                         updateDoc(userDocRef, { 
@@ -1697,14 +1808,12 @@
                     theme: 'light'
                 });
             } else {
-                // Update UI with existing data
                 const userData = userDoc.data();
                 profileName.textContent = userData.displayName;
                 profileBio.textContent = userData.bio;
                 followerCount.textContent = userData.followers || 0;
                 followingCount.textContent = userData.following || 0;
                 
-                // Update profile picture
                 updateProfileUI(user, userData);
             }
         }
@@ -1747,57 +1856,49 @@
         }
 
         function setupFirestoreListeners(uid) {
-            // Clean up old listeners
             if (_usersUnsub) _usersUnsub();
             if (_followsUnsub) _followsUnsub();
             if (_followersUnsub) _followersUnsub();
             if (_chatListUnsub) _chatListUnsub();
 
-            // Listen for users (to populate local cache)
             _usersUnsub = onSnapshot(collection(db, 'users'), (snapshot) => {
                 users = [];
                 snapshot.forEach(doc => {
                     users.push({ id: doc.id, ...doc.data() });
                 });
                 
-                // Refresh lists that depend on user data
                 loadUsers();
                 loadFollowedUsers();
                 loadFollowers();
                 loadChats(); 
                 
-                // Sync RTDB presence to Firestore
                 syncPresence();
             });
 
-            // Listen for who *I* am following
             _followsUnsub = onSnapshot(query(collection(db, 'follows'), where('followerId', '==', uid)), (snapshot) => {
                 follows = [];
                 snapshot.forEach(doc => {
                     follows.push({ id: doc.id, ...doc.data() });
                 });
                 followingCount.textContent = follows.length;
-                loadUsers(); // Refresh user list to update follow buttons
-                loadFollowedUsers(); // Refresh followed list
+                loadUsers(); 
+                loadFollowedUsers(); 
             });
             
-            // === NEW: Listen for who is following *ME* ===
             _followersUnsub = onSnapshot(query(collection(db, 'follows'), where('followingId', '==', uid)), (snapshot) => {
                 followers = [];
                 snapshot.forEach(doc => {
                     followers.push({ id: doc.id, ...doc.data() });
                 });
                 followerCount.textContent = followers.length;
-                loadFollowers(); // Refresh follower list
+                loadFollowers(); 
             });
             
-            // Listen for my chat list
             _chatListUnsub = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', uid), orderBy('lastMessage.timestamp', 'desc')), (snapshot) => {
                 renderChatList(snapshot);
             }, err => console.error("Error listening to chat list:", err));
         }
 
-        // === REFACTORED: Update Profile UI to use Google PFP ===
         function updateProfileUI(user, userData = null) {
             const pfp = user.photoURL || (userData ? userData.photoURL : null);
             const dispName = user.displayName || (userData ? userData.displayName : 'User');
@@ -1821,7 +1922,6 @@
             }
         }
         
-        // Helper function for rendering user lists
         function renderUserList(container, userIds, emptyMessage) {
             container.innerHTML = '';
             
@@ -1861,7 +1961,6 @@
                 container.appendChild(userElement);
             });
             
-            // Add event listeners
             addListButtonListeners(container);
         }
 
@@ -1875,13 +1974,11 @@
             renderUserList(followedList, followedUserIds, 'You are not following anyone yet.');
         }
 
-        // === NEW: Load Followers Function ===
         function loadFollowers() {
             const followerUserIds = followers.map(f => f.followerId);
             renderUserList(followerList, followerUserIds, 'You have no followers yet.');
         }
         
-        // Helper to add listeners to dynamic list buttons
         function addListButtonListeners(container) {
             container.querySelectorAll('.follow-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
@@ -1909,7 +2006,6 @@
             });
         }
 
-        // Render chat list (called by snapshot)
         function renderChatList(snapshot) {
             chatList.innerHTML = '';
             
@@ -1926,8 +2022,17 @@
                 const displayName = user ? user.displayName : 'Unknown User';
                 const photoURL = user ? user.photoURL : null;
                 const isOnline = user ? user.isOnline : false;
-                // === UPDATED: Use lastMessage.text fallback ===
-                const lastMessage = chatData.lastMessage ? chatData.lastMessage.text : 'Say hi!';
+                
+                let lastMessageText = 'Say hi!';
+                if (chatData.lastMessage && chatData.lastMessage.text) {
+                    if (chatData.lastMessage.type === 'image') {
+                        lastMessageText = '胴 Image';
+                    } else if (chatData.lastMessage.type === 'audio') {
+                        lastMessageText = '痔 Voice Note';
+                    } else {
+                        lastMessageText = chatData.lastMessage.text;
+                    }
+                }
 
                 const chatElement = document.createElement('div');
                 chatElement.className = 'chat-item';
@@ -1940,7 +2045,7 @@
                     </div>
                     <div class="chat-info">
                         <h4>${displayName}</h4>
-                        <p class="last-message">${escapeHtml(lastMessage)}</p>
+                        <p class="last-message">${escapeHtml(lastMessageText)}</p>
                     </div>
                 `;
                 
@@ -1954,7 +2059,6 @@
             });
         }
         
-        // Helper function to find or create a chat document
         async function getOrCreateChat(otherUserId) {
             if (!currentUser) return null;
             
@@ -1986,7 +2090,6 @@
             return newChatDoc.id;
         }
 
-        // Open chat (now populates hover card)
         async function openChat(userId, user) {
             if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
 
@@ -1998,8 +2101,10 @@
                 return;
             }
             currentChatId = chatId;
+            
+            // Clear any pending media from other chats
+            clearMediaPreview();
 
-            // === NEW: Update Chat Header Info ===
             const headerAvatarDiv = chatHeader.querySelector('.chat-header-avatar');
             const headerImg = headerAvatarDiv.querySelector('img');
             const headerIcon = headerAvatarDiv.querySelector('i');
@@ -2019,10 +2124,8 @@
             chatFollowerCount.textContent = user.followers || 0;
             chatFollowingCount.textContent = user.following || 0;
 
-            // show loading
             chatMessages.innerHTML = `<div class="message received"><div class="message-meta">Loading messages...<span class="message-time">Just now</span></div></div>`;
 
-            // Listen to messages subcollection
             const messagesQuery = query(
                 collection(db, 'chats', currentChatId, 'messages'),
                 orderBy('timestamp', 'asc')
@@ -2037,18 +2140,30 @@
             markMessagesAsRead(userId, currentChatId);
         }
 
-        // === MODIFIED: Render conversation with media ===
+        // === MODIFIED: Render conversation with media AND date separators ===
         function renderConversation(snapshot) {
             chatMessages.innerHTML = '';
+            let lastMessageDate = null; // --- NEW: Track last date
             
             if (snapshot.empty) {
                 chatMessages.innerHTML = `<div class="message received">Start a conversation with ${currentChatUser ? currentChatUser.displayName : 'this user'}!<div class="message-meta"><span class="message-time">Just now</span></div></div>`;
             } else {
                 snapshot.forEach(doc => {
                     const m = doc.data();
-                    const div = document.createElement('div');
                     const ts = m.timestamp ? m.timestamp.toDate() : new Date();
+                    
+                    // --- NEW: Date Separator Logic ---
+                    const messageDateStr = ts.toDateString();
+                    if (messageDateStr !== lastMessageDate) {
+                        const dateDiv = document.createElement('div');
+                        dateDiv.className = 'date-separator';
+                        dateDiv.textContent = formatDateSeparator(ts);
+                        chatMessages.appendChild(dateDiv);
+                        lastMessageDate = messageDateStr;
+                    }
+                    // --- END NEW ---
 
+                    const div = document.createElement('div');
                     let ticksHtml = '';
                     if (m.senderId === currentUser.uid) {
                         if (m.isRead) {
@@ -2058,7 +2173,6 @@
                         }
                     }
 
-                    // === NEW: Build Message Content ===
                     let messageContent = '';
                     let hasMedia = false;
                     
@@ -2070,11 +2184,9 @@
                         hasMedia = true;
                     }
 
-                    // Add text/caption
-                    if (m.text && m.text !== 'Sent an image' && m.text !== 'Sent a voice note') {
+                    if (m.text) {
                         messageContent += `<div class="${hasMedia ? 'media-caption' : ''}">${escapeHtml(m.text)}</div>`;
                     } else if (!hasMedia) {
-                        // Fallback for old text-only messages
                         messageContent = escapeHtml(m.text || '');
                     }
                     
@@ -2099,89 +2211,98 @@
             if (__sendHandler) sendBtn.removeEventListener('click', __sendHandler);
             if (__keyHandler) messageInput.removeEventListener('keypress', __keyHandler);
 
-            // === MODIFIED: Pass null for media on text send ===
-            __sendHandler = () => sendMessage(receiverId, chatId, null);
-            __keyHandler = (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(receiverId, chatId, null); } };
+            // === MODIFIED: This handler now decides what to send ===
+            __sendHandler = () => handleSendMessage(receiverId, chatId);
+            __keyHandler = (e) => { if (e.key === 'Enter') { e.preventDefault(); handleSendMessage(receiverId, chatId); } };
 
             sendBtn.addEventListener('click', __sendHandler);
             messageInput.addEventListener('keypress', __keyHandler);
         }
 
-        // === MODIFIED: Send message with media support ===
-        async function sendMessage(receiverId, chatId, media = null) {
-            if (!chatId) return;
-            
+        // === NEW: Top-level send handler ===
+        async function handleSendMessage(receiverId, chatId) {
+            if (!chatId || !currentUser) return;
+
             const messageText = (messageInput.value || '').trim();
 
-            // Must have text OR media to send
-            if (!messageText && !media) return;
+            // Case 1: Sending media (image or audio)
+            if (pendingMediaBlob && pendingMediaType) {
+                const blob = pendingMediaBlob;
+                const type = pendingMediaType;
+                
+                // Clear preview immediately
+                clearMediaPreview();
+                messageInput.value = ''; // Clear caption
+                
+                // Start upload
+                uploadFileToStorage(blob, type, receiverId, chatId, messageText);
+                
+            // Case 2: Sending text only
+            } else if (messageText) {
+                // Optimistic UI for text
+                const optimisticMessage = {
+                    text: messageText,
+                    timestamp: new Date()
+                };
+                const tempDiv = document.createElement('div');
+                tempDiv.className = 'message sent';
+                tempDiv.innerHTML = `
+                    ${escapeHtml(optimisticMessage.text)}
+                    <div class="message-meta">
+                        <span class="message-time">${optimisticMessage.timestamp.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                        <span class="message-ticks pending">
+                            <i class="fas fa-check"></i>
+                        </span>
+                    </div>
+                `;
+                chatMessages.appendChild(tempDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
 
-            if (currentUser) {
-                try {
-                    let optimisticMessage = null;
-                    let lastMessageText = messageText;
-
-                    const messageData = {
-                        senderId: currentUser.uid,
-                        receiverId: receiverId,
-                        timestamp: serverTimestamp(),
-                        isRead: false
-                    };
-                    
-                    if (media) {
-                        messageData.type = media.type;
-                        if (media.type === 'image') messageData.imageUrl = media.url;
-                        if (media.type === 'audio') messageData.audioUrl = media.url;
-                        
-                        if (messageText) messageData.text = messageText; // Add caption
-                        
-                        if (!lastMessageText) {
-                            lastMessageText = media.type === 'image' ? '📷 Image' : '🎤 Voice Note';
-                        }
-                    } else {
-                        // Optimistic UI for text
-                        optimisticMessage = {
-                            text: messageText,
-                            timestamp: new Date()
-                        };
-                        messageData.type = 'text';
-                        messageData.text = messageText;
-                    }
-                    
-                    // === MODIFIED: Only show optimistic UI for text ===
-                    if (optimisticMessage) {
-                        const tempDiv = document.createElement('div');
-                        tempDiv.className = 'message sent';
-                        tempDiv.innerHTML = `
-                            ${escapeHtml(optimisticMessage.text)}
-                            <div class="message-meta">
-                                <span class="message-time">${optimisticMessage.timestamp.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-                                <span class="message-ticks pending">
-                                    <i class="fas fa-check"></i>
-                                </span>
-                            </div>
-                        `;
-                        chatMessages.appendChild(tempDiv);
-                        chatMessages.scrollTop = chatMessages.scrollHeight;
-                    }
-
-                    // Add to subcollection
-                    await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
-
-                    // Update parent chat doc
-                    await updateDoc(doc(db, 'chats', chatId), {
-                        lastMessage: {
-                            text: lastMessageText,
-                            timestamp: messageData.timestamp
-                        }
-                    });
-
-                    messageInput.value = '';
-                } catch (error) {
-                    console.error('Error sending message:', error);
-                }
+                messageInput.value = '';
+                
+                // Send text message to Firestore
+                const messageData = {
+                    senderId: currentUser.uid,
+                    receiverId: receiverId,
+                    timestamp: serverTimestamp(),
+                    isRead: false,
+                    type: 'text',
+                    text: messageText
+                };
+                await sendFirestoreMessage(chatId, messageData);
             }
         }
+
+
+        // === NEW: Separated Firestore write function ===
+        async function sendFirestoreMessage(chatId, messageData) {
+            try {
+                // Add to messages subcollection
+                await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
+
+                // Determine lastMessage text
+                let lastMessageText = '...';
+                if (messageData.type === 'text') {
+                    lastMessageText = messageData.text;
+                } else if (messageData.type === 'image') {
+                    lastMessageText = messageData.text ? `胴 ${messageData.text}` : '胴 Image';
+                } else if (messageData.type === 'audio') {
+                    lastMessageText = messageData.text ? `痔 ${messageData.text}` : '痔 Voice Note';
+                }
+
+                // Update parent chat doc
+                await updateDoc(doc(db, 'chats', chatId), {
+                    lastMessage: {
+                        text: lastMessageText,
+                        timestamp: messageData.timestamp,
+                        type: messageData.type // Store type for chat list
+                    }
+                });
+            } catch (error) {
+                console.error('Error sending message to Firestore:', error);
+            }
+        }
+
         
         // Mark messages as read
         async function markMessagesAsRead(senderId, chatId) {
@@ -2215,7 +2336,6 @@
                     timestamp: serverTimestamp()
                 });
                 
-                // Update counts (using local cache for speed, listener will catch up)
                 const userDocRef = doc(db, 'users', userId);
                 const userDoc = await getDoc(userDocRef);
                 if (userDoc.exists()) {
@@ -2249,7 +2369,6 @@
                     await deleteDoc(doc(db, 'follows', followDoc.id));
                 });
 
-                // Update counts
                 const userDocRef = doc(db, 'users', userId);
                 const userDoc = await getDoc(userDocRef);
                 if (userDoc.exists()) {
@@ -2278,27 +2397,78 @@
             if (!file || !file.type.startsWith('image/')) return;
             
             if (!currentChatId || !currentChatUser) {
-                console.warn("No active chat. Cannot upload image.");
                 alert("Please select a chat before sending an image.");
                 return;
             }
 
-            uploadFileToStorage(file, file.type, currentChatUser.id, currentChatId);
+            // --- NEW: Set pending media, don't upload ---
+            pendingMediaBlob = file;
+            pendingMediaType = file.type;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                showMediaPreview('image', event.target.result);
+            };
+            reader.readAsDataURL(file);
             
-            // Reset file input to allow uploading the same file again
             e.target.value = null;
         }
+        
+        // === NEW: Show/Hide Media Preview ===
+        function showMediaPreview(type, url) {
+            if (type === 'image') {
+                previewContent.innerHTML = `<img src="${url}" alt="Image Preview">`;
+            } else if (type === 'audio') {
+                previewContent.innerHTML = `<audio controls src="${url}"></audio>`;
+            }
+            mediaPreview.classList.add('active');
+            
+            // Hide attachment buttons
+            uploadBtn.style.display = 'none';
+            recordBtn.style.display = 'none';
+        }
+        
+        // === NEW: Clear Media Preview ===
+        function clearMediaPreview() {
+            mediaPreview.classList.remove('active');
+            previewContent.innerHTML = '';
+            pendingMediaBlob = null;
+            pendingMediaType = null;
+            
+            // Show attachment buttons
+            uploadBtn.style.display = 'flex';
+            recordBtn.style.display = 'flex';
+        }
 
-        // Start Recording
+        // === MODIFIED: Start Recording ===
         async function startRecording() {
             if (!currentChatId || !currentChatUser) {
-                console.warn("No active chat. Cannot record audio.");
                 alert("Please select a chat before recording.");
                 return;
             }
+            // Clear any pending image
+            clearMediaPreview();
 
             try {
                 mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // --- Start Audio Visualization ---
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                analyser = audioContext.createAnalyser();
+                canvasContext = voiceWaveCanvas.getContext('2d');
+                
+                const source = audioContext.createMediaStreamSource(mediaStream);
+                source.connect(analyser);
+                
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                
+                drawSoundWaves();
+                // --- End Visualization Setup ---
+                
                 mediaRecorder = new MediaRecorder(mediaStream);
                 audioChunks = [];
 
@@ -2306,7 +2476,17 @@
                     audioChunks.push(event.data);
                 };
 
-                mediaRecorder.onstop = uploadAudio;
+                // --- MODIFIED: onstop now just creates the preview ---
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    
+                    pendingMediaBlob = audioBlob;
+                    pendingMediaType = 'audio/webm';
+                    showMediaPreview('audio', audioUrl);
+                    
+                    audioChunks = [];
+                };
 
                 mediaRecorder.start();
 
@@ -2328,14 +2508,46 @@
                 alert("Could not start recording. Please ensure microphone permissions are granted.");
             }
         }
+        
+        // === NEW: Sound Wave Drawing Function ===
+        function drawSoundWaves() {
+            animationFrameId = requestAnimationFrame(drawSoundWaves);
+            
+            analyser.getByteTimeDomainData(dataArray); // Use TimeDomainData for waves
+            
+            canvasContext.fillStyle = 'rgba(255, 255, 255, 0)'; // Clear canvas
+            canvasContext.clearRect(0, 0, voiceWaveCanvas.width, voiceWaveCanvas.height);
+            
+            canvasContext.lineWidth = 2;
+            canvasContext.strokeStyle = 'var(--primary-color)'; // Use theme color
+            canvasContext.beginPath();
+            
+            const sliceWidth = voiceWaveCanvas.width * 1.0 / dataArray.length;
+            let x = 0;
+            
+            for(let i = 0; i < dataArray.length; i++) {
+                const v = dataArray[i] / 128.0; // value between 0 and 2
+                const y = v * voiceWaveCanvas.height / 2;
+        
+                if(i === 0) {
+                    canvasContext.moveTo(x, y);
+                } else {
+                    canvasContext.lineTo(x, y);
+                }
+        
+                x += sliceWidth;
+            }
+            
+            canvasContext.lineTo(voiceWaveCanvas.width, voiceWaveCanvas.height / 2);
+            canvasContext.stroke();
+        }
 
-        // Stop Recording
-        function stopRecording() {
+        // === MODIFIED: Stop Recording ===
+        function stopAndPreviewRecording() {
             if (mediaRecorder && mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
             }
             
-            // Stop media stream tracks
             if (mediaStream) {
                 mediaStream.getTracks().forEach(track => track.stop());
             }
@@ -2343,52 +2555,56 @@
             // Stop timer
             clearInterval(recordTimerInterval);
             
+            // Stop sound wave animation
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            
             // Update UI
             toggleRecordingUI(false);
         }
         
-        // Show/Hide Recording UI
+        // === MODIFIED: Show/Hide Recording UI ===
         function toggleRecordingUI(isRecording) {
             if (isRecording) {
-                recordingStatus.style.display = 'flex';
-                messageInput.style.display = 'none';
-                uploadBtn.style.display = 'none';
-                recordBtn.style.display = 'none';
-                sendBtn.style.display = 'none';
+                voiceRecorderUI.classList.add('active');
+                messageInputContainer.style.display = 'none';
             } else {
-                recordingStatus.style.display = 'none';
-                messageInput.style.display = 'block';
-                uploadBtn.style.display = 'flex';
-                recordBtn.style.display = 'flex';
-                sendBtn.style.display = 'flex';
+                voiceRecorderUI.classList.remove('active');
+                messageInputContainer.style.display = 'flex';
             }
         }
 
-        // Upload Audio Blob
-        function uploadAudio() {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); // Using webm, common format
-            uploadFileToStorage(audioBlob, 'audio/webm', currentChatUser.id, currentChatId);
-            audioChunks = [];
-        }
-
-        // Upload File to Storage
-        async function uploadFileToStorage(file, mimeType, receiverId, chatId) {
+        // === MODIFIED: Upload File to Storage (now accepts caption) ===
+        async function uploadFileToStorage(file, mimeType, receiverId, chatId, caption = '') {
             if (!currentUser) return;
 
             try {
                 const fileType = mimeType.startsWith('image/') ? 'image' : 'audio';
-                const fileExtension = mimeType.split('/')[1].split(';')[0]; // e.g., 'png', 'webm'
+                const fileExtension = mimeType.split('/')[1].split(';')[0]; 
                 const fileName = `${currentUser.uid}-${Date.now()}.${fileExtension}`;
                 const sRef = storageRef(storage, `chat_media/${chatId}/${fileName}`);
 
-                // Show some uploading indicator (optional, but good UX)
-                // For now, we'll just upload
+                // Show uploading indicator (e.g., in a temp message)
+                // For now, just upload
                 
                 const uploadTask = await uploadBytes(sRef, file);
                 const downloadURL = await getDownloadURL(uploadTask.ref);
 
                 // Now, send the message with this URL
-                await sendMessage(receiverId, chatId, { type: fileType, url: downloadURL });
+                const messageData = {
+                    senderId: currentUser.uid,
+                    receiverId: receiverId,
+                    timestamp: serverTimestamp(),
+                    isRead: false,
+                    type: fileType,
+                };
+                
+                if (fileType === 'image') messageData.imageUrl = downloadURL;
+                if (fileType === 'audio') messageData.audioUrl = downloadURL;
+                if (caption) messageData.text = caption; // Add caption
+
+                await sendFirestoreMessage(chatId, messageData);
 
             } catch (error) {
                 console.error("Error uploading file:", error);
@@ -2396,10 +2612,14 @@
             }
         }
         
-        // === NEW: Add Listeners for Media Buttons ===
+        // === MODIFIED: Add Listeners for Media Buttons ===
         uploadBtn.addEventListener('click', () => imageUpload.click());
+        imageUpload.addEventListener('change', handleImageUpload); // Listen for file selection
+        
         recordBtn.addEventListener('click', startRecording);
-        stopRecordBtn.addEventListener('click', stopRecording);
+        stopRecordBtn.addEventListener('click', stopAndPreviewRecording); // New stop button
+        
+        removeMediaBtn.addEventListener('click', clearMediaPreview); // New remove button
 
         // Initialize with light theme
         document.body.setAttribute('data-theme', 'light');
