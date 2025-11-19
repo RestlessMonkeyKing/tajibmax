@@ -634,18 +634,18 @@
 
         .chat-info h4, .user-info h4 {
             font-size: 16px;
-        .user-info p {
-            font-size: 14px;
-            color: #8E8E93;
-            /* MODIFIED: from nowrap to normal */
-            white-space: normal; 
+            margin-bottom: 5px;
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2; /* Limit to 2 lines */
-            -webkit-box-orient: vertical;
-            line-height: 1.4em; /* 14px * 1.4 = 19.6px */
-            max-height: 2.8em; /* line-height * 2 */
+        }
+
+        .last-message {
+            font-size: 14px;
+            color: #8E8E93;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .user-actions {
@@ -662,13 +662,154 @@
             font-size: 12px;
             cursor: pointer;
             transition: var(--transition);
-            font-size: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .follow-btn::after, .message-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .follow-btn:hover::after, .message-btn:hover::after {
+            animation: ripple 1s ease-out;
+        }
+
+        .follow-btn:hover, .message-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0, 122, 255, 0.3);
+        }
+
+        .follow-btn.following {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .message-btn {
+            background: #34C759;
+        }
+
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transform: translateY(0);
+            transition: var(--transition);
+        }
+
+        /* === REFACTORED: Chat Header (to be expandable) === */
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--glass-border);
+            transition: var(--transition);
+            overflow: hidden;
+            cursor: pointer;
+            height: 81px; /* Default height */
         }
         
-        /* NEW: Hide helper tabs */
-        /* REMOVED: .tab[data-tab="followers"] { display: none; } */
+        .chat-header.expanded {
+            height: 147px; /* Expanded height */
+        }
+        
+        .chat-header .profile-header {
+            opacity: 1; /* Always visible */
+            margin-bottom: 15px;
+        }
 
-        .tab.active {
+        .chat-header-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF2D55, #FF9500);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            margin-right: 15px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .chat-header-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Status indicator on chat header */
+        .chat-header .avatar-wrapper .status-indicator {
+            width: 10px;
+            height: 10px;
+            bottom: 1px;
+            right: 16px;
+            border-width: 1px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            margin-bottom: 10px;
+            position: relative;
+            word-wrap: break-word;
+            animation: messageAppear 0.3s ease-out;
+        }
+        
+        /* === NEW: Styles for Media Messages === */
+        .message img {
+            max-width: 300px;
+            width: 100%;
+            border-radius: 15px;
+            margin-top: 5px;
+            cursor: pointer;
+        }
+        .message audio {
+            width: 300px;
+            max-width: 100%;
+            margin-top: 5px;
+        }
+        .message .media-caption {
+            margin-top: 5px;
+        }
+        /* Make media message bubbles less padded */
+        .message.has-media {
+            padding: 8px;
+        }
+
+
+        @keyframes messageAppear {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.sent {
+            align-self: flex-end;
             background: var(--primary-color);
             color: white;
             border-bottom-right-radius: 5px;
@@ -1020,18 +1161,18 @@
             <div class="app-title-bar">iMessage Social</div>
             
             <div class="tabs">
-                <!-- REMOVED: Chats tab -->
-                <div class="tab active" data-tab="suggested">👥 Suggested</div> <!-- SET to active -->
+                <div class="tab active" data-tab="chats">💬 Chats</div>
+                <div class="tab" data-tab="suggested">👥 Suggested</div>
                 <div class="tab" data-tab="followed">❤️ Followed</div>
                 <div class="tab" data-tab="followers">Followers</div>
             </div>
             
             <input type="text" class="search-box" placeholder="Search...">
             
-            <div class="chat-list" id="chatList" style="display: none;"> <!-- HIDDEN by default -->
+            <div class="chat-list" id="chatList">
                 </div>
             
-            <div class="user-list" id="userList" style="display: block;"> <!-- SHOWN by default -->
+            <div class="user-list" id="userList" style="display: none;">
                 </div>
             
             <div class="followed-list" id="followedList" style="display: none;">
@@ -1362,7 +1503,9 @@
                 followerList.style.display = 'none'; // === NEW ===
 
                 // Show the correct list
-                if (tab.dataset.tab === 'suggested') { // No longer else-if
+                if (tab.dataset.tab === 'chats') {
+                    chatList.style.display = 'block';
+                } else if (tab.dataset.tab === 'suggested') {
                     userList.style.display = 'block';
                     loadUsers();
                 } else if (tab.dataset.tab === 'followed') {
@@ -1691,8 +1834,7 @@
 
             usersToDisplay.forEach(user => {
                 const isFollowing = follows.some(follow => follow.followingId === user.id);
-                // REMOVED: shortBio logic
-                // const shortBio = user.bio ? user.bio.split(' ').slice(0, 5).join(' ') + (user.bio.split(' ').length > 5 ? '...' : '') : 'No bio yet';
+                const shortBio = user.bio ? user.bio.split(' ').slice(0, 5).join(' ') + (user.bio.split(' ').length > 5 ? '...' : '') : 'No bio yet';
 
                 const userElement = document.createElement('div');
                 userElement.className = 'user-item';
@@ -1706,7 +1848,7 @@
                     </div>
                     <div class="user-info">
                         <h4>${user.displayName}</h4>
-                        <p>${escapeHtml(user.bio || 'No bio yet')}</p> <!-- Use full bio, CSS will truncate -->
+                        <p>${shortBio}</p>
                     </div>
                     <div class="user-actions">
                         ${isFollowing ?
@@ -1724,23 +1866,7 @@
         }
 
         function loadUsers() {
-            // const allOtherUserIds = users.map(u => u.id); // OLD
-            
-            // NEW: Sort users
-            const sortedUsers = [...users].sort((a, b) => {
-                const aIsFollowing = follows.some(follow => follow.followingId === a.id);
-                const bIsFollowing = follows.some(follow => follow.followingId === b.id);
-                
-                if (aIsFollowing && !bIsFollowing) {
-                    return 1; // a (followed) comes after b (not followed)
-                }
-                if (!aIsFollowing && bIsFollowing) {
-                    return -1; // a (not followed) comes before b (followed)
-                }
-                return 0; // Keep original order
-            });
-
-            const allOtherUserIds = sortedUsers.map(u => u.id);
+            const allOtherUserIds = users.map(u => u.id);
             renderUserList(userList, allOtherUserIds, 'No other users found.');
         }
 
@@ -1777,7 +1903,7 @@
                     const user = users.find(u => u.id === userId);
                     if (user) {
                         openChat(userId, user);
-                        // REMOVED: document.querySelector('[data-tab="chats"]').click();
+                        document.querySelector('[data-tab="chats"]').click();
                     }
                 });
             });
@@ -2272,7 +2398,6 @@
         
         // === NEW: Add Listeners for Media Buttons ===
         uploadBtn.addEventListener('click', () => imageUpload.click());
-        imageUpload.addEventListener('change', handleImageUpload); // ADDED this line
         recordBtn.addEventListener('click', startRecording);
         stopRecordBtn.addEventListener('click', stopRecording);
 
