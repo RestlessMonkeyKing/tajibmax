@@ -52,23 +52,2149 @@
             --glass-border: rgba(255, 255, 255, 0.2);
         }
 
-        /* === NEW: Text Clamping Utilities === */
-        .line-clamp-1 {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            transition: var(--transition);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Login Screen */
+        .login-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            padding: 20px;
+            text-align: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            box-shadow: var(--shadow);
+            max-width: 400px;
+            width: 100%;
+            transform: translateY(0);
+            transition: var(--transition);
+        }
+
+        .login-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 60px rgba(31, 38, 135, 0.5);
+        }
+
+        .app-logo {
+            font-size: 48px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .app-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .app-subtitle {
+            font-size: 16px;
+            margin-bottom: 30px;
+            color: #8E8E93;
+        }
+
+        .login-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 15px;
+            border-radius: 15px;
+            border: none;
+            background: #4285F4;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 20px;
+            position: relative;
             overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            -webkit-box-orient: vertical;
-            white-space: normal;
+        }
+
+        .login-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .login-btn:hover::after {
+            animation: ripple 1s ease-out;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(66, 133, 244, 0.3);
+        }
+
+        .login-btn i {
+            font-size: 20px;
+        }
+
+        /* App Container */
+        .app-container {
+            display: none;
+            height: 100vh;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            gap: 20px;
+            animation: fadeIn 0.5s ease-out;
         }
         
-        .line-clamp-2 {
+        /* === NEW: Top Right Controls Wrapper === */
+        .top-right-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+        
+        /* === REFACTORED: Profile Card === */
+        .profile-card {
+            position: relative; /* Changed from absolute */
+            width: 60px;
+            height: 60px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            padding: 0;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .profile-card.expanded {
+            width: 240px;
+            height: auto;
+            border-radius: var(--border-radius);
+            padding: 20px;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .profile-card.expanded .profile-header {
+            opacity: 1;
+        }
+        
+        /* === NEW: Avatar Wrapper (for status indicator) === */
+        .avatar-wrapper {
+            position: relative;
+            flex-shrink: 0;
+        }
+        
+        /* === REFACTORED: Profile Pic === */
+        .profile-pic {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-right: 15px;
+            overflow: hidden;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+
+        .profile-card:not(.expanded) .profile-pic {
+            margin-right: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .profile-pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* === REFACTORED: Status Indicator (no longer child) === */
+        .status-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px; /* 17px with margin-right */
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #34C759;
+            border: 2px solid var(--card-bg);
+            z-index: 10;
+        }
+        /* Specific adjustment for profile card wrapper */
+        .profile-pic-wrapper .status-indicator {
+            right: 17px; 
+        }
+        /* Adjustment for non-expanded card */
+        .profile-card:not(.expanded) .profile-pic-wrapper .status-indicator {
+            right: 2px;
+            bottom: 2px;
+        }
+
+        .status-indicator.offline {
+            background: #8E8E93;
+        }
+
+        .profile-info {
+            overflow: hidden;
+        }
+
+        .profile-info h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            white-space: normal;
+        }
+
+        .profile-info p {
+            font-size: 14px;
+            color: #8E8E93;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .profile-stats {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .profile-stats > div {
+            cursor: pointer; /* Make stats clickable */
+        }
+
+        .profile-card.expanded .profile-stats,
+        .chat-header.expanded .profile-stats { /* ADDED chat-header */
+            opacity: 1;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .profile-card.expanded .profile-actions {
+            opacity: 1;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border-radius: 10px;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .btn:hover::after {
+            animation: ripple 1s ease-out;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* === REFACTORED: Theme Selector === */
+        .theme-selector {
+            position: relative; /* Changed from absolute */
+            width: 60px; /* NEW */
+            height: 60px; /* NEW */
+            border-radius: 50%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            overflow: hidden;
+        }
+
+        .theme-selector.expanded {
+            width: 200px;
+            border-radius: 30px; /* Updated */
+            padding: 0 10px;
+        }
+
+        .theme-options {
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            width: 0;
+            transition: opacity 0.3s ease, width 0.3s ease;
+        }
+
+        .theme-selector.expanded .theme-options {
+            opacity: 1;
+            width: auto;
+        }
+
+        .theme-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+        }
+
+        .theme-option:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-option.active {
+            transform: scale(1.15);
+            box-shadow: 0 0 0 2px var(--text-color);
+        }
+
+        .theme-light {
+            background: #F2F2F7;
+            color: #1C1C1E;
+        }
+
+        .theme-dark {
+            background: #000000;
+            color: #FFFFFF;
+        }
+
+        .theme-liquid {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #FFFFFF;
+        }
+
+        .theme-sunset {
+            background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+            color: #FFFFFF;
+        }
+
+        .theme-forest {
+            background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
+            color: #FFFFFF;
+        }
+
+        .theme-icon {
+            transition: var(--transition);
+        }
+
+        .theme-selector.expanded .theme-icon {
+            opacity: 0;
+            width: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 300px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            transform: translateX(0);
+            transition: var(--transition);
+        }
+
+        .app-title-bar {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 5px;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 12px;
+        }
+        
+        /* NEW: Hide helper tabs */
+        .tab[data-tab="followers"] {
+            display: none;
+        }
+
+        .tab.active {
+            background: var(--primary-color);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .search-box {
+            padding: 12px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.3);
+            margin-bottom: 20px;
+            width: 100%;
+            color: var(--text-color);
+            transition: var(--transition);
+        }
+
+        .search-box:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary-color);
+        }
+
+        .chat-list, .user-list, .followed-list, .follower-list { /* ADDED follower-list */
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .chat-item, .user-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            animation: slideIn 0.3s ease-out;
+            position: relative;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .chat-item:hover, .user-item:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .chat-item.active {
+            background: rgba(0, 122, 255, 0.2);
+        }
+
+        .chat-avatar, .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #5856D6, #007AFF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            margin-right: 15px;
+            overflow: hidden;
+            flex-shrink: 0;
+            position: relative; /* Kept for child elements if any */
+        }
+
+        .chat-avatar img, .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .chat-avatar .status-indicator, .user-avatar .status-indicator {
+            width: 12px;
+            height: 12px;
+            bottom: 2px;
+            right: 2px;
+        }
+        
+        /* Status indicator on list items */
+        .chat-item .avatar-wrapper .status-indicator,
+        .user-item .avatar-wrapper .status-indicator {
+            right: 17px;
+        }
+
+        .chat-info, .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .chat-info h4, .user-info h4 {
+            font-size: 16px;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .last-message {
+            font-size: 14px;
+            color: #8E8E93;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .follow-btn, .message-btn {
+            padding: 6px 12px;
+            border-radius: 10px;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .follow-btn::after, .message-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .follow-btn:hover::after, .message-btn:hover::after {
+            animation: ripple 1s ease-out;
+        }
+
+        .follow-btn:hover, .message-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0, 122, 255, 0.3);
+        }
+
+        .follow-btn.following {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .message-btn {
+            background: #34C759;
+        }
+
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transform: translateY(0);
+            transition: var(--transition);
+        }
+
+        /* === REFACTORED: Chat Header (to be expandable) === */
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--glass-border);
+            transition: var(--transition);
+            overflow: hidden;
+            cursor: pointer;
+            height: 81px; /* Default height */
+        }
+        
+        .chat-header.expanded {
+            height: 147px; /* Expanded height */
+        }
+        
+        .chat-header .profile-header {
+            opacity: 1; /* Always visible */
+            margin-bottom: 15px;
+        }
+
+        .chat-header-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF2D55, #FF9500);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            margin-right: 15px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .chat-header-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Status indicator on chat header */
+        .chat-header .avatar-wrapper .status-indicator {
+            width: 10px;
+            height: 10px;
+            bottom: 1px;
+            right: 16px;
+            border-width: 1px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            margin-bottom: 10px;
+            position: relative;
+            word-wrap: break-word;
+            animation: messageAppear 0.3s ease-out;
+        }
+
+        @keyframes messageAppear {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.sent {
+            align-self: flex-end;
+            background: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.received {
+            align-self: flex-start;
+            background: #E5E5EA;
+            color: black;
+            border-bottom-left-radius: 5px;
+        }
+        
+        [data-theme="dark"] .message.received {
+            background: #2C2C2E;
+            color: white;
+        }
+
+        .message-meta {
+            display: flex;
+            align-items: center;
+            font-size: 11px;
+            margin-top: 5px;
+            opacity: 0.7;
+        }
+
+        .message.sent .message-meta {
+            justify-content: flex-end;
+        }
+
+        .message.received .message-meta {
+            justify-content: flex-start;
+        }
+
+        .message-time {
+            margin-top: 0;
+            text-align: left; /* Reset from old rule */
+        }
+        
+        /* Add space only if ticks are present */
+        .message.sent .message-time {
+            margin-right: 5px;
+        }
+        
+        /* === REFACTORED: Ticks System === */
+        .message-ticks {
+            font-size: 12px;
+        }
+        
+        /* 1 grey tick (pending) or 2 grey ticks (delivered) */
+        .message.sent .message-ticks.pending,
+        .message.sent .message-ticks.delivered {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* 2 blue ticks (read) */
+        .message.sent .message-ticks.read {
+            color: #40C6FF; /* WhatsApp-style blue */
+        }
+        
+        [data-theme="dark"] .message.sent .message-ticks.pending,
+        [data-theme="dark"] .message.sent .message-ticks.delivered {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        [data-theme="dark"] .message.sent .message-ticks.read {
+             color: #40C6FF;
+        }
+
+        .message-input-container {
+            padding: 20px;
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.3);
+            color: var(--text-color);
+            transition: var(--transition);
+        }
+
+        .message-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary-color);
+        }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .send-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+
+        .send-btn:hover::after {
+            animation: ripple 1s ease-out;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
+        }
+
+        /* Edit Profile Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+            transform: scale(0.9);
+            animation: modalAppear 0.3s ease-out forwards;
+        }
+
+        @keyframes modalAppear {
+            to { transform: scale(1); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: var(--transition);
+        }
+
+        .close-btn:hover {
+            transform: rotate(90deg);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.3);
+            color: var(--text-color);
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+                padding: 10px;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 40%;
+            }
+            
+            .chat-area {
+                height: 60%;
+            }
+            
+            .top-right-controls {
+                position: relative;
+                top: 0;
+                right: 0;
+                width: 100%;
+                margin-bottom: 20px;
+                justify-content: space-between;
+            }
+            
+            .profile-card {
+                width: 100%;
+                max-width: calc(100% - 80px); /* Full width minus theme selector */
+                height: auto;
+                border-radius: var(--border-radius);
+            }
+            
+            .profile-card.expanded {
+                width: 100%;
+            }
+            
+            .theme-selector {
+                width: 60px;
+            }
+
+            .theme-selector.expanded {
+                width: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+            <div class="app-logo">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h1 class="app-title">iMessage Social</h1>
+            <p class="app-subtitle">Connect with friends in real-time</p>
+            <button class="login-btn" id="googleSignInBtn">
+                <i class="fab fa-google"></i>
+                Sign in with Google
+            </button>
+            <p class="app-subtitle">Sign in to start messaging</p>
+        </div>
+    </div>
+
+    <div class="app-container" id="appContainer">
+    
+        <div class="top-right-controls">
+            <div class="theme-selector" id="themeSelector">
+                <div class="theme-icon">
+                    <i class="fas fa-palette"></i>
+                </div>
+                <div class="theme-options">
+                    <div class="theme-option theme-light active" data-theme="light" title="Light Mode">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <div class="theme-option theme-dark" data-theme="dark" title="Dark Mode">
+                        <i class="fas fa-moon"></i>
+                    </div>
+                    <div class="theme-option theme-liquid" data-theme="liquid" title="Liquid Glass">
+                        <i class="fas fa-glass-whiskey"></i>
+                    </div>
+                    <div class="theme-option theme-sunset" data-theme="sunset" title="Sunset">
+                        <i class="fas fa-sun"></i>
+                    </div>
+                    <div class="theme-option theme-forest" data-theme="forest" title="Forest">
+                        <i class="fas fa-tree"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-card" id="profileCard">
+                <div class="profile-header">
+                    <div class="profile-pic-wrapper">
+                        <div class="profile-pic" id="profilePic">
+                            <img src="" alt="Profile" style="display:none;" />
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="status-indicator" id="profileStatus"></div>
+                    </div>
+                    <div class="profile-info">
+                        <h3 id="profileName">Loading...</h3>
+                        <p id="profileBio">Bio will appear here</p>
+                    </div>
+                </div>
+                <div class="profile-stats">
+                    <div id="followersBtn"> <div class="stat-number" id="followerCount">0</div>
+                        <div class="stat-label">Followers</div>
+                    </div>
+                    <div id="followingBtn"> <div class="stat-number" id="followingCount">0</div>
+                        <div class="stat-label">Following</div>
+                    </div>
+                </div>
+                <div class="profile-actions">
+                    <button class="btn" id="editProfileBtn">Edit Profile</button>
+                    <button class="btn btn-outline" id="logoutBtn">Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="app-title-bar">iMessage Social</div>
+            
+            <div class="tabs">
+                <div class="tab active" data-tab="chats">💬 Chats</div>
+                <div class="tab" data-tab="suggested">👥 Suggested</div>
+                <div class="tab" data-tab="followed">❤️ Followed</div>
+                <div class="tab" data-tab="followers">Followers</div>
+            </div>
+            
+            <input type="text" class="search-box" placeholder="Search...">
+            
+            <div class="chat-list" id="chatList">
+                </div>
+            
+            <div class="user-list" id="userList" style="display: none;">
+                </div>
+            
+            <div class="followed-list" id="followedList" style="display: none;">
+                </div>
+            
+            <div class="follower-list" id="followerList" style="display: none;">
+                </div>
+        </div>
+        
+        <div class="chat-area">
+            <div class="chat-header" id="chatHeader">
+                <div class="profile-header">
+                    <div class="avatar-wrapper">
+                        <div class="chat-header-avatar profile-pic"> <img src="" alt="Avatar" style="display:none;" />
+                            <i class="fas fa-user-friends"></i>
+                        </div>
+                        <div class="status-indicator offline"></div>
+                    </div>
+                    <div class="profile-info">
+                        <h3 id="chatHeaderTitle">Select a conversation</h3>
+                        <p id="chatHeaderSubtitle">Start chatting with friends</p>
+                    </div>
+                </div>
+                <div class="profile-stats">
+                    <div>
+                        <div class="stat-number" id="chatFollowerCount">0</div>
+                        <div class="stat-label">Followers</div>
+                    </div>
+                    <div>
+                        <div class="stat-number" id="chatFollowingCount">0</div>
+                        <div class="stat-label">Following</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message received">
+                    Welcome to iMessage Social! Select a conversation to start messaging.
+                    <div class="message-meta">
+                        <span class="message-time">Just now</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="message-input-container">
+                <input type="text" class="message-input" placeholder="Type a message...">
+                <button class="send-btn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editProfileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Profile</h3>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="editName">Display Name</label>
+                <input type="text" id="editName" class="form-control" placeholder="Your display name" maxlength="30">
+            </div>
+            <div class="form-group">
+                <label for="editBio">Bio (max 10 words)</label>
+                <textarea id="editBio" class="form-control" rows="3" placeholder="Tell others about yourself (max 10 words)" maxlength="100"></textarea>
+                <small style="color: #8E8E93; font-size: 12px;">Words remaining: <span id="wordCount">10</span></small>
+            </div>
+            <button class="btn" id="saveProfileBtn">Save Changes</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
+        import { 
+            getAuth, 
+            GoogleAuthProvider, 
+            signInWithPopup,
+            onAuthStateChanged,
+            signOut 
+        } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            onSnapshot, 
+            serverTimestamp, 
+            query, 
+            where, 
+            orderBy,
+            updateDoc,
+            doc,
+            setDoc,
+            getDoc,
+            getDocs,
+            deleteDoc,
+            limit
+        } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
+        
+        // === NEW: Import Realtime Database (RTDB) for Presence ===
+        import { 
+            getDatabase, 
+            ref, 
+            onDisconnect, 
+            set, 
+            serverTimestamp as rtdbServerTimestamp, 
+            onValue 
+        } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCvaWRvpDY-BOOg_oitS4oVGDoQkiWMR6A",
+            authDomain: "windowsassistant-36760.firebaseapp.com",
+            projectId: "windowsassistant-36760",
+            storageBucket: "windowsassistant-36760.firebasestorage.app",
+            messagingSenderId: "125638102938",
+            appId: "1:125638102938:web:42e36690e0b74096003423",
+            // === NEW: Add RTDB URL ===
+            databaseURL: "https://windowsassistant-36760-default-rtdb.firebaseio.com",
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const rtdb = getDatabase(app); // === NEW: Init RTDB ===
+        const provider = new GoogleAuthProvider();
+
+        // DOM Elements
+        const loginScreen = document.getElementById('loginScreen');
+        const appContainer = document.getElementById('appContainer');
+        const googleSignInBtn = document.getElementById('googleSignInBtn');
+        const themeSelector = document.getElementById('themeSelector');
+        const profileCard = document.getElementById('profileCard');
+        const profilePic = document.getElementById('profilePic');
+        const profileName = document.getElementById('profileName');
+        const profileBio = document.getElementById('profileBio');
+        const profileStatus = document.getElementById('profileStatus');
+        const followerCount = document.getElementById('followerCount');
+        const followingCount = document.getElementById('followingCount');
+        const followersBtn = document.getElementById('followersBtn');
+        const followingBtn = document.getElementById('followingBtn');
+        const editProfileBtn = document.getElementById('editProfileBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const tabs = document.querySelectorAll('.tab');
+        const chatList = document.getElementById('chatList');
+        const userList = document.getElementById('userList');
+        const followedList = document.getElementById('followedList');
+        const followerList = document.getElementById('followerList'); // === NEW ===
+        const chatHeader = document.getElementById('chatHeader'); // === NEW ===
+        const chatHeaderTitle = document.getElementById('chatHeaderTitle');
+        const chatHeaderSubtitle = document.getElementById('chatHeaderSubtitle');
+        const chatFollowerCount = document.getElementById('chatFollowerCount'); // === NEW ===
+        const chatFollowingCount = document.getElementById('chatFollowingCount'); // === NEW ===
+        const chatMessages = document.getElementById('chatMessages');
+        const editProfileModal = document.getElementById('editProfileModal');
+        const closeModal = document.getElementById('closeModal');
+        const saveProfileBtn = document.getElementById('saveProfileBtn');
+        const editName = document.getElementById('editName');
+        const editBio = document.getElementById('editBio');
+        const wordCount = document.getElementById('wordCount');
+        let messageInput = document.querySelector('.message-input');
+        let sendBtn = document.querySelector('.send-btn');
+        const themeOptions = document.querySelectorAll('.theme-option');
+
+        // Current user data
+        let currentUser = null;
+        let currentTheme = 'light';
+        let users = []; // Local cache of user profiles
+        let follows = [];
+        let followers = []; // === NEW: Local cache of followers ===
+        let currentChatUser = null;
+        let currentChatId = null;
+        
+        let _convoUnsub = null;
+        let _chatListUnsub = null;
+        let _usersUnsub = null; // === NEW: Store user listener
+        let _followsUnsub = null; // === NEW: Store follows listener
+        let _followersUnsub = null; // === NEW: Store followers listener
+
+        // stable send handlers
+        let __sendHandler = null;
+        let __keyHandler = null;
+
+        // helpers
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return String(unsafe).replace(/[&<"'>]/g, (m) => {
+                switch (m) {
+                    case '&': return '&amp;';
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '"': return '&quot;';
+                    case "'": return '&#039;';
+                    default: return m;
+                }
+            });
+        }
+
+        // Profile card hover behavior
+        let profileCardTimeout;
+        profileCard.addEventListener('mouseenter', () => {
+            clearTimeout(profileCardTimeout);
+            profileCard.classList.add('expanded');
+        });
+
+        profileCard.addEventListener('mouseleave', () => {
+            profileCardTimeout = setTimeout(() => {
+                profileCard.classList.remove('expanded');
+            }, 300);
+        });
+
+        // Theme selector hover behavior
+        let themeSelectorTimeout;
+        themeSelector.addEventListener('mouseenter', () => {
+            clearTimeout(themeSelectorTimeout);
+            themeSelector.classList.add('expanded');
+        });
+
+        themeSelector.addEventListener('mouseleave', () => {
+            themeSelectorTimeout = setTimeout(() => {
+                themeSelector.classList.remove('expanded');
+            }, 300);
+        });
+        
+        // === NEW: Chat Header hover behavior ===
+        let chatHeaderTimeout;
+        chatHeader.addEventListener('mouseenter', () => {
+            clearTimeout(chatHeaderTimeout);
+            chatHeader.classList.add('expanded');
+        });
+
+        chatHeader.addEventListener('mouseleave', () => {
+            chatHeaderTimeout = setTimeout(() => {
+                chatHeader.classList.remove('expanded');
+            }, 300);
+        });
+
+        // Theme selection
+        themeOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const theme = option.dataset.theme;
+                setTheme(theme);
+                themeOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
+            });
+        });
+
+        // Bio word count limit
+        editBio.addEventListener('input', () => {
+            const words = editBio.value.trim().split(/\s+/).filter(word => word.length > 0);
+            const wordLimit = 10;
+            const remaining = wordLimit - words.length;
+
+            wordCount.textContent = remaining;
+
+            if (remaining < 0) {
+                wordCount.style.color = '#FF3B30';
+                editBio.value = words.slice(0, wordLimit).join(' ');
+                wordCount.textContent = 0;
+            } else {
+                wordCount.style.color = '#8E8E93';
+            }
+        });
+
+        // Google Sign-In
+        googleSignInBtn.addEventListener('click', () => {
+            signInWithPopup(auth, provider)
+                .catch((error) => {
+                    console.error('Sign-in error:', error);
+                });
+        });
+
+        // Tab switching functionality
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Hide all lists
+                chatList.style.display = 'none';
+                userList.style.display = 'none';
+                followedList.style.display = 'none';
+                followerList.style.display = 'none'; // === NEW ===
+
+                // Show the correct list
+                if (tab.dataset.tab === 'chats') {
+                    chatList.style.display = 'block';
+                } else if (tab.dataset.tab === 'suggested') {
+                    userList.style.display = 'block';
+                    loadUsers();
+                } else if (tab.dataset.tab === 'followed') {
+                    followedList.style.display = 'block';
+                    loadFollowedUsers();
+                } else if (tab.dataset.tab === 'followers') { // === NEW ===
+                    followerList.style.display = 'block';
+                    loadFollowers();
+                }
+            });
+        });
+        
+        // === NEW: Clickable Stats ===
+        followersBtn.addEventListener('click', () => {
+            document.querySelector('[data-tab="followers"]').click();
+        });
+        
+        followingBtn.addEventListener('click', () => {
+            document.querySelector('[data-tab="followed"]').click();
+        });
+
+        // Modal functionality
+        editProfileBtn.addEventListener('click', () => {
+            editName.value = profileName.textContent;
+            editBio.value = profileBio.textContent;
+            const words = editBio.value.trim().split(/\s+/).filter(word => word.length > 0);
+            wordCount.textContent = 10 - words.length;
+            editProfileModal.style.display = 'flex';
+        });
+
+        closeModal.addEventListener('click', () => {
+            editProfileModal.style.display = 'none';
+        });
+
+        saveProfileBtn.addEventListener('click', () => {
+            const newName = editName.value;
+            let newBio = editBio.value;
+            const words = newBio.trim().split(/\s+/).filter(word => word.length > 0);
+            if (words.length > 10) {
+                newBio = words.slice(0, 10).join(' ');
+            }
+            profileName.textContent = newName;
+            profileBio.textContent = newBio;
+            if (currentUser) {
+                updateUserProfile(currentUser.uid, newName, newBio);
+            }
+            editProfileModal.style.display = 'none';
+        });
+
+        // Logout functionality
+        logoutBtn.addEventListener('click', async () => {
+            if (currentUser) {
+                // === NEW: Manually set offline in RTDB and Firestore before sign-out ===
+                const userStatusRef = ref(rtdb, 'status/' + currentUser.uid);
+                await set(userStatusRef, { 
+                    state: 'offline', 
+                    last_changed: rtdbServerTimestamp() 
+                });
+                await updateUserOnlineStatus(currentUser.uid, false).catch(()=>{});
+            }
+
+            // cleanup ALL listeners
+            if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
+            if (_chatListUnsub) { _chatListUnsub(); _chatListUnsub = null; }
+            if (_usersUnsub) { _usersUnsub(); _usersUnsub = null; }
+            if (_followsUnsub) { _followsUnsub(); _followsUnsub = null; }
+            if (_followersUnsub) { _followersUnsub(); _followersUnsub = null; }
+
+            signOut(auth).then(() => {
+                // Reset UI
+                currentUser = null;
+                currentChatId = null;
+                currentChatUser = null;
+                users = [];
+                follows = [];
+                followers = [];
+                loginScreen.style.display = 'flex';
+                appContainer.style.display = 'none';
+            }).catch((error) => {
+                console.error('Logout error:', error);
+            });
+        });
+
+        // Firebase Authentication State Observer
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User is signed in
+                currentUser = user;
+                console.log('User signed in:', user);
+                loginScreen.style.display = 'none';
+                appContainer.style.display = 'flex';
+
+                // === NEW: Set up Realtime Database Presence ===
+                setupPresence(user.uid);
+
+                checkAndCreateUserProfile(user);
+                loadUserTheme(user.uid);
+                setupFirestoreListeners(user.uid);
+                updateProfileUI(user);
+            } else {
+                // User is signed out
+                loginScreen.style.display = 'flex';
+                appContainer.style.display = 'none';
+            }
+        });
+        
+        // === NEW: Presence System Function ===
+        function setupPresence(uid) {
+            const userStatusRef = ref(rtdb, 'status/' + uid);
+            const connectedRef = ref(rtdb, '.info/connected');
+            
+            const isOnlineForRTDB = { 
+                state: 'online', 
+                last_changed: rtdbServerTimestamp() 
+            };
+            const isOfflineForRTDB = { 
+                state: 'offline', 
+                last_changed: rtdbServerTimestamp() 
+            };
+
+            onValue(connectedRef, (snap) => {
+                if (snap.val() === false) {
+                    // Not connected, but don't set offline here.
+                    // onDisconnect will handle it.
+                    return;
+                }
+                
+                // Connection is established
+                onDisconnect(userStatusRef).set(isOfflineForRTDB).then(() => {
+                    // Now that onDisconnect is set, set current status to online
+                    set(userStatusRef, isOnlineForRTDB);
+                    
+                    // Also update Firestore
+                    updateUserOnlineStatus(uid, true);
+                });
+            });
+        }
+        
+        // === NEW: Sync RTDB Status changes to Firestore ===
+        function syncPresence() {
+            const statusRef = ref(rtdb, 'status/');
+            onValue(statusRef, (snapshot) => {
+                if (!snapshot.exists()) return;
+                
+                snapshot.forEach((childSnapshot) => {
+                    const uid = childSnapshot.key;
+                    const status = childSnapshot.val();
+                    const isOnline = status.state === 'online';
+                    
+                    // Find user in local cache
+                    const localUser = users.find(u => u.id === uid);
+                    
+                    // Update Firestore if status is different
+                    if (localUser && localUser.isOnline !== isOnline) {
+                        const userDocRef = doc(db, 'users', uid);
+                        updateDoc(userDocRef, { 
+                            isOnline: isOnline, 
+                            lastSeen: serverTimestamp() 
+                        }).catch(err => console.error("Error syncing presence to Firestore:", err));
+                    }
+                });
+            });
+        }
+
+        // Theme functions
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.body.setAttribute('data-theme', theme);
+            if (currentUser) {
+                updateUserTheme(currentUser.uid, theme);
+            }
+        }
+
+        // Firestore functions
+        async function checkAndCreateUserProfile(user) {
+            const userDocRef = doc(db, 'users', user.uid);
+            const userDoc = await getDoc(userDocRef);
+
+            if (!userDoc.exists()) {
+                await setDoc(userDocRef, {
+                    displayName: user.displayName || `User${Math.floor(1000 + Math.random() * 9000)}`,
+                    bio: 'Hello! I am using iMessage Social.',
+                    photoURL: user.photoURL || '',
+                    followers: 0,
+                    following: 0,
+                    isOnline: true,
+                    lastSeen: serverTimestamp(),
+                    createdAt: serverTimestamp(),
+                    theme: 'light'
+                });
+            } else {
+                // Update UI with existing data
+                const userData = userDoc.data();
+                profileName.textContent = userData.displayName;
+                profileBio.textContent = userData.bio;
+                followerCount.textContent = userData.followers || 0;
+                followingCount.textContent = userData.following || 0;
+                
+                // Update profile picture
+                updateProfileUI(user, userData);
+            }
+        }
+
+        async function updateUserProfile(uid, displayName, bio) {
+            const userDocRef = doc(db, 'users', uid);
+            await updateDoc(userDocRef, {
+                displayName: displayName,
+                bio: bio
+            });
+        }
+
+        async function updateUserTheme(uid, theme) {
+            const userDocRef = doc(db, 'users', uid);
+            await updateDoc(userDocRef, {
+                theme: theme
+            });
+        }
+
+        async function updateUserOnlineStatus(uid, isOnline) {
+            const userDocRef = doc(db, 'users', uid);
+            await updateDoc(userDocRef, {
+                isOnline: isOnline,
+                lastSeen: serverTimestamp()
+            });
+        }
+
+        async function loadUserTheme(uid) {
+            const userDocRef = doc(db, 'users', uid);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                if (userData.theme) {
+                    setTheme(userData.theme);
+                    themeOptions.forEach(option => {
+                        option.classList.toggle('active', option.dataset.theme === userData.theme);
+                    });
+                }
+            }
+        }
+
+        function setupFirestoreListeners(uid) {
+            // Clean up old listeners
+            if (_usersUnsub) _usersUnsub();
+            if (_followsUnsub) _followsUnsub();
+            if (_followersUnsub) _followersUnsub();
+            if (_chatListUnsub) _chatListUnsub();
+
+            // Listen for users (to populate local cache)
+            _usersUnsub = onSnapshot(collection(db, 'users'), (snapshot) => {
+                users = [];
+                snapshot.forEach(doc => {
+                    users.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Refresh lists that depend on user data
+                loadUsers();
+                loadFollowedUsers();
+                loadFollowers();
+                loadChats(); 
+                
+                // Sync RTDB presence to Firestore
+                syncPresence();
+            });
+
+            // Listen for who *I* am following
+            _followsUnsub = onSnapshot(query(collection(db, 'follows'), where('followerId', '==', uid)), (snapshot) => {
+                follows = [];
+                snapshot.forEach(doc => {
+                    follows.push({ id: doc.id, ...doc.data() });
+                });
+                followingCount.textContent = follows.length;
+                loadUsers(); // Refresh user list to update follow buttons
+                loadFollowedUsers(); // Refresh followed list
+            });
+            
+            // === NEW: Listen for who is following *ME* ===
+            _followersUnsub = onSnapshot(query(collection(db, 'follows'), where('followingId', '==', uid)), (snapshot) => {
+                followers = [];
+                snapshot.forEach(doc => {
+                    followers.push({ id: doc.id, ...doc.data() });
+                });
+                followerCount.textContent = followers.length;
+                loadFollowers(); // Refresh follower list
+            });
+            
+            // Listen for my chat list
+            _chatListUnsub = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', uid), orderBy('lastMessage.timestamp', 'desc')), (snapshot) => {
+                renderChatList(snapshot);
+            }, err => console.error("Error listening to chat list:", err));
+        }
+
+        // === REFACTORED: Update Profile UI to use Google PFP ===
+        function updateProfileUI(user, userData = null) {
+            const pfp = user.photoURL || (userData ? userData.photoURL : null);
+            const dispName = user.displayName || (userData ? userData.displayName : 'User');
+            
+            profileName.textContent = dispName;
+            
+            const img = profilePic.querySelector('img');
+            const icon = profilePic.querySelector('i');
+
+            if (pfp) {
+                img.src = pfp;
+                img.style.display = 'block';
+                icon.style.display = 'none';
+            } else {
+                img.style.display = 'none';
+                icon.style.display = 'block';
+            }
+            
+            if (userData) {
+                profileStatus.classList.toggle('offline', !userData.isOnline);
+            }
+        }
+        
+        // Helper function for rendering user lists
+        function renderUserList(container, userIds, emptyMessage) {
+            container.innerHTML = '';
+            
+            const usersToDisplay = users.filter(user => userIds.includes(user.id) && user.id !== currentUser.uid);
+
+            if (usersToDisplay.length === 0) {
+                container.innerHTML = `<div class="user-item">${emptyMessage}</div>`;
+                return;
+            }
+
+            usersToDisplay.forEach(user => {
+                const isFollowing = follows.some(follow => follow.followingId === user.id);
+                const shortBio = user.bio ? user.bio.split(' ').slice(0, 5).join(' ') + (user.bio.split(' ').length > 5 ? '...' : '') : 'No bio yet';
+
+                const userElement = document.createElement('div');
+                userElement.className = 'user-item';
+
+                userElement.innerHTML = `
+                    <div class="avatar-wrapper">
+                        <div class="user-avatar">
+                            ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
+                        </div>
+                        <div class="status-indicator ${user.isOnline ? '' : 'offline'}"></div>
+                    </div>
+                    <div class="user-info">
+                        <h4>${user.displayName}</h4>
+                        <p>${shortBio}</p>
+                    </div>
+                    <div class="user-actions">
+                        ${isFollowing ?
+                            `<button class="message-btn" data-userid="${user.id}">Message</button>
+                             <button class="follow-btn following" data-userid="${user.id}">Unfollow</button>` :
+                            `<button class="follow-btn" data-userid="${user.id}">Follow</button>`
+                        }
+                    </div>
+                `;
+                container.appendChild(userElement);
+            });
+            
+            // Add event listeners
+            addListButtonListeners(container);
+        }
+
+        function loadUsers() {
+            const allOtherUserIds = users.map(u => u.id);
+            renderUserList(userList, allOtherUserIds, 'No other users found.');
+        }
+
+        function loadFollowedUsers() {
+            const followedUserIds = follows.map(f => f.followingId);
+            renderUserList(followedList, followedUserIds, 'You are not following anyone yet.');
+        }
+
+        // === NEW: Load Followers Function ===
+        function loadFollowers() {
+            const followerUserIds = followers.map(f => f.followerId);
+            renderUserList(followerList, followerUserIds, 'You have no followers yet.');
+        }
+        
+        // Helper to add listeners to dynamic list buttons
+        function addListButtonListeners(container) {
+            container.querySelectorAll('.follow-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const userId = button.dataset.userid;
+                    const isFollowing = button.classList.contains('following');
+                    if (isFollowing) {
+                        unfollowUser(userId);
+                    } else {
+                        followUser(userId);
+                    }
+                });
+            });
+
+            container.querySelectorAll('.message-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const userId = button.dataset.userid;
+                    const user = users.find(u => u.id === userId);
+                    if (user) {
+                        openChat(userId, user);
+                        document.querySelector('[data-tab="chats"]').click();
+                    }
+                });
+            });
+        }
+
+        // Render chat list (called by snapshot)
+        function renderChatList(snapshot) {
+            chatList.innerHTML = '';
+            
+            if (snapshot.empty) {
+                chatList.innerHTML = '<div class="chat-item">No conversations yet. Follow users to start chatting!</div>';
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const chatData = doc.data();
+                const otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
+                const user = users.find(u => u.id === otherUserId);
+                
+                const displayName = user ? user.displayName : 'Unknown User';
+                const photoURL = user ? user.photoURL : null;
+                const isOnline = user ? user.isOnline : false;
+                const lastMessage = chatData.lastMessage ? chatData.lastMessage.text : 'Say hi!';
+
+                const chatElement = document.createElement('div');
+                chatElement.className = 'chat-item';
+                chatElement.innerHTML = `
+                    <div class="avatar-wrapper">
+                        <div class="chat-avatar">
+                            ${photoURL ? `<img src="${photoURL}">` : '<i class="fas fa-user"></i>'}
+                        </div>
+                        <div class="status-indicator ${isOnline ? '' : 'offline'}"></div>
+                    </div>
+                    <div class="chat-info">
+                        <h4>${displayName}</h4>
+                        <p class="last-message">${escapeHtml(lastMessage)}</p>
+                    </div>
+                `;
+                
+                chatElement.addEventListener('click', () => {
+                    if (user) {
+                        openChat(user.id, user);
+                    }
+                });
+                
+                chatList.appendChild(chatElement);
+            });
+        }
+        
+        // Helper function to find or create a chat document
+        async function getOrCreateChat(otherUserId) {
+            if (!currentUser) return null;
+            
+            const chatsRef = collection(db, 'chats');
+            const q = query(chatsRef, where('members', 'array-contains', currentUser.uid));
+            
+            const querySnapshot = await getDocs(q);
+            let existingChat = null;
+            
+            querySnapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.members && data.members.includes(otherUserId)) {
+                    existingChat = { id: doc.id, ...data };
+                }
+            });
+
+            if (existingChat) {
+                return existingChat.id;
+            }
+            
+            const newChatDoc = await addDoc(chatsRef, {
+                members: [currentUser.uid, otherUserId],
+                lastMessage: {
+                    text: 'Chat created',
+                    timestamp: serverTimestamp()
+                }
+            });
+            
+            return newChatDoc.id;
+        }
+
+        // Open chat (now populates hover card)
+        async function openChat(userId, user) {
+            if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
+
+            currentChatUser = { id: userId, ...user };
+            
+            const chatId = await getOrCreateChat(userId);
+            if (!chatId) {
+                console.error("Could not get or create chat ID");
+                return;
+            }
+            currentChatId = chatId;
+
+            // === NEW: Update Chat Header Info ===
+            const headerAvatarDiv = chatHeader.querySelector('.chat-header-avatar');
+            const headerImg = headerAvatarDiv.querySelector('img');
+            const headerIcon = headerAvatarDiv.querySelector('i');
+            
+            if (user.photoURL) {
+                headerImg.src = user.photoURL;
+                headerImg.style.display = 'block';
+                headerIcon.style.display = 'none';
+            } else {
+                headerImg.style.display = 'none';
+                headerIcon.style.display = 'block';
+            }
+            
+            chatHeader.querySelector('.status-indicator').classList.toggle('offline', !user.isOnline);
+            chatHeaderTitle.textContent = user.displayName;
+            chatHeaderSubtitle.textContent = user.isOnline ? 'Online' : 'Offline';
+            chatFollowerCount.textContent = user.followers || 0;
+            chatFollowingCount.textContent = user.following || 0;
+
+            // show loading
+            chatMessages.innerHTML = `<div class="message received"><div class="message-meta">Loading messages...<span class="message-time">Just now</span></div></div>`;
+
+            // Listen to messages subcollection
+            const messagesQuery = query(
+                collection(db, 'chats', currentChatId, 'messages'),
+                orderBy('timestamp', 'asc')
+            );
+            
+            _convoUnsub = onSnapshot(messagesQuery, (snapshot) => {
+                renderConversation(snapshot);
+            }, err => console.error('Error listening to messages:', err));
+
+
+            bindSendHandlerForConversation(userId, currentChatId);
+            markMessagesAsRead(userId, currentChatId);
+        }
+
+        // Render conversation with new ticks
+        function renderConversation(snapshot) {
+            chatMessages.innerHTML = '';
+            
+            if (snapshot.empty) {
+                chatMessages.innerHTML = `<div class="message received">Start a conversation with ${currentChatUser ? currentChatUser.displayName : 'this user'}!<div class="message-meta"><span class="message-time">Just now</span></div></div>`;
+            } else {
+                snapshot.forEach(doc => {
+                    const m = doc.data();
+                    const div = document.createElement('div');
+                    div.className = 'message ' + (m.senderId === currentUser.uid ? 'sent' : 'received');
+                    const ts = m.timestamp ? m.timestamp.toDate() : new Date();
+
+                    let ticksHtml = '';
+                    if (m.senderId === currentUser.uid) {
+                        // === NEW: Ticks Logic ===
+                        if (m.isRead) {
+                            ticksHtml = `<span class="message-ticks read"><i class="fas fa-check-double"></i></span>`; // 2 Blue
+                        } else {
+                            ticksHtml = `<span class="message-ticks delivered"><i class="fas fa-check-double"></i></span>`; // 2 Grey
+                        }
+                    }
+
+                    div.innerHTML = `
+                        ${escapeHtml(m.text || '')}
+                        <div class="message-meta">
+                            <span class="message-time">${ts.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                            ${ticksHtml}
+                        </div>
+                    `;
+                    chatMessages.appendChild(div);
+                });
+            }
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // bind send handler
+        function bindSendHandlerForConversation(receiverId, chatId) {
+            if (__sendHandler) sendBtn.removeEventListener('click', __sendHandler);
+            if (__keyHandler) messageInput.removeEventListener('keypress', __keyHandler);
+
+            __sendHandler = () => sendMessage(receiverId, chatId);
+            __keyHandler = (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(receiverId, chatId); } };
+
+            sendBtn.addEventListener('click', __sendHandler);
+            messageInput.addEventListener('keypress', __keyHandler);
+        }
+
+        // Send message with new optimistic tick
+        async function sendMessage(receiverId, chatId) {
+            if (!chatId) return;
+            
+            const messageText = (messageInput.value || '').trim();
+
+            if (messageText && currentUser) {
+                try {
+                    // === NEW: Optimistic UI with 1 Grey Tick ===
+                    const tempDiv = document.createElement('div');
+                    tempDiv.className = 'message sent';
+                    const now = new Date();
+                    tempDiv.innerHTML = `
+                        ${escapeHtml(messageText)}
+                        <div class="message-meta">
+                            <span class="message-time">${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                            <span class="message-ticks pending">
+                                <i class="fas fa-check"></i>
+                            </span>
+                        </div>
+                    `;
+                    chatMessages.appendChild(tempDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    
+                    const messageData = {
+                        senderId: currentUser.uid,
+                        receiverId: receiverId,
+                        text: messageText,
+                        timestamp: serverTimestamp(),
+                        isRead: false
+                    };
+
+                    // Add to subcollection
+                    await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
+
+                    // Update parent chat doc
+                    await updateDoc(doc(db, 'chats', chatId), {
+                        lastMessage: {
+                            text: messageText,
+                            timestamp: messageData.timestamp
+                        }
+                    });
+
+                    messageInput.value = '';
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                }
+            }
+        }
+        
+        // Mark messages as read
+        async function markMessagesAsRead(senderId, chatId) {
+            if (!currentUser || !chatId) return;
+
+            const unreadQuery = query(
+                collection(db, 'chats', chatId, 'messages'),
+                where('senderId', '==', senderId),
+                where('receiverId', '==', currentUser.uid),
+                where('isRead', '==', false)
+            );
+
+            try {
+                const querySnapshot = await getDocs(unreadQuery);
+                const updates = [];
+                querySnapshot.forEach((doc) => {
+                    updates.push(updateDoc(doc.ref, { isRead: true }));
+                });
+                await Promise.all(updates);
+            } catch (error) {
+                console.error('Error marking messages as read:', error);
+            }
+        }
+
+        async function followUser(userId) {
+            if (!currentUser) return;
+            try {
+                await addDoc(collection(db, 'follows'), {
+                    followerId: currentUser.uid,
+                    followingId: userId,
+                    timestamp: serverTimestamp()
+                });
+                
+                // Update counts (using local cache for speed, listener will catch up)
+                const userDocRef = doc(db, 'users', userId);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    await updateDoc(userDocRef, {
+                        followers: (userDoc.data().followers || 0) + 1
+                    });
+                }
+
+                const currentUserDocRef = doc(db, 'users', currentUser.uid);
+                const currentUserDoc = await getDoc(currentUserDocRef);
+                if (currentUserDoc.exists()) {
+                    await updateDoc(currentUserDocRef, {
+                        following: (currentUserDoc.data().following || 0) + 1
+                    });
+                }
+            } catch (error) {
+                console.error('Error following user:', error);
+            }
+        }
+
+        async function unfollowUser(userId) {
+            if (!currentUser) return;
+            try {
+                const followsQuery = query(
+                    collection(db, 'follows'),
+                    where('followerId', '==', currentUser.uid),
+                    where('followingId', '==', userId)
+                );
+                const querySnapshot = await getDocs(followsQuery);
+                querySnapshot.forEach(async (followDoc) => {
+                    await deleteDoc(doc(db, 'follows', followDoc.id));
+                });
+
+                // Update counts
+                const userDocRef = doc(db, 'users', userId);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    await updateDoc(userDocRef, {
+                        followers: Math.max(0, (userDoc.data().followers || 0) - 1)
+                    });
+                }
+
+                const currentUserDocRef = doc(db, 'users', currentUser.uid);
+                const currentUserDoc = await getDoc(currentUserDocRef);
+                if (currentUserDoc.exists()) {
+                    await updateDoc(currentUserDocRef, {
+                        following: Math.max(0, (currentUserDoc.data().following || 0) - 1)
+                    });
+                }
+            } catch (error) {
+                console.error('Error unfollowing user:', error);
+            }
+        }
+
+        // Initialize with light theme
+        document.body.setAttribute('data-theme', 'light');
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iMessage Social</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --bg-color: #F2F2F7;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text-color: #1C1C1E;
+            --border-radius: 20px;
+            --shadow: 0 12px 48px rgba(31, 38, 135, 0.37);
+            --transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.18);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #000000;
+            --card-bg: rgba(30, 30, 30, 0.7);
+            --text-color: #FFFFFF;
+            --glass-bg: rgba(30, 30, 30, 0.5);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Liquid glass updated to requested style */
+        [data-theme="liquid"] {
+            --bg-color: radial-gradient(1200px 600px at 10% 20%, rgba(102,126,234,0.20) 0%, rgba(118,75,162,0.12) 20%, rgba(118,75,162,0.08) 40%, rgba(255,255,255,0) 100%), linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: rgba(255, 255, 255, 0.06);
+            --text-color: #FFFFFF;
+            --glass-bg: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+            --glass-border: rgba(255,255,255,0.08);
+            --shadow: 0 12px 40px rgba(20,18,50,0.45);
+        }
+
+        [data-theme="sunset"] {
+            --bg-color: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+            --card-bg: rgba(255, 255, 255, 0.2);
+            --text-color: #FFFFFF;
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.25);
+        }
+
+        [data-theme="forest"] {
+            --bg-color: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
+            --card-bg: rgba(255, 255, 255, 0.15);
+            --text-color: #FFFFFF;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
         }
 
         * {
@@ -218,21 +2344,13 @@
             padding: 20px;
             gap: 20px;
             animation: fadeIn 0.5s ease-out;
-            position: relative; /* === NEW: Ensures z-index context === */
         }
-        
-        .top-right-controls {
+
+        /* Profile Card - Collapsible */
+        .profile-card {
             position: absolute;
             top: 20px;
             right: 20px;
-            display: flex;
-            gap: 20px;
-            z-index: 101; /* === NEW: Bumped z-index === */
-        }
-        
-        /* Profile Card (Used for self AND chat header) */
-        .profile-card {
-            position: relative;
             width: 60px;
             height: 60px;
             background: var(--glass-bg);
@@ -241,10 +2359,10 @@
             border-radius: 50%;
             padding: 0;
             box-shadow: var(--shadow);
+            z-index: 100;
             transition: var(--transition);
             overflow: hidden;
             cursor: pointer;
-            z-index: 102; /* On top of other controls */
         }
 
         .profile-card.expanded {
@@ -265,12 +2383,7 @@
         .profile-card.expanded .profile-header {
             opacity: 1;
         }
-        
-        .avatar-wrapper {
-            position: relative;
-            flex-shrink: 0;
-        }
-        
+
         .profile-pic {
             width: 60px;
             height: 60px;
@@ -285,13 +2398,7 @@
             overflow: hidden;
             flex-shrink: 0;
             transition: var(--transition);
-        }
-        
-        /* Smaller avatar for chat header */
-        .chat-header .profile-pic {
-            width: 40px;
-            height: 40px;
-            font-size: 16px;
+            position: relative;
         }
 
         .profile-card:not(.expanded) .profile-pic {
@@ -317,23 +2424,6 @@
             border: 2px solid var(--card-bg);
             z-index: 10;
         }
-        
-        .profile-pic-wrapper .status-indicator {
-            right: 17px; 
-        }
-        .profile-card:not(.expanded) .profile-pic-wrapper .status-indicator {
-            right: 2px;
-            bottom: 2px;
-        }
-        
-        /* Chat header status indicator */
-        .chat-header .avatar-wrapper .status-indicator {
-            width: 10px;
-            height: 10px;
-            bottom: 1px;
-            right: 16px;
-            border-width: 1px;
-        }
 
         .status-indicator.offline {
             background: #8E8E93;
@@ -354,6 +2444,9 @@
         .profile-info p {
             font-size: 14px;
             color: #8E8E93;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .profile-stats {
@@ -363,10 +2456,6 @@
             font-size: 14px;
             opacity: 0;
             transition: opacity 0.3s ease;
-        }
-        
-        .profile-stats > div {
-            cursor: pointer;
         }
 
         .profile-card.expanded .profile-stats {
@@ -427,10 +2516,13 @@
             color: var(--primary-color);
         }
 
+        /* Theme Selector */
         .theme-selector {
-            position: relative;
-            width: 60px;
-            height: 60px;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
@@ -440,14 +2532,14 @@
             justify-content: center;
             cursor: pointer;
             box-shadow: var(--shadow);
+            z-index: 100;
             transition: var(--transition);
             overflow: hidden;
-            z-index: 101;
         }
 
         .theme-selector.expanded {
             width: 200px;
-            border-radius: 30px;
+            border-radius: 25px;
             padding: 0 10px;
         }
 
@@ -561,10 +2653,6 @@
             transition: var(--transition);
             font-size: 12px;
         }
-        
-        .tab[data-tab="followers"] {
-            display: none;
-        }
 
         .tab.active {
             background: var(--primary-color);
@@ -588,7 +2676,7 @@
             box-shadow: 0 0 0 2px var(--primary-color);
         }
 
-        .chat-list, .user-list, .followed-list, .follower-list {
+        .chat-list, .user-list, .followed-list {
             flex: 1;
             overflow-y: auto;
         }
@@ -640,10 +2728,12 @@
             height: 100%;
             object-fit: cover;
         }
-        
-        .chat-item .avatar-wrapper .status-indicator,
-        .user-item .avatar-wrapper .status-indicator {
-            right: 17px;
+
+        .chat-avatar .status-indicator, .user-avatar .status-indicator {
+            width: 12px;
+            height: 12px;
+            bottom: 2px;
+            right: 2px;
         }
 
         .chat-info, .user-info {
@@ -659,10 +2749,12 @@
             text-overflow: ellipsis;
         }
 
-        .user-info p {
+        .last-message {
             font-size: 14px;
             color: #8E8E93;
-            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .user-actions {
@@ -731,62 +2823,41 @@
             transition: var(--transition);
         }
 
-        /* === REFACTORED: Chat Header === */
         .chat-header {
             padding: 20px;
             border-bottom: 1px solid var(--glass-border);
-            position: relative; /* For the new hover card */
-            z-index: 10;
-        }
-        
-        .chat-header-bar {
             display: flex;
             align-items: center;
-            cursor: pointer;
         }
-        
-        /* This is the new hover card, using the same class */
-        .chat-header .profile-card {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            width: 60px; /* Start at 60px */
-            height: 60px;
-            border-radius: 50%;
-            z-index: 100;
-        }
-        
-        .chat-header .profile-card .profile-pic {
-            width: 40px; /* Match the bar's avatar size */
-            height: 40px;
-            font-size: 16px;
-        }
-        
-        /* Adjustments for when chat header card is *not* expanded */
-        .chat-header .profile-card:not(.expanded) .profile-pic {
-            width: 100%;
-            height: 100%;
-        }
-        
-        .chat-header .profile-card:not(.expanded) .profile-header {
-            opacity: 1; /* Make sure avatar is visible */
-        }
-        
-        /* Show the real header info only when card is *not* expanded */
-        .chat-header .profile-card.expanded ~ .chat-header-bar {
-            opacity: 0.2;
-        }
-        
-        .chat-header-bar:hover {
-            opacity: 0.2;
-        }
-        
-        .chat-header-bar .profile-pic {
+
+        .chat-header-avatar {
             width: 40px;
             height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF2D55, #FF9500);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
             font-size: 16px;
+            margin-right: 15px;
+            overflow: hidden;
+            flex-shrink: 0;
+            position: relative;
         }
-        
+
+        .chat-header-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .chat-header-avatar .status-indicator {
+            width: 10px;
+            height: 10px;
+            bottom: 1px;
+            right: 1px;
+        }
 
         .chat-messages {
             flex: 1;
@@ -804,27 +2875,6 @@
             position: relative;
             word-wrap: break-word;
             animation: messageAppear 0.3s ease-out;
-        }
-        
-        /* === NEW: Image & Audio Messages === */
-        .message.image {
-            padding: 5px;
-            background: transparent;
-        }
-        
-        .message.image img {
-            width: 100%;
-            max-width: 250px;
-            border-radius: 15px;
-            cursor: pointer;
-        }
-        
-        .message.audio audio {
-            width: 250px;
-        }
-        /* Fix audio player in dark mode */
-        [data-theme="dark"] .message.audio audio {
-            filter: invert(1);
         }
 
         @keyframes messageAppear {
@@ -850,27 +2900,6 @@
             background: #2C2C2E;
             color: white;
         }
-        
-        /* Sent image/audio bubbles */
-        .message.sent.image {
-            background: var(--primary-color);
-        }
-        .message.sent.audio {
-            background: var(--primary-color);
-        }
-        .message.received.image {
-            background: #E5E5EA;
-        }
-        .message.received.audio {
-            background: #E5E5EA;
-        }
-        [data-theme="dark"] .message.received.image {
-            background: #2C2C2E;
-        }
-        [data-theme="dark"] .message.received.audio {
-            background: #2C2C2E;
-        }
-
 
         .message-meta {
             display: flex;
@@ -878,12 +2907,6 @@
             font-size: 11px;
             margin-top: 5px;
             opacity: 0.7;
-        }
-        
-        /* Meta for non-text messages */
-        .message.image .message-meta,
-        .message.audio .message-meta {
-            padding: 0 10px 5px 10px;
         }
 
         .message.sent .message-meta {
@@ -896,33 +2919,32 @@
 
         .message-time {
             margin-top: 0;
-            text-align: left;
+            text-align: left; /* Reset from old rule */
         }
         
+        /* Add space only if ticks are present */
         .message.sent .message-time {
             margin-right: 5px;
         }
-        
+
         .message-ticks {
             font-size: 12px;
         }
-        
-        .message.sent .message-ticks.pending,
-        .message.sent .message-ticks.delivered {
-            color: rgba(255, 255, 255, 0.7);
-        }
 
+        /* Ticks on light-mode sent bubble (blue) */
+        .message.sent .message-ticks {
+            color: rgba(255, 255, 255, 0.7); /* Greyed-out ticks */
+        }
         .message.sent .message-ticks.read {
-            color: #40C6FF; /* WhatsApp-style blue */
+            color: white; /* Bright white 'read' ticks */
         }
         
-        [data-theme="dark"] .message.sent .message-ticks.pending,
-        [data-theme="dark"] .message.sent .message-ticks.delivered {
+        /* Ticks on dark-mode sent bubble (still blue) */
+        [data-theme="dark"] .message.sent .message-ticks {
             color: rgba(255, 255, 255, 0.7);
         }
-        
         [data-theme="dark"] .message.sent .message-ticks.read {
-             color: #40C6FF;
+            color: white;
         }
 
         .message-input-container {
@@ -941,19 +2963,13 @@
             color: var(--text-color);
             transition: var(--transition);
         }
-        
-        /* === NEW: Recording indicator === */
-        .message-input.recording {
-            background: rgba(255, 0, 0, 0.1);
-            border-color: rgba(255, 0, 0, 0.5);
-        }
 
         .message-input:focus {
             outline: none;
             box-shadow: 0 0 0 2px var(--primary-color);
         }
 
-        .send-btn, .attach-btn, .mic-btn {
+        .send-btn {
             width: 44px;
             height: 44px;
             border-radius: 50%;
@@ -967,25 +2983,9 @@
             transition: var(--transition);
             position: relative;
             overflow: hidden;
-            flex-shrink: 0;
-        }
-        
-        .attach-btn, .mic-btn {
-            background: #8E8E93;
-        }
-        
-        .mic-btn.recording {
-            background: #FF3B30;
-            animation: pulse-red 1s infinite;
-        }
-        
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 59, 48, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
         }
 
-        .send-btn::after, .attach-btn::after, .mic-btn::after {
+        .send-btn::after {
             content: '';
             position: absolute;
             top: 50%;
@@ -999,17 +2999,13 @@
             transform-origin: 50% 50%;
         }
 
-        .send-btn:hover::after, .attach-btn:hover::after, .mic-btn:hover::after {
+        .send-btn:hover::after {
             animation: ripple 1s ease-out;
         }
 
-        .send-btn:hover, .attach-btn:hover, .mic-btn:hover {
+        .send-btn:hover {
             transform: scale(1.05);
             box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
-        }
-        
-        .attach-btn:hover, .mic-btn:hover {
-            box-shadow: 0 5px 15px rgba(142, 142, 147, 0.3);
         }
 
         /* Edit Profile Modal */
@@ -1105,49 +3101,28 @@
             .sidebar {
                 width: 100%;
                 height: 40%;
-                order: 2; /* Sidebar below controls/chat */
             }
             
             .chat-area {
                 height: 60%;
-                order: 1; /* Chat area at top */
             }
             
-            .top-right-controls {
+            .profile-card {
                 position: relative;
                 top: 0;
                 right: 0;
                 width: 100%;
-                margin-bottom: 20px;
-                justify-content: space-between;
-                order: 0; /* Controls at very top */
-            }
-            
-            .profile-card {
-                width: 100%;
-                max-width: calc(100% - 80px);
                 height: auto;
                 border-radius: var(--border-radius);
+                margin-bottom: 20px;
             }
             
             .profile-card.expanded {
                 width: 100%;
             }
-            
-            .theme-selector {
-                width: 60px;
-            }
 
             .theme-selector.expanded {
                 width: 180px;
-            }
-            
-            .chat-header .profile-card {
-                display: none; /* Hide hover card on mobile, too complex */
-            }
-            
-            .chat-header .chat-header-bar {
-                opacity: 1 !important; /* Always show bar */
             }
         }
     </style>
@@ -1169,59 +3144,53 @@
     </div>
 
     <div class="app-container" id="appContainer">
-    
-        <div class="top-right-controls">
-            <div class="theme-selector" id="themeSelector">
-                <div class="theme-icon">
-                    <i class="fas fa-palette"></i>
+        <div class="theme-selector" id="themeSelector">
+            <div class="theme-icon">
+                <i class="fas fa-palette"></i>
+            </div>
+            <div class="theme-options">
+                <div class="theme-option theme-light active" data-theme="light" title="Light Mode">
+                    <i class="fas fa-sun"></i>
                 </div>
-                <div class="theme-options">
-                    <div class="theme-option theme-light active" data-theme="light" title="Light Mode">
-                        <i class="fas fa-sun"></i>
-                    </div>
-                    <div class="theme-option theme-dark" data-theme="dark" title="Dark Mode">
-                        <i class="fas fa-moon"></i>
-                    </div>
-                    <div class="theme-option theme-liquid" data-theme="liquid" title="Liquid Glass">
-                        <i class="fas fa-glass-whiskey"></i>
-                    </div>
-                    <div class="theme-option theme-sunset" data-theme="sunset" title="Sunset">
-                        <i class="fas fa-sun"></i>
-                    </div>
-                    <div class="theme-option theme-forest" data-theme="forest" title="Forest">
-                        <i class="fas fa-tree"></i>
-                    </div>
+                <div class="theme-option theme-dark" data-theme="dark" title="Dark Mode">
+                    <i class="fas fa-moon"></i>
+                </div>
+                <div class="theme-option theme-liquid" data-theme="liquid" title="Liquid Glass">
+                    <i class="fas fa-glass-whiskey"></i>
+                </div>
+                <div class="theme-option theme-sunset" data-theme="sunset" title="Sunset">
+                    <i class="fas fa-sun"></i>
+                </div>
+                <div class="theme-option theme-forest" data-theme="forest" title="Forest">
+                    <i class="fas fa-tree"></i>
                 </div>
             </div>
+        </div>
 
-            <div class="profile-card" id="profileCard">
-                <div class="profile-header">
-                    <div class="avatar-wrapper profile-pic-wrapper">
-                        <div class="profile-pic" id="profilePic">
-                            <img src="" alt="Profile" style="display:none;" />
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="status-indicator" id="profileStatus"></div>
-                    </div>
-                    <div class="profile-info">
-                        <h3 id="profileName">Loading...</h3>
-                        <p id="profileBio" class="line-clamp-2">Bio will appear here</p>
-                    </div>
+        <div class="profile-card" id="profileCard">
+            <div class="profile-header">
+                <div class="profile-pic" id="profilePic">
+                    <i class="fas fa-user"></i>
+                    <div class="status-indicator" id="profileStatus"></div>
                 </div>
-                <div class="profile-stats">
-                    <div id="followersBtn">
-                        <div class="stat-number" id="followerCount">0</div>
-                        <div class="stat-label">Followers</div>
-                    </div>
-                    <div id="followingBtn">
-                        <div class="stat-number" id="followingCount">0</div>
-                        <div class="stat-label">Following</div>
-                    </div>
+                <div class="profile-info">
+                    <h3 id="profileName">Loading...</h3>
+                    <p id="profileBio">Bio will appear here</p>
                 </div>
-                <div class="profile-actions">
-                    <button class="btn" id="editProfileBtn">Edit Profile</button>
-                    <button class="btn btn-outline" id="logoutBtn">Logout</button>
+            </div>
+            <div class="profile-stats">
+                <div>
+                    <div class="stat-number" id="followerCount">0</div>
+                    <div class="stat-label">Followers</div>
                 </div>
+                <div>
+                    <div class="stat-number" id="followingCount">0</div>
+                    <div class="stat-label">Following</div>
+                </div>
+            </div>
+            <div class="profile-actions">
+                <button class="btn" id="editProfileBtn">Edit Profile</button>
+                <button class="btn btn-outline" id="logoutBtn">Logout</button>
             </div>
         </div>
 
@@ -1232,7 +3201,7 @@
                 <div class="tab active" data-tab="chats">💬 Chats</div>
                 <div class="tab" data-tab="suggested">👥 Suggested</div>
                 <div class="tab" data-tab="followed">❤️ Followed</div>
-                <div class="tab" data-tab="followers">Followers</div>
+                <div class="tab" data-tab="me">🙍‍♂️ Me</div>
             </div>
             
             <input type="text" class="search-box" placeholder="Search...">
@@ -1245,50 +3214,17 @@
             
             <div class="followed-list" id="followedList" style="display: none;">
                 </div>
-            
-            <div class="follower-list" id="followerList" style="display: none;">
-                </div>
         </div>
         
         <div class="chat-area">
-            <div class="chat-header" id="chatHeader">
-                <div class="profile-card" id="chatHeaderCard">
-                    <div class="profile-header">
-                        <div class="avatar-wrapper">
-                            <div class="profile-pic">
-                                <img src="" alt="Avatar" style="display:none;" />
-                                <i class="fas fa-user-friends"></i>
-                            </div>
-                            <div class="status-indicator offline"></div>
-                        </div>
-                        <div class="profile-info">
-                            <h3 id="chatHeaderTitle">Select a conversation</h3>
-                            <p id="chatHeaderSubtitle" class="line-clamp-2">Start chatting with friends</p>
-                        </div>
-                    </div>
-                    <div class="profile-stats">
-                        <div>
-                            <div class="stat-number" id="chatFollowerCount">0</div>
-                            <div class="stat-label">Followers</div>
-                        </div>
-                        <div>
-                            <div class="stat-number" id="chatFollowingCount">0</div>
-                            <div class="stat-label">Following</div>
-                        </div>
-                    </div>
+            <div class="chat-header">
+                <div class="chat-header-avatar">
+                    <i class="fas fa-user-friends"></i>
+                    <div class="status-indicator offline"></div>
                 </div>
-                
-                <div class="chat-header-bar">
-                    <div class="avatar-wrapper">
-                        <div class="profile-pic">
-                            <img src="" alt="Avatar" style="display:none;" />
-                            <i class="fas fa-user-friends"></i>
-                        </div>
-                        <div class="status-indicator offline"></div>
-                    </div>
-                    <div class="profile-info">
-                        <h3></h3> <p></p>
-                    </div>
+                <div>
+                    <h3 id="chatHeaderTitle">Select a conversation</h3>
+                    <p id="chatHeaderSubtitle">Start chatting with friends</p>
                 </div>
             </div>
             
@@ -1302,15 +3238,8 @@
             </div>
             
             <div class="message-input-container">
-                <input type="file" id="imageUpload" accept="image/*" style="display: none;">
-                <button class="attach-btn" id="attachBtn">
-                    <i class="fas fa-paperclip"></i>
-                </button>
                 <input type="text" class="message-input" placeholder="Type a message...">
-                <button class="mic-btn" id="micBtn">
-                    <i class="fas fa-microphone"></i>
-                </button>
-                <button class="send-btn" id="sendBtn">
+                <button class="send-btn">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
@@ -1361,24 +3290,8 @@
             getDoc,
             getDocs,
             deleteDoc,
-            limit
+            limit // *** NEW: Import limit for chat query ***
         } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
-        import { 
-            getDatabase, 
-            ref, 
-            onDisconnect, 
-            set, 
-            serverTimestamp as rtdbServerTimestamp, 
-            onValue 
-        } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js';
-        // === NEW: Import Storage ===
-        import { 
-            getStorage, 
-            ref as storageRef, 
-            uploadBytes, 
-            getDownloadURL,
-            uploadString 
-        } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-storage.js';
 
         // Firebase configuration
         const firebaseConfig = {
@@ -1387,17 +3300,13 @@
             projectId: "windowsassistant-36760",
             storageBucket: "windowsassistant-36760.firebasestorage.app",
             messagingSenderId: "125638102938",
-            appId: "1:125638102938:web:42e36690e0b74096003423",
-            databaseURL: "https://windowsassistant-36760-default-rtdb.firebaseio.com",
+            appId: "1:125638102938:web:42e36690e0b74096003423"
         };
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const rtdb = getDatabase(app);
-        const storage = getStorage(app); // === NEW: Init Storage ===
-
         const provider = new GoogleAuthProvider();
 
         // DOM Elements
@@ -1412,25 +3321,12 @@
         const profileStatus = document.getElementById('profileStatus');
         const followerCount = document.getElementById('followerCount');
         const followingCount = document.getElementById('followingCount');
-        const followersBtn = document.getElementById('followersBtn');
-        const followingBtn = document.getElementById('followingBtn');
         const editProfileBtn = document.getElementById('editProfileBtn');
         const logoutBtn = document.getElementById('logoutBtn');
         const tabs = document.querySelectorAll('.tab');
         const chatList = document.getElementById('chatList');
         const userList = document.getElementById('userList');
         const followedList = document.getElementById('followedList');
-        const followerList = document.getElementById('followerList');
-        
-        // Chat Header
-        const chatHeader = document.getElementById('chatHeader');
-        const chatHeaderCard = document.getElementById('chatHeaderCard');
-        const chatHeaderBar = document.querySelector('.chat-header-bar');
-        const chatHeaderTitle = chatHeaderCard.querySelector('h3');
-        const chatHeaderSubtitle = chatHeaderCard.querySelector('p');
-        const chatHeaderFollowerCount = document.getElementById('chatFollowerCount');
-        const chatHeaderFollowingCount = document.getElementById('chatFollowingCount');
-        
         const chatMessages = document.getElementById('chatMessages');
         const editProfileModal = document.getElementById('editProfileModal');
         const closeModal = document.getElementById('closeModal');
@@ -1438,38 +3334,30 @@
         const editName = document.getElementById('editName');
         const editBio = document.getElementById('editBio');
         const wordCount = document.getElementById('wordCount');
-        
-        // Message Input
-        const messageInput = document.querySelector('.message-input');
-        const sendBtn = document.getElementById('sendBtn');
-        const attachBtn = document.getElementById('attachBtn');
-        const imageUpload = document.getElementById('imageUpload');
-        const micBtn = document.getElementById('micBtn');
-
+        let messageInput = document.querySelector('.message-input');
+        let sendBtn = document.querySelector('.send-btn');
         const themeOptions = document.querySelectorAll('.theme-option');
+        const chatHeaderTitle = document.getElementById('chatHeaderTitle');
+        const chatHeaderSubtitle = document.getElementById('chatHeaderSubtitle');
 
         // Current user data
         let currentUser = null;
-        let users = [];
+        let currentTheme = 'light';
+        let users = []; // Local cache of user profiles
         let follows = [];
-        let followers = [];
         let currentChatUser = null;
-        let currentChatId = null;
+        let currentChatId = null; // *** NEW: Store the active chat ID ***
         
-        // Listeners
+        // *** NEW: Single listener for the active chat's message subcollection ***
         let _convoUnsub = null;
+        
+        // *** NEW: Listener for the user's chat list ***
         let _chatListUnsub = null;
-        let _usersUnsub = null;
-        let _followsUnsub = null;
-        let _followersUnsub = null;
+
 
         // stable send handlers
         let __sendHandler = null;
         let __keyHandler = null;
-        
-        // === NEW: Media Recording ===
-        let mediaRecorder = null;
-        let audioChunks = [];
 
         // helpers
         function escapeHtml(unsafe) {
@@ -1492,6 +3380,7 @@
             clearTimeout(profileCardTimeout);
             profileCard.classList.add('expanded');
         });
+
         profileCard.addEventListener('mouseleave', () => {
             profileCardTimeout = setTimeout(() => {
                 profileCard.classList.remove('expanded');
@@ -1504,21 +3393,10 @@
             clearTimeout(themeSelectorTimeout);
             themeSelector.classList.add('expanded');
         });
+
         themeSelector.addEventListener('mouseleave', () => {
             themeSelectorTimeout = setTimeout(() => {
                 themeSelector.classList.remove('expanded');
-            }, 300);
-        });
-        
-        // Chat Header hover behavior
-        let chatHeaderTimeout;
-        chatHeaderBar.addEventListener('mouseenter', () => {
-            clearTimeout(chatHeaderTimeout);
-            chatHeaderCard.classList.add('expanded');
-        });
-        chatHeader.addEventListener('mouseleave', () => {
-            chatHeaderTimeout = setTimeout(() => {
-                chatHeaderCard.classList.remove('expanded');
             }, 300);
         });
 
@@ -1527,6 +3405,8 @@
             option.addEventListener('click', () => {
                 const theme = option.dataset.theme;
                 setTheme(theme);
+
+                // Update active theme indicator
                 themeOptions.forEach(opt => opt.classList.remove('active'));
                 option.classList.add('active');
             });
@@ -1537,9 +3417,12 @@
             const words = editBio.value.trim().split(/\s+/).filter(word => word.length > 0);
             const wordLimit = 10;
             const remaining = wordLimit - words.length;
+
             wordCount.textContent = remaining;
+
             if (remaining < 0) {
                 wordCount.style.color = '#FF3B30';
+                // Truncate to 10 words
                 editBio.value = words.slice(0, wordLimit).join(' ');
                 wordCount.textContent = 0;
             } else {
@@ -1550,7 +3433,13 @@
         // Google Sign-In
         googleSignInBtn.addEventListener('click', () => {
             signInWithPopup(auth, provider)
-                .catch((error) => console.error('Sign-in error:', error));
+                .then((result) => {
+                    // User signed in
+                    console.log('User signed in:', result.user);
+                })
+                .catch((error) => {
+                    console.error('Sign-in error:', error);
+                });
         });
 
         // Tab switching functionality
@@ -1558,41 +3447,40 @@
             tab.addEventListener('click', () => {
                 tabs.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
-                
-                chatList.style.display = 'none';
-                userList.style.display = 'none';
-                followedList.style.display = 'none';
-                followerList.style.display = 'none';
 
                 if (tab.dataset.tab === 'chats') {
                     chatList.style.display = 'block';
+                    userList.style.display = 'none';
+                    followedList.style.display = 'none';
+                    // loadChats() is now handled by a persistent listener
                 } else if (tab.dataset.tab === 'suggested') {
+                    chatList.style.display = 'none';
                     userList.style.display = 'block';
+                    followedList.style.display = 'none';
                     loadUsers();
                 } else if (tab.dataset.tab === 'followed') {
+                    chatList.style.display = 'none';
+                    userList.style.display = 'none';
                     followedList.style.display = 'block';
                     loadFollowedUsers();
-                } else if (tab.dataset.tab === 'followers') {
-                    followerList.style.display = 'block';
-                    loadFollowers();
+                } else if (tab.dataset.tab === 'me') {
+                    chatList.style.display = 'block';
+                    userList.style.display = 'none';
+                    followedList.style.display = 'none';
+                    // Show user's own profile info
                 }
             });
-        });
-        
-        followersBtn.addEventListener('click', () => {
-            document.querySelector('[data-tab="followers"]').click();
-        });
-        
-        followingBtn.addEventListener('click', () => {
-            document.querySelector('[data-tab="followed"]').click();
         });
 
         // Modal functionality
         editProfileBtn.addEventListener('click', () => {
             editName.value = profileName.textContent;
             editBio.value = profileBio.textContent;
+
+            // Update word count
             const words = editBio.value.trim().split(/\s+/).filter(word => word.length > 0);
             wordCount.textContent = 10 - words.length;
+
             editProfileModal.style.display = 'flex';
         });
 
@@ -1603,104 +3491,88 @@
         saveProfileBtn.addEventListener('click', () => {
             const newName = editName.value;
             let newBio = editBio.value;
+
+            // Limit bio to 10 words
             const words = newBio.trim().split(/\s+/).filter(word => word.length > 0);
             if (words.length > 10) {
                 newBio = words.slice(0, 10).join(' ');
             }
+
             profileName.textContent = newName;
             profileBio.textContent = newBio;
+
+            // Update user profile in Firestore
             if (currentUser) {
                 updateUserProfile(currentUser.uid, newName, newBio);
             }
+
             editProfileModal.style.display = 'none';
         });
 
         // Logout functionality
         logoutBtn.addEventListener('click', async () => {
+            // Set user offline before signing out
             if (currentUser) {
-                const userStatusRef = ref(rtdb, 'status/' + currentUser.uid);
-                await set(userStatusRef, { 
-                    state: 'offline', 
-                    last_changed: rtdbServerTimestamp() 
-                });
                 await updateUserOnlineStatus(currentUser.uid, false).catch(()=>{});
             }
 
-            if (_convoUnsub) _convoUnsub();
-            if (_chatListUnsub) _chatListUnsub();
-            if (_usersUnsub) _usersUnsub();
-            if (_followsUnsub) _followsUnsub();
-            if (_followersUnsub) _followersUnsub();
+            // *** REFACTORED: cleanup ALL listeners ***
+            if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
+            if (_chatListUnsub) { _chatListUnsub(); _chatListUnsub = null; }
+            // (other global listeners like users, follows, etc. should also be unsubscribed here if they were stored)
 
             signOut(auth).then(() => {
+                // Reset UI
                 currentUser = null;
                 currentChatId = null;
                 currentChatUser = null;
                 users = [];
                 follows = [];
-                followers = [];
                 loginScreen.style.display = 'flex';
                 appContainer.style.display = 'none';
-            }).catch((error) => console.error('Logout error:', error));
+            }).catch((error) => {
+                console.error('Logout error:', error);
+            });
         });
 
         // Firebase Authentication State Observer
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                // User is signed in
                 currentUser = user;
+                console.log('User signed in:', user);
+
+                // Show app, hide login
                 loginScreen.style.display = 'none';
                 appContainer.style.display = 'flex';
-                setupPresence(user.uid);
+
+                // Set user online
+                updateUserOnlineStatus(user.uid, true);
+
+                // Check if user profile exists, create if not
                 checkAndCreateUserProfile(user);
+
+                // Load user theme
                 loadUserTheme(user.uid);
+
+                // Set up real-time listeners
                 setupFirestoreListeners(user.uid);
+
+                // Update profile UI
                 updateProfileUI(user);
             } else {
+                // User is signed out
                 loginScreen.style.display = 'flex';
                 appContainer.style.display = 'none';
             }
         });
-        
-        // Presence System
-        function setupPresence(uid) {
-            const userStatusRef = ref(rtdb, 'status/' + uid);
-            const connectedRef = ref(rtdb, '.info/connected');
-            
-            const isOnlineForRTDB = { state: 'online', last_changed: rtdbServerTimestamp() };
-            const isOfflineForRTDB = { state: 'offline', last_changed: rtdbServerTimestamp() };
-
-            onValue(connectedRef, (snap) => {
-                if (snap.val() === false) return;
-                onDisconnect(userStatusRef).set(isOfflineForRTDB).then(() => {
-                    set(userStatusRef, isOnlineForRTDB);
-                    updateUserOnlineStatus(uid, true);
-                });
-            });
-        }
-        
-        function syncPresence() {
-            const statusRef = ref(rtdb, 'status/');
-            onValue(statusRef, (snapshot) => {
-                if (!snapshot.exists()) return;
-                snapshot.forEach((childSnapshot) => {
-                    const uid = childSnapshot.key;
-                    const status = childSnapshot.val();
-                    const isOnline = status.state === 'online';
-                    const localUser = users.find(u => u.id === uid);
-                    if (localUser && localUser.isOnline !== isOnline) {
-                        const userDocRef = doc(db, 'users', uid);
-                        updateDoc(userDocRef, { 
-                            isOnline: isOnline, 
-                            lastSeen: serverTimestamp() 
-                        }).catch(err => console.error("Error syncing presence:", err));
-                    }
-                });
-            });
-        }
 
         // Theme functions
         function setTheme(theme) {
+            currentTheme = theme;
             document.body.setAttribute('data-theme', theme);
+
+            // Save theme to Firestore if user is logged in
             if (currentUser) {
                 updateUserTheme(currentUser.uid, theme);
             }
@@ -1710,7 +3582,9 @@
         async function checkAndCreateUserProfile(user) {
             const userDocRef = doc(db, 'users', user.uid);
             const userDoc = await getDoc(userDocRef);
+
             if (!userDoc.exists()) {
+                // Create new user profile
                 await setDoc(userDocRef, {
                     displayName: user.displayName || `User${Math.floor(1000 + Math.random() * 9000)}`,
                     bio: 'Hello! I am using iMessage Social.',
@@ -1723,126 +3597,153 @@
                     theme: 'light'
                 });
             } else {
+                // Update UI with existing profile data
                 const userData = userDoc.data();
                 profileName.textContent = userData.displayName;
                 profileBio.textContent = userData.bio;
                 followerCount.textContent = userData.followers || 0;
                 followingCount.textContent = userData.following || 0;
-                updateProfileUI(user, userData);
+
+                // Update profile picture if available
+                if (userData.photoURL) {
+                    profilePic.innerHTML = `<img src="${userData.photoURL}" alt="Profile"><div class="status-indicator" id="profileStatus"></div>`;
+                }
+
+                // Update online status
+                if (userData.isOnline) {
+                    profileStatus.classList.remove('offline');
+                } else {
+                    profileStatus.classList.add('offline');
+                }
             }
         }
 
         async function updateUserProfile(uid, displayName, bio) {
-            await updateDoc(doc(db, 'users', uid), { displayName, bio });
+            const userDocRef = doc(db, 'users', uid);
+            await updateDoc(userDocRef, {
+                displayName: displayName,
+                bio: bio
+            });
         }
+
         async function updateUserTheme(uid, theme) {
-            await updateDoc(doc(db, 'users', uid), { theme });
+            const userDocRef = doc(db, 'users', uid);
+            await updateDoc(userDocRef, {
+                theme: theme
+            });
         }
+
         async function updateUserOnlineStatus(uid, isOnline) {
-            await updateDoc(doc(db, 'users', uid), { isOnline, lastSeen: serverTimestamp() });
+            const userDocRef = doc(db, 'users', uid);
+            await updateDoc(userDocRef, {
+                isOnline: isOnline,
+                lastSeen: serverTimestamp()
+            });
         }
 
         async function loadUserTheme(uid) {
-            const userDoc = await getDoc(doc(db, 'users', uid));
+            const userDocRef = doc(db, 'users', uid);
+            const userDoc = await getDoc(userDocRef);
+
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 if (userData.theme) {
                     setTheme(userData.theme);
+
+                    // Update active theme indicator
                     themeOptions.forEach(option => {
-                        option.classList.toggle('active', option.dataset.theme === userData.theme);
+                        if (option.dataset.theme === userData.theme) {
+                            option.classList.add('active');
+                        } else {
+                            option.classList.remove('active');
+                        }
                     });
                 }
             }
         }
 
-        // === REFACTORED: Listener Setup ===
         function setupFirestoreListeners(uid) {
-            if (_usersUnsub) _usersUnsub();
-            if (_followsUnsub) _followsUnsub();
-            if (_followersUnsub) _followersUnsub();
-            if (_chatListUnsub) _chatListUnsub();
-
-            _usersUnsub = onSnapshot(collection(db, 'users'), (snapshot) => {
+            // Listen for users (to populate local cache)
+            const usersQuery = collection(db, 'users');
+            onSnapshot(usersQuery, (snapshot) => {
                 users = [];
                 snapshot.forEach(doc => {
                     users.push({ id: doc.id, ...doc.data() });
                 });
                 
-                // Once users are loaded, attach chat listener
-                attachChatListener(uid); 
-                
-                // Refresh all UI that depends on user data
+                // Once users are loaded, refresh lists that depend on them
                 loadUsers();
                 loadFollowedUsers();
-                loadFollowers();
-                syncPresence();
+                loadChats(); // Reload chats to ensure user data is fresh
             });
 
-            _followsUnsub = onSnapshot(query(collection(db, 'follows'), where('followerId', '==', uid)), (snapshot) => {
+            // Listen for follows
+            const followsQuery = query(
+                collection(db, 'follows'),
+                where('followerId', '==', uid)
+            );
+
+            onSnapshot(followsQuery, (snapshot) => {
                 follows = [];
-                snapshot.forEach(doc => follows.push({ id: doc.id, ...doc.data() }));
+                snapshot.forEach(doc => {
+                    follows.push({ id: doc.id, ...doc.data() });
+                });
                 followingCount.textContent = follows.length;
+                
+                // Refresh lists that depend on follow data
                 loadUsers();
                 loadFollowedUsers();
             });
-            
-            _followersUnsub = onSnapshot(query(collection(db, 'follows'), where('followingId', '==', uid)), (snapshot) => {
-                followers = [];
-                snapshot.forEach(doc => followers.push({ id: doc.id, ...doc.data() }));
-                followerCount.textContent = followers.length;
-                loadFollowers();
+
+            // Listen for user profile updates (self)
+            const userDocRef = doc(db, 'users', uid);
+            onSnapshot(userDocRef, (doc) => {
+                if (doc.exists()) {
+                    const userData = doc.data();
+                    followerCount.textContent = userData.followers || 0;
+                }
             });
-        }
-        
-        // === NEW: Separated Chat Listener ===
-        function attachChatListener(uid) {
-            if (_chatListUnsub) _chatListUnsub(); // Detach old one if users list reloads
             
-            _chatListUnsub = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', uid), orderBy('lastMessage.timestamp', 'desc')), (snapshot) => {
-                renderChatList(snapshot);
-            }, err => console.error("Error listening to chat list:", err));
+            // *** REFACTORED: Set up persistent listener for chat list ***
+            loadChats();
         }
 
-        function updateProfileUI(user, userData = null) {
-            const pfp = user.photoURL || (userData ? userData.photoURL : null);
-            const dispName = user.displayName || (userData ? userData.displayName : 'User');
-            profileName.textContent = dispName;
-            const img = profilePic.querySelector('img');
-            const icon = profilePic.querySelector('i');
-            if (pfp) {
-                img.src = pfp; img.style.display = 'block'; icon.style.display = 'none';
-            } else {
-                img.style.display = 'none'; icon.style.display = 'block';
-            }
-            if (userData) {
-                profileStatus.classList.toggle('offline', !userData.isOnline);
+        function updateProfileUI(user) {
+            profileName.textContent = user.displayName || 'User';
+            if (user.photoURL) {
+                profilePic.innerHTML = `<img src="${user.photoURL}" alt="Profile"><div class="status-indicator" id="profileStatus"></div>`;
             }
         }
-        
-        // Render user lists
-        function renderUserList(container, userIds, emptyMessage) {
-            container.innerHTML = '';
-            const usersToDisplay = users.filter(user => userIds.includes(user.id) && user.id !== currentUser.uid);
 
-            if (usersToDisplay.length === 0) {
-                container.innerHTML = `<div class="user-item">${emptyMessage}</div>`;
+        function loadUsers() {
+            userList.innerHTML = '';
+            
+            const otherUsers = users.filter(u => u.id !== currentUser.uid);
+
+            if (otherUsers.length === 0) {
+                userList.innerHTML = '<div class="user-item">No other users found.</div>';
                 return;
             }
 
-            usersToDisplay.forEach(user => {
+            otherUsers.forEach(user => {
                 const isFollowing = follows.some(follow => follow.followingId === user.id);
+
+                // Limit bio to 5 words for user list to prevent clutter
+                const shortBio = user.bio ?
+                    user.bio.split(' ').slice(0, 5).join(' ') + (user.bio.split(' ').length > 5 ? '...' : '') :
+                    'No bio yet';
+
                 const userElement = document.createElement('div');
                 userElement.className = 'user-item';
+
                 userElement.innerHTML = `
-                    <div class="avatar-wrapper">
-                        <div class="user-avatar">
-                            ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
-                        </div>
+                    <div class="user-avatar">
+                        ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
                         <div class="status-indicator ${user.isOnline ? '' : 'offline'}"></div>
                     </div>
                     <div class="user-info">
                         <h4>${user.displayName}</h4>
-                        <p class="user-bio line-clamp-2">${escapeHtml(user.bio)}</p>
+                        <p>${shortBio}</p>
                     </div>
                     <div class="user-actions">
                         ${isFollowing ?
@@ -1852,190 +3753,282 @@
                         }
                     </div>
                 `;
-                container.appendChild(userElement);
-            });
-            addListButtonListeners(container);
-        }
 
-        function loadUsers() {
-            const allOtherUserIds = users.map(u => u.id);
-            renderUserList(userList, allOtherUserIds, 'No other users found.');
-        }
-        function loadFollowedUsers() {
-            const followedUserIds = follows.map(f => f.followingId);
-            renderUserList(followedList, followedUserIds, 'You are not following anyone yet.');
-        }
-        function loadFollowers() {
-            const followerUserIds = followers.map(f => f.followerId);
-            renderUserList(followerList, followerUserIds, 'You have no followers yet.');
-        }
-        
-        function addListButtonListeners(container) {
-            container.querySelectorAll('.follow-btn').forEach(button => {
+                userList.appendChild(userElement);
+            });
+
+            // Add event listeners to follow buttons
+            document.querySelectorAll('.follow-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const userId = button.dataset.userid;
                     const isFollowing = button.classList.contains('following');
-                    isFollowing ? unfollowUser(userId) : followUser(userId);
+
+                    if (isFollowing) {
+                        unfollowUser(userId);
+                    } else {
+                        followUser(userId);
+                    }
                 });
             });
-            container.querySelectorAll('.message-btn').forEach(button => {
+
+            // Add event listeners to message buttons
+            document.querySelectorAll('.message-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const userId = button.dataset.userid;
                     const user = users.find(u => u.id === userId);
                     if (user) {
                         openChat(userId, user);
-                        document.querySelector('[data-tab="chats"]').click();
+                        // Switch to chats tab
+                        tabs.forEach(t => t.classList.remove('active'));
+                        document.querySelector('[data-tab="chats"]').classList.add('active');
+                        chatList.style.display = 'block';
+                        userList.style.display = 'none';
+                        followedList.style.display = 'none';
                     }
                 });
             });
         }
 
-        // Render chat list (called by snapshot)
-        function renderChatList(snapshot) {
-            chatList.innerHTML = '';
-            if (snapshot.empty) {
-                chatList.innerHTML = '<div class="chat-item">No conversations yet.</div>';
+        function loadFollowedUsers() {
+            followedList.innerHTML = '';
+
+            const followedUsers = users.filter(user =>
+                follows.some(follow => follow.followingId === user.id)
+            );
+
+            if (followedUsers.length === 0) {
+                followedList.innerHTML = '<div class="user-item">You are not following anyone yet.</div>';
                 return;
             }
-            snapshot.forEach(doc => {
-                const chatData = doc.data();
-                const otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
-                const user = users.find(u => u.id === otherUserId);
-                
-                const displayName = user ? user.displayName : 'Unknown User';
-                const photoURL = user ? user.photoURL : null;
-                const isOnline = user ? user.isOnline : false;
-                const lastMessage = chatData.lastMessage ? chatData.lastMessage.text : '...';
 
-                const chatElement = document.createElement('div');
-                chatElement.className = 'chat-item';
-                chatElement.innerHTML = `
-                    <div class="avatar-wrapper">
-                        <div class="chat-avatar">
-                            ${photoURL ? `<img src="${photoURL}">` : '<i class="fas fa-user"></i>'}
-                        </div>
-                        <div class="status-indicator ${isOnline ? '' : 'offline'}"></div>
+            followedUsers.forEach(user => {
+                const shortBio = user.bio ?
+                    user.bio.split(' ').slice(0, 5).join(' ') + (user.bio.split(' ').length > 5 ? '...' : '') :
+                    'No bio yet';
+
+                const userElement = document.createElement('div');
+                userElement.className = 'user-item';
+
+                userElement.innerHTML = `
+                    <div class="user-avatar">
+                        ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
+                        <div class="status-indicator ${user.isOnline ? '' : 'offline'}"></div>
                     </div>
-                    <div class="chat-info">
-                        <h4>${displayName}</h4>
-                        <p class="last-message line-clamp-1">${escapeHtml(lastMessage)}</p>
+                    <div class="user-info">
+                        <h4>${user.displayName}</h4>
+                        <p>${shortBio}</p>
+                    </div>
+                    <div class="user-actions">
+                        <button class="message-btn" data-userid="${user.id}">Message</button>
+                        <button class="follow-btn following" data-userid="${user.id}">Unfollow</button>
                     </div>
                 `;
-                chatElement.addEventListener('click', () => {
-                    if (user) openChat(user.id, user);
+
+                followedList.appendChild(userElement);
+            });
+
+            // Add event listeners to follow buttons
+            document.querySelectorAll('.follow-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const userId = button.dataset.userid;
+                    unfollowUser(userId);
                 });
-                chatList.appendChild(chatElement);
+            });
+
+            // Add event listeners to message buttons
+            document.querySelectorAll('.message-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const userId = button.dataset.userid;
+                    const user = users.find(u => u.id === userId);
+                    if (user) {
+                        openChat(userId, user);
+                        // Switch to chats tab
+                        tabs.forEach(t => t.classList.remove('active'));
+                        document.querySelector('[data-tab="chats"]').classList.add('active');
+                        chatList.style.display = 'block';
+                        userList.style.display = 'none';
+                        followedList.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // *** REFACTORED: Load chat list from 'chats' collection ***
+        function loadChats() {
+            if (!currentUser) return;
+            
+            // Clean up old listener if it exists
+            if (_chatListUnsub) { _chatListUnsub(); }
+
+            const chatsQuery = query(
+                collection(db, 'chats'), 
+                where('members', 'array-contains', currentUser.uid),
+                orderBy('lastMessage.timestamp', 'desc')
+            );
+            
+            _chatListUnsub = onSnapshot(chatsQuery, (snapshot) => {
+                chatList.innerHTML = ''; // Clear list on each update
+                
+                if (snapshot.empty) {
+                    chatList.innerHTML = '<div class="chat-item">No conversations yet. Follow users to start chatting!</div>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const chatData = doc.data();
+                    
+                    // Find the *other* user's ID
+                    const otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
+                    
+                    // Find the other user's profile from our local cache
+                    const user = users.find(u => u.id === otherUserId);
+                    
+                    const displayName = user ? user.displayName : 'Unknown User';
+                    const photoURL = user ? user.photoURL : null;
+                    const isOnline = user ? user.isOnline : false;
+                    const lastMessage = chatData.lastMessage ? chatData.lastMessage.text : 'Say hi!';
+
+                    const chatElement = document.createElement('div');
+                    chatElement.className = 'chat-item';
+                    chatElement.innerHTML = `
+                        <div class="chat-avatar">
+                            ${photoURL ? `<img src="${photoURL}">` : '<i class="fas fa-user"></i>'}
+                            <div class="status-indicator ${isOnline ? '' : 'offline'}"></div>
+                        </div>
+                        <div class="chat-info">
+                            <h4>${displayName}</h4>
+                            <p class="last-message">${escapeHtml(lastMessage)}</p>
+                        </div>
+                    `;
+                    
+                    // Add click listener to open this chat
+                    chatElement.addEventListener('click', () => {
+                        if (user) {
+                            openChat(user.id, user);
+                        }
+                    });
+                    
+                    chatList.appendChild(chatElement);
+                });
+            }, err => { 
+                console.error("Error listening to chat list:", err); 
             });
         }
         
+        // *** NEW: Helper function to find or create a chat document ***
         async function getOrCreateChat(otherUserId) {
             if (!currentUser) return null;
+            
             const chatsRef = collection(db, 'chats');
+            
+            // Query for an existing chat between these two users
+            // Firestore limitation: can't query for two 'array-contains'
+            // So we query for one, and filter in the client
             const q = query(chatsRef, where('members', 'array-contains', currentUser.uid));
+            
             const querySnapshot = await getDocs(q);
             let existingChat = null;
+            
             querySnapshot.forEach(doc => {
-                if (doc.data().members.includes(otherUserId)) {
-                    existingChat = { id: doc.id, ...doc.data() };
+                const data = doc.data();
+                if (data.members && data.members.includes(otherUserId)) {
+                    existingChat = { id: doc.id, ...data };
                 }
             });
-            if (existingChat) return existingChat.id;
+
+            if (existingChat) {
+                return existingChat.id; // Return existing chat ID
+            }
+            
+            // No chat exists, so create one
+            console.log(`Creating new chat for ${currentUser.uid} and ${otherUserId}`);
             const newChatDoc = await addDoc(chatsRef, {
                 members: [currentUser.uid, otherUserId],
-                lastMessage: { text: 'Chat created', timestamp: serverTimestamp() }
+                lastMessage: {
+                    text: 'Chat created',
+                    timestamp: serverTimestamp()
+                }
             });
-            return newChatDoc.id;
+            
+            return newChatDoc.id; // Return new chat ID
         }
 
+        // *** REFACTORED: openChat now listens to a subcollection ***
         async function openChat(userId, user) {
-            if (_convoUnsub) _convoUnsub();
+            // cleanup previous listeners
+            if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
+
             currentChatUser = { id: userId, ...user };
             
+            // Find or create the chat ID
             const chatId = await getOrCreateChat(userId);
-            if (!chatId) return;
-            currentChatId = chatId;
-
-            // Update Chat Header Card
-            const cardImg = chatHeaderCard.querySelector('img');
-            const cardIcon = chatHeaderCard.querySelector('i');
-            if (user.photoURL) {
-                cardImg.src = user.photoURL; cardImg.style.display = 'block'; cardIcon.style.display = 'none';
-            } else {
-                cardImg.style.display = 'none'; cardIcon.style.display = 'block';
+            if (!chatId) {
+                console.error("Could not get or create chat ID");
+                return;
             }
-            chatHeaderCard.querySelector('.status-indicator').classList.toggle('offline', !user.isOnline);
-            chatHeaderTitle.textContent = user.displayName;
-            chatHeaderSubtitle.textContent = user.isOnline ? 'Online' : 'Offline';
-            chatHeaderFollowerCount.textContent = user.followers || 0;
-            chatHeaderFollowingCount.textContent = user.following || 0;
-            
-            // Update Static Bar Underneath
-            const barImg = chatHeaderBar.querySelector('img');
-            const barIcon = chatHeaderBar.querySelector('i');
-            if (user.photoURL) {
-                barImg.src = user.photoURL; barImg.style.display = 'block'; barIcon.style.display = 'none';
-            } else {
-                barImg.style.display = 'none'; barIcon.style.display = 'block';
-            }
-            chatHeaderBar.querySelector('.status-indicator').classList.toggle('offline', !user.isOnline);
-            chatHeaderBar.querySelector('h3').textContent = user.displayName;
-            chatHeaderBar.querySelector('p').textContent = user.isOnline ? 'Online' : 'Offline';
+            currentChatId = chatId; // Store the active chat ID
 
+            // update header
+            const headerAvatar = document.querySelector('.chat-header-avatar');
+            headerAvatar.innerHTML = user && user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>';
+            if (headerAvatar.querySelector('.status-indicator')) headerAvatar.querySelector('.status-indicator').classList.toggle('offline', !(user && user.isOnline));
+            chatHeaderTitle.textContent = user ? user.displayName : 'Unknown User';
+            chatHeaderSubtitle.textContent = (user && user.isOnline) ? 'Online' : 'Offline';
+
+            // show loading
             chatMessages.innerHTML = `<div class="message received"><div class="message-meta">Loading messages...<span class="message-time">Just now</span></div></div>`;
 
-            const messagesQuery = query(collection(db, 'chats', currentChatId, 'messages'), orderBy('timestamp', 'asc'));
-            _convoUnsub = onSnapshot(messagesQuery, renderConversation, err => console.error('Error listening to messages:', err));
+            // *** NEW: Create a single listener for the chat's 'messages' subcollection ***
+            const messagesQuery = query(
+                collection(db, 'chats', currentChatId, 'messages'),
+                orderBy('timestamp', 'asc')
+            );
             
+            _convoUnsub = onSnapshot(messagesQuery, (snapshot) => {
+                renderConversation(snapshot);
+            }, err => console.error('Error listening to messages:', err));
+
+
+            // bind send handler for this conversation (stable attach)
             bindSendHandlerForConversation(userId, currentChatId);
+            
+            // Mark messages as read when opening chat
             markMessagesAsRead(userId, currentChatId);
         }
 
+        // *** REFACTORED: Simplified render function ***
         function renderConversation(snapshot) {
-            chatMessages.innerHTML = '';
+            chatMessages.innerHTML = ''; // Clear messages
+            
             if (snapshot.empty) {
-                chatMessages.innerHTML = `<div class="message received">Start a conversation!<div class="message-meta"><span class="message-time">Just now</span></div></div>`;
+                chatMessages.innerHTML = `<div class="message received">Start a conversation with ${currentChatUser ? currentChatUser.displayName : 'this user'}!<div class="message-meta"><span class="message-time">Just now</span></div></div>`;
             } else {
                 snapshot.forEach(doc => {
                     const m = doc.data();
                     const div = document.createElement('div');
-                    const ts = m.timestamp ? m.timestamp.toDate() : new Date();
-                    const time = ts.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                    const senderClass = m.senderId === currentUser.uid ? 'sent' : 'received';
-                    
-                    let messageContent = '';
-                    let messageClass = '';
-                    
-                    // === NEW: Message Type Rendering ===
-                    if (m.type === 'image') {
-                        messageClass = 'image';
-                        messageContent = `<img src="${escapeHtml(m.url)}" alt="Sent image">`;
-                    } else if (m.type === 'audio') {
-                        messageClass = 'audio';
-                        messageContent = `<audio controls src="${escapeHtml(m.url)}"></audio>`;
-                    } else {
-                        messageClass = 'text';
-                        messageContent = escapeHtml(m.text || '');
-                    }
+                    div.className = 'message ' + (m.senderId === currentUser.uid ? 'sent' : 'received');
+                    const ts = m.timestamp ? (m.timestamp.toDate ? m.timestamp.toDate() : new Date()) : new Date();
 
                     let ticksHtml = '';
                     if (m.senderId === currentUser.uid) {
+                        // Check read status for ticks
                         if (m.isRead) {
-                            ticksHtml = `<span class="message-ticks read"><i class="fas fa-check-double"></i></span>`; // 2 Blue
+                            // Read: 2 white ticks
+                            ticksHtml = `<span class="message-ticks read"><i class="fas fa-check-double"></i></span>`;
                         } else {
-                            // Check if timestamp exists. If it doesn't, it's 'pending' (1 tick)
-                            ticksHtml = m.timestamp ? 
-                                `<span class="message-ticks delivered"><i class="fas fa-check-double"></i></span>` : // 2 Grey
-                                `<span class="message-ticks pending"><i class="fas fa-check"></i></span>`; // 1 Grey
+                            // Delivered (but not read): 2 grey ticks
+                            ticksHtml = `<span class="message-ticks delivered"><i class="fas fa-check-double"></i></span>`;
                         }
                     }
 
-                    div.className = `message ${senderClass} ${messageClass}`;
                     div.innerHTML = `
-                        ${messageContent}
+                        ${escapeHtml(m.text || '')}
                         <div class="message-meta">
-                            <span class="message-time">${time}</span>
+                            <span class="message-time">${ts.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
                             ${ticksHtml}
                         </div>
                     `;
@@ -2045,166 +4038,97 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
+        // *** REFACTORED: bindSendHandler now passes chatId ***
         function bindSendHandlerForConversation(receiverId, chatId) {
             if (__sendHandler) sendBtn.removeEventListener('click', __sendHandler);
             if (__keyHandler) messageInput.removeEventListener('keypress', __keyHandler);
 
-            __sendHandler = () => {
-                const text = messageInput.value.trim();
-                if (text) {
-                    sendMessage(receiverId, chatId, { type: 'text', content: text });
-                    messageInput.value = '';
-                }
-            };
-            __keyHandler = (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    __sendHandler();
-                }
-            };
+            __sendHandler = () => sendMessage(receiverId, chatId);
+            __keyHandler = (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(receiverId, chatId); } };
 
             sendBtn.addEventListener('click', __sendHandler);
             messageInput.addEventListener('keypress', __keyHandler);
         }
-        
-        // === NEW: Generic File Upload Function ===
-        async function uploadFile(file, folder) {
-            const fileName = `${new Date().getTime()}-${file.name}`;
-            const fileRef = storageRef(storage, `${folder}/${currentChatId}/${fileName}`);
-            await uploadBytes(fileRef, file);
-            return await getDownloadURL(fileRef);
-        }
-        
-        // === NEW: Image Upload Handler ===
-        attachBtn.addEventListener('click', () => imageUpload.click());
-        imageUpload.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (file && currentChatId && currentChatUser) {
-                try {
-                    const downloadURL = await uploadFile(file, 'chat-images');
-                    sendMessage(currentChatUser.id, currentChatId, { type: 'image', content: downloadURL });
-                } catch (err) {
-                    console.error("Error uploading image:", err);
-                }
-                imageUpload.value = null; // Reset input
-            }
-        });
-        
-        // === NEW: Voice Recording Handlers ===
-        micBtn.addEventListener('mousedown', async () => {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                alert('Your browser does not support voice recording.');
+
+        // *** REFACTORED: sendMessage now writes to a subcollection ***
+        async function sendMessage(receiverId, chatId) {
+            if (!chatId) {
+                console.error("No active chat ID, cannot send message.");
                 return;
             }
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                
-                mediaRecorder.ondataavailable = event => {
-                    audioChunks.push(event.data);
-                };
-                
-                mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    try {
-                        const downloadURL = await uploadFile(audioBlob, 'chat-audio');
-                        sendMessage(currentChatUser.id, currentChatId, { type: 'audio', content: downloadURL });
-                    } catch (err) {
-                        console.error("Error uploading audio:", err);
-                    }
+            
+            const messageText = (messageInput.value || '').trim();
+
+            if (messageText && currentUser) {
+                try {
+                    // optimistic UI append (remains the same)
+                    const tempDiv = document.createElement('div');
+                    tempDiv.className = 'message sent';
+                    const now = new Date();
+                    tempDiv.innerHTML = `
+                        ${escapeHtml(messageText)}
+                        <div class="message-meta">
+                            <span class="message-time">${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                            <span class="message-ticks delivered">
+                                <i class="fas fa-check-double"></i>
+                            </span>
+                        </div>
+                    `;
+                    chatMessages.appendChild(tempDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
                     
-                    // Stop all tracks
-                    stream.getTracks().forEach(track => track.stop());
-                };
-                
-                mediaRecorder.start();
-                micBtn.classList.add('recording');
-                messageInput.placeholder = "Recording... Release to send.";
-                messageInput.classList.add('recording');
-                
-            } catch (err) {
-                console.error('Error starting recording:', err);
-                alert('Could not start recording. Please grant microphone permission.');
-            }
-        });
-        
-        micBtn.addEventListener('mouseup', () => {
-            if (mediaRecorder && mediaRecorder.state === 'recording') {
-                mediaRecorder.stop();
-                micBtn.classList.remove('recording');
-                messageInput.placeholder = "Type a message...";
-                messageInput.classList.remove('recording');
-            }
-        });
+                    const messageData = {
+                        senderId: currentUser.uid,
+                        receiverId: receiverId, // Still useful for 'mark as read' logic
+                        text: messageText,
+                        timestamp: serverTimestamp(),
+                        isRead: false
+                    };
 
-        // === REFACTORED: sendMessage for different types ===
-        async function sendMessage(receiverId, chatId, messagePayload) {
-            if (!chatId || !messagePayload) return;
+                    // *** NEW: Add to the 'messages' subcollection ***
+                    await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
 
-            let messageData = {
-                senderId: currentUser.uid,
-                receiverId: receiverId,
-                timestamp: null, // Set to null for optimistic "pending" tick
-                isRead: false,
-                type: messagePayload.type
-            };
-            
-            let lastMessageText = '';
+                    // *** NEW: Update the 'lastMessage' on the parent chat doc ***
+                    await updateDoc(doc(db, 'chats', chatId), {
+                        lastMessage: {
+                            text: messageText,
+                            timestamp: messageData.timestamp
+                        }
+                    });
 
-            if (messagePayload.type === 'text') {
-                messageData.text = messagePayload.content;
-                lastMessageText = messagePayload.content;
-            } else if (messagePayload.type === 'image') {
-                messageData.url = messagePayload.content;
-                lastMessageText = '📷 Image';
-            } else if (messagePayload.type === 'audio') {
-                messageData.url = messagePayload.content;
-                lastMessageText = '🎤 Voice Message';
-            }
-            
-            // Optimistic UI rendering
-            renderConversation({ 
-                docs: [...chatMessages.querySelectorAll('.message')].map((el, i) => ({ 
-                    id: `temp-${i}`, 
-                    data: () => (el.messageData) // Get saved data from previous renders
-                })).filter(m => m.data()).concat([{ id: 'temp-new', data: () => messageData }])
-            });
-
-            try {
-                // Set the real timestamp
-                messageData.timestamp = serverTimestamp();
-                
-                // Add to subcollection
-                await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
-                
-                // Update parent chat doc
-                await updateDoc(doc(db, 'chats', chatId), {
-                    lastMessage: {
-                        text: lastMessageText,
-                        timestamp: messageData.timestamp
-                    }
-                });
-            } catch (error) {
-                console.error('Error sending message:', error);
+                    // Clear input after send
+                    messageInput.value = '';
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                }
             }
         }
         
+        // *** REFACTORED: markMessagesAsRead now queries the subcollection ***
         async function markMessagesAsRead(senderId, chatId) {
             if (!currentUser || !chatId) return;
+
+            // Query for unread messages from this sender *in this specific chat*
             const unreadQuery = query(
                 collection(db, 'chats', chatId, 'messages'),
                 where('senderId', '==', senderId),
                 where('receiverId', '==', currentUser.uid),
                 where('isRead', '==', false)
             );
+
             try {
                 const querySnapshot = await getDocs(unreadQuery);
+                
                 const updates = [];
                 querySnapshot.forEach((doc) => {
                     updates.push(updateDoc(doc.ref, { isRead: true }));
                 });
+                
                 await Promise.all(updates);
+                if (updates.length > 0) {
+                    console.log(`Marked ${updates.length} messages from ${senderId} as read.`);
+                }
+
             } catch (error) {
                 console.error('Error marking messages as read:', error);
             }
@@ -2212,22 +4136,34 @@
 
         async function followUser(userId) {
             if (!currentUser) return;
+
             try {
+                // Add follow relationship
                 await addDoc(collection(db, 'follows'), {
                     followerId: currentUser.uid,
                     followingId: userId,
                     timestamp: serverTimestamp()
                 });
-                const userDoc = await getDoc(doc(db, 'users', userId));
+
+                // Update follower count for the followed user
+                const userDocRef = doc(db, 'users', userId);
+                const userDoc = await getDoc(userDocRef);
+
                 if (userDoc.exists()) {
-                    await updateDoc(userDoc.ref, {
-                        followers: (userDoc.data().followers || 0) + 1
+                    const userData = userDoc.data();
+                    await updateDoc(userDocRef, {
+                        followers: (userData.followers || 0) + 1
                     });
                 }
-                const currentUserDoc = await getDoc(doc(db, 'users', currentUser.uid));
+
+                // Update following count for current user
+                const currentUserDocRef = doc(db, 'users', currentUser.uid);
+                const currentUserDoc = await getDoc(currentUserDocRef);
+
                 if (currentUserDoc.exists()) {
-                    await updateDoc(currentUserDoc.ref, {
-                        following: (currentUserDoc.data().following || 0) + 1
+                    const currentUserData = currentUserDoc.data();
+                    await updateDoc(currentUserDocRef, {
+                        following: (currentUserData.following || 0) + 1
                     });
                 }
             } catch (error) {
@@ -2237,27 +4173,40 @@
 
         async function unfollowUser(userId) {
             if (!currentUser) return;
+
             try {
+                // Find and delete follow relationship
                 const followsQuery = query(
                     collection(db, 'follows'),
                     where('followerId', '==', currentUser.uid),
                     where('followingId', '==', userId)
                 );
+
                 const querySnapshot = await getDocs(followsQuery);
                 querySnapshot.forEach(async (followDoc) => {
-                    await deleteDoc(followDoc.ref);
+                    // Delete the follow document
+                    await deleteDoc(doc(db, 'follows', followDoc.id));
                 });
 
-                const userDoc = await getDoc(doc(db, 'users', userId));
+                // Update follower count for the unfollowed user
+                const userDocRef = doc(db, 'users', userId);
+                const userDoc = await getDoc(userDocRef);
+
                 if (userDoc.exists()) {
-                    await updateDoc(userDoc.ref, {
-                        followers: Math.max(0, (userDoc.data().followers || 0) - 1)
+                    const userData = userDoc.data();
+                    await updateDoc(userDocRef, {
+                        followers: Math.max(0, (userData.followers || 0) - 1)
                     });
                 }
-                const currentUserDoc = await getDoc(doc(db, 'users', currentUser.uid));
+
+                // Update following count for current user
+                const currentUserDocRef = doc(db, 'users', currentUser.uid);
+                const currentUserDoc = await getDoc(currentUserDocRef);
+
                 if (currentUserDoc.exists()) {
-                    await updateDoc(currentUserDoc.ref, {
-                        following: Math.max(0, (currentUserDoc.data().following || 0) - 1)
+                    const currentUserData = currentUserDoc.data();
+                    await updateDoc(currentUserDocRef, {
+                        following: Math.max(0, (currentUserData.following || 0) - 1)
                     });
                 }
             } catch (error) {
