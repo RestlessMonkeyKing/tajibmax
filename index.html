@@ -780,6 +780,28 @@
             word-wrap: break-word;
             animation: messageAppear 0.3s ease-out;
         }
+        
+        /* === NEW: Styles for Media Messages === */
+        .message img {
+            max-width: 300px;
+            width: 100%;
+            border-radius: 15px;
+            margin-top: 5px;
+            cursor: pointer;
+        }
+        .message audio {
+            width: 300px;
+            max-width: 100%;
+            margin-top: 5px;
+        }
+        .message .media-caption {
+            margin-top: 5px;
+        }
+        /* Make media message bubbles less padded */
+        .message.has-media {
+            padding: 8px;
+        }
+
 
         @keyframes messageAppear {
             from { opacity: 0; transform: translateY(10px); }
@@ -860,6 +882,7 @@
             padding: 20px;
             border-top: 1px solid var(--glass-border);
             display: flex;
+            align-items: center; /* Vertically center items */
             gap: 10px;
         }
 
@@ -892,6 +915,7 @@
             transition: var(--transition);
             position: relative;
             overflow: hidden;
+            flex-shrink: 0; /* Prevent buttons from shrinking */
         }
 
         .send-btn::after {
@@ -915,6 +939,22 @@
         .send-btn:hover {
             transform: scale(1.05);
             box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
+        }
+        
+        /* === NEW: Recording Status Style === */
+        .recording-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #FF3B30;
+            font-weight: 600;
+            font-size: 14px;
+            flex: 1; /* Take up the input space */
+            padding: 0 10px;
+        }
+        .recording-status #stopRecordBtn {
+            font-size: 24px;
+            cursor: pointer;
         }
 
         /* Edit Profile Modal */
@@ -1177,9 +1217,27 @@
                 </div>
             </div>
             
-            <div class="message-input-container">
+            <div class="message-input-container" id="messageInputContainer">
+                <!-- NEW: Upload and Record Buttons -->
+                <button class="send-btn" id="uploadBtn" title="Send Image" style="background-color: #5856D6;">
+                    <i class="fas fa-paperclip"></i>
+                </button>
+                <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                
+                <button class="send-btn" id="recordBtn" title="Send Voice Note" style="background-color: #FF2D55;">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                
+                <!-- NEW: Recording Status Indicator -->
+                <div class="recording-status" id="recordingStatus" style="display: none;">
+                    <i class="fas fa-stop-circle" id="stopRecordBtn"></i>
+                    <span>Recording...</span>
+                    <span id="recordTimer">0:00</span>
+                </div>
+                
+                <!-- Original Input and Send Button -->
                 <input type="text" class="message-input" placeholder="Type a message...">
-                <button class="send-btn">
+                <button class="send-btn" id="sendBtn">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
@@ -1243,6 +1301,14 @@
             onValue 
         } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js';
 
+        // === NEW: Import Firebase Storage ===
+        import {
+            getStorage,
+            ref as storageRef,
+            uploadBytes,
+            getDownloadURL
+        } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-storage.js';
+
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCvaWRvpDY-BOOg_oitS4oVGDoQkiWMR6A",
@@ -1260,6 +1326,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const rtdb = getDatabase(app); // === NEW: Init RTDB ===
+        const storage = getStorage(app); // === NEW: Init Storage ===
         const provider = new GoogleAuthProvider();
 
         // DOM Elements
@@ -1295,8 +1362,18 @@
         const editName = document.getElementById('editName');
         const editBio = document.getElementById('editBio');
         const wordCount = document.getElementById('wordCount');
+        
+        // === NEW: Media DOM Elements ===
+        const messageInputContainer = document.getElementById('messageInputContainer');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const imageUpload = document.getElementById('imageUpload');
+        const recordBtn = document.getElementById('recordBtn');
+        const recordingStatus = document.getElementById('recordingStatus');
+        const recordTimer = document.getElementById('recordTimer');
+        const stopRecordBtn = document.getElementById('stopRecordBtn');
+
         let messageInput = document.querySelector('.message-input');
-        let sendBtn = document.querySelector('.send-btn');
+        let sendBtn = document.getElementById('sendBtn'); // === UPDATED: Use ID
         const themeOptions = document.querySelectorAll('.theme-option');
 
         // Current user data
@@ -1308,6 +1385,12 @@
         let currentChatUser = null;
         let currentChatId = null;
         
+        // === NEW: Media Recorder Variables ===
+        let mediaRecorder;
+        let audioChunks = [];
+        let recordTimerInterval;
+        let mediaStream; // To stop tracks
+
         let _convoUnsub = null;
         let _chatListUnsub = null;
         let _usersUnsub = null; // === NEW: Store user listener
@@ -1843,6 +1926,7 @@
                 const displayName = user ? user.displayName : 'Unknown User';
                 const photoURL = user ? user.photoURL : null;
                 const isOnline = user ? user.isOnline : false;
+                // === UPDATED: Use lastMessage.text fallback ===
                 const lastMessage = chatData.lastMessage ? chatData.lastMessage.text : 'Say hi!';
 
                 const chatElement = document.createElement('div');
@@ -1953,7 +2037,7 @@
             markMessagesAsRead(userId, currentChatId);
         }
 
-        // Render conversation with new ticks
+        // === MODIFIED: Render conversation with media ===
         function renderConversation(snapshot) {
             chatMessages.innerHTML = '';
             
@@ -1963,12 +2047,10 @@
                 snapshot.forEach(doc => {
                     const m = doc.data();
                     const div = document.createElement('div');
-                    div.className = 'message ' + (m.senderId === currentUser.uid ? 'sent' : 'received');
                     const ts = m.timestamp ? m.timestamp.toDate() : new Date();
 
                     let ticksHtml = '';
                     if (m.senderId === currentUser.uid) {
-                        // === NEW: Ticks Logic ===
                         if (m.isRead) {
                             ticksHtml = `<span class="message-ticks read"><i class="fas fa-check-double"></i></span>`; // 2 Blue
                         } else {
@@ -1976,8 +2058,31 @@
                         }
                     }
 
+                    // === NEW: Build Message Content ===
+                    let messageContent = '';
+                    let hasMedia = false;
+                    
+                    if (m.type === 'image' && m.imageUrl) {
+                        messageContent += `<img src="${escapeHtml(m.imageUrl)}" alt="Sent image" onclick="window.open('${escapeHtml(m.imageUrl)}', '_blank')">`;
+                        hasMedia = true;
+                    } else if (m.type === 'audio' && m.audioUrl) {
+                        messageContent += `<audio controls src="${escapeHtml(m.audioUrl)}"></audio>`;
+                        hasMedia = true;
+                    }
+
+                    // Add text/caption
+                    if (m.text && m.text !== 'Sent an image' && m.text !== 'Sent a voice note') {
+                        messageContent += `<div class="${hasMedia ? 'media-caption' : ''}">${escapeHtml(m.text)}</div>`;
+                    } else if (!hasMedia) {
+                        // Fallback for old text-only messages
+                        messageContent = escapeHtml(m.text || '');
+                    }
+                    
+                    div.className = 'message ' + (m.senderId === currentUser.uid ? 'sent' : 'received');
+                    if(hasMedia) div.classList.add('has-media');
+
                     div.innerHTML = `
-                        ${escapeHtml(m.text || '')}
+                        ${messageContent}
                         <div class="message-meta">
                             <span class="message-time">${ts.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
                             ${ticksHtml}
@@ -1994,44 +2099,71 @@
             if (__sendHandler) sendBtn.removeEventListener('click', __sendHandler);
             if (__keyHandler) messageInput.removeEventListener('keypress', __keyHandler);
 
-            __sendHandler = () => sendMessage(receiverId, chatId);
-            __keyHandler = (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(receiverId, chatId); } };
+            // === MODIFIED: Pass null for media on text send ===
+            __sendHandler = () => sendMessage(receiverId, chatId, null);
+            __keyHandler = (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(receiverId, chatId, null); } };
 
             sendBtn.addEventListener('click', __sendHandler);
             messageInput.addEventListener('keypress', __keyHandler);
         }
 
-        // Send message with new optimistic tick
-        async function sendMessage(receiverId, chatId) {
+        // === MODIFIED: Send message with media support ===
+        async function sendMessage(receiverId, chatId, media = null) {
             if (!chatId) return;
             
             const messageText = (messageInput.value || '').trim();
 
-            if (messageText && currentUser) {
+            // Must have text OR media to send
+            if (!messageText && !media) return;
+
+            if (currentUser) {
                 try {
-                    // === NEW: Optimistic UI with 1 Grey Tick ===
-                    const tempDiv = document.createElement('div');
-                    tempDiv.className = 'message sent';
-                    const now = new Date();
-                    tempDiv.innerHTML = `
-                        ${escapeHtml(messageText)}
-                        <div class="message-meta">
-                            <span class="message-time">${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-                            <span class="message-ticks pending">
-                                <i class="fas fa-check"></i>
-                            </span>
-                        </div>
-                    `;
-                    chatMessages.appendChild(tempDiv);
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                    
+                    let optimisticMessage = null;
+                    let lastMessageText = messageText;
+
                     const messageData = {
                         senderId: currentUser.uid,
                         receiverId: receiverId,
-                        text: messageText,
                         timestamp: serverTimestamp(),
                         isRead: false
                     };
+                    
+                    if (media) {
+                        messageData.type = media.type;
+                        if (media.type === 'image') messageData.imageUrl = media.url;
+                        if (media.type === 'audio') messageData.audioUrl = media.url;
+                        
+                        if (messageText) messageData.text = messageText; // Add caption
+                        
+                        if (!lastMessageText) {
+                            lastMessageText = media.type === 'image' ? '📷 Image' : '🎤 Voice Note';
+                        }
+                    } else {
+                        // Optimistic UI for text
+                        optimisticMessage = {
+                            text: messageText,
+                            timestamp: new Date()
+                        };
+                        messageData.type = 'text';
+                        messageData.text = messageText;
+                    }
+                    
+                    // === MODIFIED: Only show optimistic UI for text ===
+                    if (optimisticMessage) {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.className = 'message sent';
+                        tempDiv.innerHTML = `
+                            ${escapeHtml(optimisticMessage.text)}
+                            <div class="message-meta">
+                                <span class="message-time">${optimisticMessage.timestamp.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                                <span class="message-ticks pending">
+                                    <i class="fas fa-check"></i>
+                                </span>
+                            </div>
+                        `;
+                        chatMessages.appendChild(tempDiv);
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
 
                     // Add to subcollection
                     await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
@@ -2039,7 +2171,7 @@
                     // Update parent chat doc
                     await updateDoc(doc(db, 'chats', chatId), {
                         lastMessage: {
-                            text: messageText,
+                            text: lastMessageText,
                             timestamp: messageData.timestamp
                         }
                     });
@@ -2138,2081 +2270,136 @@
             }
         }
 
-        // Initialize with light theme
-        document.body.setAttribute('data-theme', 'light');
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iMessage Social</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary-color: #007AFF;
-            --secondary-color: #5856D6;
-            --bg-color: #F2F2F7;
-            --card-bg: rgba(255, 255, 255, 0.8);
-            --text-color: #1C1C1E;
-            --border-radius: 20px;
-            --shadow: 0 12px 48px rgba(31, 38, 135, 0.37);
-            --transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            --glass-bg: rgba(255, 255, 255, 0.25);
-            --glass-border: rgba(255, 255, 255, 0.18);
-        }
-
-        [data-theme="dark"] {
-            --bg-color: #000000;
-            --card-bg: rgba(30, 30, 30, 0.7);
-            --text-color: #FFFFFF;
-            --glass-bg: rgba(30, 30, 30, 0.5);
-            --glass-border: rgba(255, 255, 255, 0.1);
-        }
-
-        /* Liquid glass updated to requested style */
-        [data-theme="liquid"] {
-            --bg-color: radial-gradient(1200px 600px at 10% 20%, rgba(102,126,234,0.20) 0%, rgba(118,75,162,0.12) 20%, rgba(118,75,162,0.08) 40%, rgba(255,255,255,0) 100%), linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --card-bg: rgba(255, 255, 255, 0.06);
-            --text-color: #FFFFFF;
-            --glass-bg: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
-            --glass-border: rgba(255,255,255,0.08);
-            --shadow: 0 12px 40px rgba(20,18,50,0.45);
-        }
-
-        [data-theme="sunset"] {
-            --bg-color: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
-            --card-bg: rgba(255, 255, 255, 0.2);
-            --text-color: #FFFFFF;
-            --glass-bg: rgba(255, 255, 255, 0.15);
-            --glass-border: rgba(255, 255, 255, 0.25);
-        }
-
-        [data-theme="forest"] {
-            --bg-color: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
-            --card-bg: rgba(255, 255, 255, 0.15);
-            --text-color: #FFFFFF;
-            --glass-bg: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        }
-
-        body {
-            background: var(--bg-color);
-            color: var(--text-color);
-            transition: var(--transition);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* Login Screen */
-        .login-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            padding: 20px;
-            text-align: center;
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .login-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--border-radius);
-            padding: 40px;
-            box-shadow: var(--shadow);
-            max-width: 400px;
-            width: 100%;
-            transform: translateY(0);
-            transition: var(--transition);
-        }
-
-        .login-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 60px rgba(31, 38, 135, 0.5);
-        }
-
-        .app-logo {
-            font-size: 48px;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        .app-title {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .app-subtitle {
-            font-size: 16px;
-            margin-bottom: 30px;
-            color: #8E8E93;
-        }
-
-        .login-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
-            padding: 15px;
-            border-radius: 15px;
-            border: none;
-            background: #4285F4;
-            color: white;
-            font-weight: 600;
-            font-size: 16px;
-            cursor: pointer;
-            transition: var(--transition);
-            margin-bottom: 20px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .login-btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 5px;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.5);
-            opacity: 0;
-            border-radius: 100%;
-            transform: scale(1, 1) translate(-50%);
-            transform-origin: 50% 50%;
-        }
-
-        .login-btn:hover::after {
-            animation: ripple 1s ease-out;
-        }
-
-        @keyframes ripple {
-            0% {
-                transform: scale(0, 0);
-                opacity: 0.5;
-            }
-            100% {
-                transform: scale(20, 20);
-                opacity: 0;
-            }
-        }
-
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(66, 133, 244, 0.3);
-        }
-
-        .login-btn i {
-            font-size: 20px;
-        }
-
-        /* App Container */
-        .app-container {
-            display: none;
-            height: 100vh;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            gap: 20px;
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        /* Profile Card - Collapsible */
-        .profile-card {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 50%;
-            padding: 0;
-            box-shadow: var(--shadow);
-            z-index: 100;
-            transition: var(--transition);
-            overflow: hidden;
-            cursor: pointer;
-        }
-
-        .profile-card.expanded {
-            width: 240px;
-            height: auto;
-            border-radius: var(--border-radius);
-            padding: 20px;
-        }
-
-        .profile-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .profile-card.expanded .profile-header {
-            opacity: 1;
-        }
-
-        .profile-pic {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-            margin-right: 15px;
-            overflow: hidden;
-            flex-shrink: 0;
-            transition: var(--transition);
-            position: relative;
-        }
-
-        .profile-card:not(.expanded) .profile-pic {
-            margin-right: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        .profile-pic img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .status-indicator {
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: #34C759;
-            border: 2px solid var(--card-bg);
-            z-index: 10;
-        }
-
-        .status-indicator.offline {
-            background: #8E8E93;
-        }
-
-        .profile-info {
-            overflow: hidden;
-        }
-
-        .profile-info h3 {
-            font-size: 18px;
-            margin-bottom: 5px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .profile-info p {
-            font-size: 14px;
-            color: #8E8E93;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .profile-stats {
-            display: flex;
-            justify-content: space-between;
-            margin: 15px 0;
-            font-size: 14px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .profile-card.expanded .profile-stats {
-            opacity: 1;
-        }
-
-        .profile-actions {
-            display: flex;
-            gap: 10px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .profile-card.expanded .profile-actions {
-            opacity: 1;
-        }
-
-        .btn {
-            padding: 8px 15px;
-            border-radius: 10px;
-            border: none;
-            background: var(--primary-color);
-            color: white;
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 5px;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.5);
-            opacity: 0;
-            border-radius: 100%;
-            transform: scale(1, 1) translate(-50%);
-            transform-origin: 50% 50%;
-        }
-
-        .btn:hover::after {
-            animation: ripple 1s ease-out;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-        }
-
-        /* Theme Selector */
-        .theme-selector {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: var(--shadow);
-            z-index: 100;
-            transition: var(--transition);
-            overflow: hidden;
-        }
-
-        .theme-selector.expanded {
-            width: 200px;
-            border-radius: 25px;
-            padding: 0 10px;
-        }
-
-        .theme-options {
-            display: flex;
-            gap: 8px;
-            opacity: 0;
-            width: 0;
-            transition: opacity 0.3s ease, width 0.3s ease;
-        }
-
-        .theme-selector.expanded .theme-options {
-            opacity: 1;
-            width: auto;
-        }
-
-        .theme-option {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: var(--transition);
-            font-size: 14px;
-        }
-
-        .theme-option:hover {
-            transform: scale(1.1);
-        }
-
-        .theme-option.active {
-            transform: scale(1.15);
-            box-shadow: 0 0 0 2px var(--text-color);
-        }
-
-        .theme-light {
-            background: #F2F2F7;
-            color: #1C1C1E;
-        }
-
-        .theme-dark {
-            background: #000000;
-            color: #FFFFFF;
-        }
-
-        .theme-liquid {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #FFFFFF;
-        }
-
-        .theme-sunset {
-            background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
-            color: #FFFFFF;
-        }
-
-        .theme-forest {
-            background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
-            color: #FFFFFF;
-        }
-
-        .theme-icon {
-            transition: var(--transition);
-        }
-
-        .theme-selector.expanded .theme-icon {
-            opacity: 0;
-            width: 0;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 300px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--border-radius);
-            padding: 20px;
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            transform: translateX(0);
-            transition: var(--transition);
-        }
-
-        .app-title-bar {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            text-align: center;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .tabs {
-            display: flex;
-            margin-bottom: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 5px;
-        }
-
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: var(--transition);
-            font-size: 12px;
-        }
-
-        .tab.active {
-            background: var(--primary-color);
-            color: white;
-            transform: scale(1.05);
-        }
-
-        .search-box {
-            padding: 12px;
-            border-radius: 15px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.3);
-            margin-bottom: 20px;
-            width: 100%;
-            color: var(--text-color);
-            transition: var(--transition);
-        }
-
-        .search-box:focus {
-            outline: none;
-            box-shadow: 0 0 0 2px var(--primary-color);
-        }
-
-        .chat-list, .user-list, .followed-list {
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .chat-item, .user-item {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: var(--transition);
-            animation: slideIn 0.3s ease-out;
-            position: relative;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-10px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .chat-item:hover, .user-item:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .chat-item.active {
-            background: rgba(0, 122, 255, 0.2);
-        }
-
-        .chat-avatar, .user-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #5856D6, #007AFF);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 18px;
-            margin-right: 15px;
-            overflow: hidden;
-            flex-shrink: 0;
-            position: relative;
-        }
-
-        .chat-avatar img, .user-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .chat-avatar .status-indicator, .user-avatar .status-indicator {
-            width: 12px;
-            height: 12px;
-            bottom: 2px;
-            right: 2px;
-        }
-
-        .chat-info, .user-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .chat-info h4, .user-info h4 {
-            font-size: 16px;
-            margin-bottom: 5px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .last-message {
-            font-size: 14px;
-            color: #8E8E93;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .user-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .follow-btn, .message-btn {
-            padding: 6px 12px;
-            border-radius: 10px;
-            border: none;
-            background: var(--primary-color);
-            color: white;
-            font-size: 12px;
-            cursor: pointer;
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .follow-btn::after, .message-btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 5px;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.5);
-            opacity: 0;
-            border-radius: 100%;
-            transform: scale(1, 1) translate(-50%);
-            transform-origin: 50% 50%;
-        }
-
-        .follow-btn:hover::after, .message-btn:hover::after {
-            animation: ripple 1s ease-out;
-        }
-
-        .follow-btn:hover, .message-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 3px 10px rgba(0, 122, 255, 0.3);
-        }
-
-        .follow-btn.following {
-            background: transparent;
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-        }
-
-        .message-btn {
-            background: #34C759;
-        }
-
-        /* Chat Area */
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            transform: translateY(0);
-            transition: var(--transition);
-        }
-
-        .chat-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--glass-border);
-            display: flex;
-            align-items: center;
-        }
-
-        .chat-header-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #FF2D55, #FF9500);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 16px;
-            margin-right: 15px;
-            overflow: hidden;
-            flex-shrink: 0;
-            position: relative;
-        }
-
-        .chat-header-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .chat-header-avatar .status-indicator {
-            width: 10px;
-            height: 10px;
-            bottom: 1px;
-            right: 1px;
-        }
-
-        .chat-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .message {
-            max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 18px;
-            margin-bottom: 10px;
-            position: relative;
-            word-wrap: break-word;
-            animation: messageAppear 0.3s ease-out;
-        }
-
-        @keyframes messageAppear {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message.sent {
-            align-self: flex-end;
-            background: var(--primary-color);
-            color: white;
-            border-bottom-right-radius: 5px;
-        }
-
-        .message.received {
-            align-self: flex-start;
-            background: #E5E5EA;
-            color: black;
-            border-bottom-left-radius: 5px;
-        }
-        
-        [data-theme="dark"] .message.received {
-            background: #2C2C2E;
-            color: white;
-        }
-
-        .message-meta {
-            display: flex;
-            align-items: center;
-            font-size: 11px;
-            margin-top: 5px;
-            opacity: 0.7;
-        }
-
-        .message.sent .message-meta {
-            justify-content: flex-end;
-        }
-
-        .message.received .message-meta {
-            justify-content: flex-start;
-        }
-
-        .message-time {
-            margin-top: 0;
-            text-align: left; /* Reset from old rule */
-        }
-        
-        /* Add space only if ticks are present */
-        .message.sent .message-time {
-            margin-right: 5px;
-        }
-
-        .message-ticks {
-            font-size: 12px;
-        }
-
-        /* Ticks on light-mode sent bubble (blue) */
-        .message.sent .message-ticks {
-            color: rgba(255, 255, 255, 0.7); /* Greyed-out ticks */
-        }
-        .message.sent .message-ticks.read {
-            color: white; /* Bright white 'read' ticks */
-        }
-        
-        /* Ticks on dark-mode sent bubble (still blue) */
-        [data-theme="dark"] .message.sent .message-ticks {
-            color: rgba(255, 255, 255, 0.7);
-        }
-        [data-theme="dark"] .message.sent .message-ticks.read {
-            color: white;
-        }
-
-        .message-input-container {
-            padding: 20px;
-            border-top: 1px solid var(--glass-border);
-            display: flex;
-            gap: 10px;
-        }
-
-        .message-input {
-            flex: 1;
-            padding: 12px 20px;
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.3);
-            color: var(--text-color);
-            transition: var(--transition);
-        }
-
-        .message-input:focus {
-            outline: none;
-            box-shadow: 0 0 0 2px var(--primary-color);
-        }
-
-        .send-btn {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            border: none;
-            background: var(--primary-color);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .send-btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 5px;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.5);
-            opacity: 0;
-            border-radius: 100%;
-            transform: scale(1, 1) translate(-50%);
-            transform-origin: 50% 50%;
-        }
-
-        .send-btn:hover::after {
-            animation: ripple 1s ease-out;
-        }
-
-        .send-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
-        }
-
-        /* Edit Profile Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        .modal-content {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--border-radius);
-            padding: 30px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: var(--shadow);
-            transform: scale(0.9);
-            animation: modalAppear 0.3s ease-out forwards;
-        }
-
-        @keyframes modalAppear {
-            to { transform: scale(1); }
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: var(--text-color);
-            transition: var(--transition);
-        }
-
-        .close-btn:hover {
-            transform: rotate(90deg);
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.3);
-            color: var(--text-color);
-            transition: var(--transition);
-        }
-
-        .form-control:focus {
-            outline: none;
-            box-shadow: 0 0 0 2px var(--primary-color);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .app-container {
-                flex-direction: column;
-                padding: 10px;
-            }
+        // === NEW: Media Upload Functions ===
+
+        // Handle Image Selection
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file || !file.type.startsWith('image/')) return;
             
-            .sidebar {
-                width: 100%;
-                height: 40%;
-            }
-            
-            .chat-area {
-                height: 60%;
-            }
-            
-            .profile-card {
-                position: relative;
-                top: 0;
-                right: 0;
-                width: 100%;
-                height: auto;
-                border-radius: var(--border-radius);
-                margin-bottom: 20px;
-            }
-            
-            .profile-card.expanded {
-                width: 100%;
-            }
-
-            .theme-selector.expanded {
-                width: 180px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="login-screen" id="loginScreen">
-        <div class="login-card">
-            <div class="app-logo">
-                <i class="fas fa-comments"></i>
-            </div>
-            <h1 class="app-title">iMessage Social</h1>
-            <p class="app-subtitle">Connect with friends in real-time</p>
-            <button class="login-btn" id="googleSignInBtn">
-                <i class="fab fa-google"></i>
-                Sign in with Google
-            </button>
-            <p class="app-subtitle">Sign in to start messaging</p>
-        </div>
-    </div>
-
-    <div class="app-container" id="appContainer">
-        <div class="theme-selector" id="themeSelector">
-            <div class="theme-icon">
-                <i class="fas fa-palette"></i>
-            </div>
-            <div class="theme-options">
-                <div class="theme-option theme-light active" data-theme="light" title="Light Mode">
-                    <i class="fas fa-sun"></i>
-                </div>
-                <div class="theme-option theme-dark" data-theme="dark" title="Dark Mode">
-                    <i class="fas fa-moon"></i>
-                </div>
-                <div class="theme-option theme-liquid" data-theme="liquid" title="Liquid Glass">
-                    <i class="fas fa-glass-whiskey"></i>
-                </div>
-                <div class="theme-option theme-sunset" data-theme="sunset" title="Sunset">
-                    <i class="fas fa-sun"></i>
-                </div>
-                <div class="theme-option theme-forest" data-theme="forest" title="Forest">
-                    <i class="fas fa-tree"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="profile-card" id="profileCard">
-            <div class="profile-header">
-                <div class="profile-pic" id="profilePic">
-                    <i class="fas fa-user"></i>
-                    <div class="status-indicator" id="profileStatus"></div>
-                </div>
-                <div class="profile-info">
-                    <h3 id="profileName">Loading...</h3>
-                    <p id="profileBio">Bio will appear here</p>
-                </div>
-            </div>
-            <div class="profile-stats">
-                <div>
-                    <div class="stat-number" id="followerCount">0</div>
-                    <div class="stat-label">Followers</div>
-                </div>
-                <div>
-                    <div class="stat-number" id="followingCount">0</div>
-                    <div class="stat-label">Following</div>
-                </div>
-            </div>
-            <div class="profile-actions">
-                <button class="btn" id="editProfileBtn">Edit Profile</button>
-                <button class="btn btn-outline" id="logoutBtn">Logout</button>
-            </div>
-        </div>
-
-        <div class="sidebar">
-            <div class="app-title-bar">iMessage Social</div>
-            
-            <div class="tabs">
-                <div class="tab active" data-tab="chats">💬 Chats</div>
-                <div class="tab" data-tab="suggested">👥 Suggested</div>
-                <div class="tab" data-tab="followed">❤️ Followed</div>
-                <div class="tab" data-tab="me">🙍‍♂️ Me</div>
-            </div>
-            
-            <input type="text" class="search-box" placeholder="Search...">
-            
-            <div class="chat-list" id="chatList">
-                </div>
-            
-            <div class="user-list" id="userList" style="display: none;">
-                </div>
-            
-            <div class="followed-list" id="followedList" style="display: none;">
-                </div>
-        </div>
-        
-        <div class="chat-area">
-            <div class="chat-header">
-                <div class="chat-header-avatar">
-                    <i class="fas fa-user-friends"></i>
-                    <div class="status-indicator offline"></div>
-                </div>
-                <div>
-                    <h3 id="chatHeaderTitle">Select a conversation</h3>
-                    <p id="chatHeaderSubtitle">Start chatting with friends</p>
-                </div>
-            </div>
-            
-            <div class="chat-messages" id="chatMessages">
-                <div class="message received">
-                    Welcome to iMessage Social! Select a conversation to start messaging.
-                    <div class="message-meta">
-                        <span class="message-time">Just now</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="message-input-container">
-                <input type="text" class="message-input" placeholder="Type a message...">
-                <button class="send-btn">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="editProfileModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Edit Profile</h3>
-                <button class="close-btn" id="closeModal">&times;</button>
-            </div>
-            <div class="form-group">
-                <label for="editName">Display Name</label>
-                <input type="text" id="editName" class="form-control" placeholder="Your display name" maxlength="30">
-            </div>
-            <div class="form-group">
-                <label for="editBio">Bio (max 10 words)</label>
-                <textarea id="editBio" class="form-control" rows="3" placeholder="Tell others about yourself (max 10 words)" maxlength="100"></textarea>
-                <small style="color: #8E8E93; font-size: 12px;">Words remaining: <span id="wordCount">10</span></small>
-            </div>
-            <button class="btn" id="saveProfileBtn">Save Changes</button>
-        </div>
-    </div>
-
-    <script type="module">
-        // Import Firebase modules
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
-        import { 
-            getAuth, 
-            GoogleAuthProvider, 
-            signInWithPopup,
-            onAuthStateChanged,
-            signOut 
-        } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
-        import { 
-            getFirestore, 
-            collection, 
-            addDoc, 
-            onSnapshot, 
-            serverTimestamp, 
-            query, 
-            where, 
-            orderBy,
-            updateDoc,
-            doc,
-            setDoc,
-            getDoc,
-            getDocs,
-            deleteDoc,
-            limit // *** NEW: Import limit for chat query ***
-        } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
-
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyCvaWRvpDY-BOOg_oitS4oVGDoQkiWMR6A",
-            authDomain: "windowsassistant-36760.firebaseapp.com",
-            projectId: "windowsassistant-36760",
-            storageBucket: "windowsassistant-36760.firebasestorage.app",
-            messagingSenderId: "125638102938",
-            appId: "1:125638102938:web:42e36690e0b74096003423"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const provider = new GoogleAuthProvider();
-
-        // DOM Elements
-        const loginScreen = document.getElementById('loginScreen');
-        const appContainer = document.getElementById('appContainer');
-        const googleSignInBtn = document.getElementById('googleSignInBtn');
-        const themeSelector = document.getElementById('themeSelector');
-        const profileCard = document.getElementById('profileCard');
-        const profilePic = document.getElementById('profilePic');
-        const profileName = document.getElementById('profileName');
-        const profileBio = document.getElementById('profileBio');
-        const profileStatus = document.getElementById('profileStatus');
-        const followerCount = document.getElementById('followerCount');
-        const followingCount = document.getElementById('followingCount');
-        const editProfileBtn = document.getElementById('editProfileBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const tabs = document.querySelectorAll('.tab');
-        const chatList = document.getElementById('chatList');
-        const userList = document.getElementById('userList');
-        const followedList = document.getElementById('followedList');
-        const chatMessages = document.getElementById('chatMessages');
-        const editProfileModal = document.getElementById('editProfileModal');
-        const closeModal = document.getElementById('closeModal');
-        const saveProfileBtn = document.getElementById('saveProfileBtn');
-        const editName = document.getElementById('editName');
-        const editBio = document.getElementById('editBio');
-        const wordCount = document.getElementById('wordCount');
-        let messageInput = document.querySelector('.message-input');
-        let sendBtn = document.querySelector('.send-btn');
-        const themeOptions = document.querySelectorAll('.theme-option');
-        const chatHeaderTitle = document.getElementById('chatHeaderTitle');
-        const chatHeaderSubtitle = document.getElementById('chatHeaderSubtitle');
-
-        // Current user data
-        let currentUser = null;
-        let currentTheme = 'light';
-        let users = []; // Local cache of user profiles
-        let follows = [];
-        let currentChatUser = null;
-        let currentChatId = null; // *** NEW: Store the active chat ID ***
-        
-        // *** NEW: Single listener for the active chat's message subcollection ***
-        let _convoUnsub = null;
-        
-        // *** NEW: Listener for the user's chat list ***
-        let _chatListUnsub = null;
-
-
-        // stable send handlers
-        let __sendHandler = null;
-        let __keyHandler = null;
-
-        // helpers
-        function escapeHtml(unsafe) {
-            if (!unsafe) return '';
-            return String(unsafe).replace(/[&<"'>]/g, (m) => {
-                switch (m) {
-                    case '&': return '&amp;';
-                    case '<': return '&lt;';
-                    case '>': return '&gt;';
-                    case '"': return '&quot;';
-                    case "'": return '&#039;';
-                    default: return m;
-                }
-            });
-        }
-
-        // Profile card hover behavior
-        let profileCardTimeout;
-        profileCard.addEventListener('mouseenter', () => {
-            clearTimeout(profileCardTimeout);
-            profileCard.classList.add('expanded');
-        });
-
-        profileCard.addEventListener('mouseleave', () => {
-            profileCardTimeout = setTimeout(() => {
-                profileCard.classList.remove('expanded');
-            }, 300);
-        });
-
-        // Theme selector hover behavior
-        let themeSelectorTimeout;
-        themeSelector.addEventListener('mouseenter', () => {
-            clearTimeout(themeSelectorTimeout);
-            themeSelector.classList.add('expanded');
-        });
-
-        themeSelector.addEventListener('mouseleave', () => {
-            themeSelectorTimeout = setTimeout(() => {
-                themeSelector.classList.remove('expanded');
-            }, 300);
-        });
-
-        // Theme selection
-        themeOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                const theme = option.dataset.theme;
-                setTheme(theme);
-
-                // Update active theme indicator
-                themeOptions.forEach(opt => opt.classList.remove('active'));
-                option.classList.add('active');
-            });
-        });
-
-        // Bio word count limit
-        editBio.addEventListener('input', () => {
-            const words = editBio.value.trim().split(/\s+/).filter(word => word.length > 0);
-            const wordLimit = 10;
-            const remaining = wordLimit - words.length;
-
-            wordCount.textContent = remaining;
-
-            if (remaining < 0) {
-                wordCount.style.color = '#FF3B30';
-                // Truncate to 10 words
-                editBio.value = words.slice(0, wordLimit).join(' ');
-                wordCount.textContent = 0;
-            } else {
-                wordCount.style.color = '#8E8E93';
-            }
-        });
-
-        // Google Sign-In
-        googleSignInBtn.addEventListener('click', () => {
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    // User signed in
-                    console.log('User signed in:', result.user);
-                })
-                .catch((error) => {
-                    console.error('Sign-in error:', error);
-                });
-        });
-
-        // Tab switching functionality
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-
-                if (tab.dataset.tab === 'chats') {
-                    chatList.style.display = 'block';
-                    userList.style.display = 'none';
-                    followedList.style.display = 'none';
-                    // loadChats() is now handled by a persistent listener
-                } else if (tab.dataset.tab === 'suggested') {
-                    chatList.style.display = 'none';
-                    userList.style.display = 'block';
-                    followedList.style.display = 'none';
-                    loadUsers();
-                } else if (tab.dataset.tab === 'followed') {
-                    chatList.style.display = 'none';
-                    userList.style.display = 'none';
-                    followedList.style.display = 'block';
-                    loadFollowedUsers();
-                } else if (tab.dataset.tab === 'me') {
-                    chatList.style.display = 'block';
-                    userList.style.display = 'none';
-                    followedList.style.display = 'none';
-                    // Show user's own profile info
-                }
-            });
-        });
-
-        // Modal functionality
-        editProfileBtn.addEventListener('click', () => {
-            editName.value = profileName.textContent;
-            editBio.value = profileBio.textContent;
-
-            // Update word count
-            const words = editBio.value.trim().split(/\s+/).filter(word => word.length > 0);
-            wordCount.textContent = 10 - words.length;
-
-            editProfileModal.style.display = 'flex';
-        });
-
-        closeModal.addEventListener('click', () => {
-            editProfileModal.style.display = 'none';
-        });
-
-        saveProfileBtn.addEventListener('click', () => {
-            const newName = editName.value;
-            let newBio = editBio.value;
-
-            // Limit bio to 10 words
-            const words = newBio.trim().split(/\s+/).filter(word => word.length > 0);
-            if (words.length > 10) {
-                newBio = words.slice(0, 10).join(' ');
-            }
-
-            profileName.textContent = newName;
-            profileBio.textContent = newBio;
-
-            // Update user profile in Firestore
-            if (currentUser) {
-                updateUserProfile(currentUser.uid, newName, newBio);
-            }
-
-            editProfileModal.style.display = 'none';
-        });
-
-        // Logout functionality
-        logoutBtn.addEventListener('click', async () => {
-            // Set user offline before signing out
-            if (currentUser) {
-                await updateUserOnlineStatus(currentUser.uid, false).catch(()=>{});
-            }
-
-            // *** REFACTORED: cleanup ALL listeners ***
-            if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
-            if (_chatListUnsub) { _chatListUnsub(); _chatListUnsub = null; }
-            // (other global listeners like users, follows, etc. should also be unsubscribed here if they were stored)
-
-            signOut(auth).then(() => {
-                // Reset UI
-                currentUser = null;
-                currentChatId = null;
-                currentChatUser = null;
-                users = [];
-                follows = [];
-                loginScreen.style.display = 'flex';
-                appContainer.style.display = 'none';
-            }).catch((error) => {
-                console.error('Logout error:', error);
-            });
-        });
-
-        // Firebase Authentication State Observer
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // User is signed in
-                currentUser = user;
-                console.log('User signed in:', user);
-
-                // Show app, hide login
-                loginScreen.style.display = 'none';
-                appContainer.style.display = 'flex';
-
-                // Set user online
-                updateUserOnlineStatus(user.uid, true);
-
-                // Check if user profile exists, create if not
-                checkAndCreateUserProfile(user);
-
-                // Load user theme
-                loadUserTheme(user.uid);
-
-                // Set up real-time listeners
-                setupFirestoreListeners(user.uid);
-
-                // Update profile UI
-                updateProfileUI(user);
-            } else {
-                // User is signed out
-                loginScreen.style.display = 'flex';
-                appContainer.style.display = 'none';
-            }
-        });
-
-        // Theme functions
-        function setTheme(theme) {
-            currentTheme = theme;
-            document.body.setAttribute('data-theme', theme);
-
-            // Save theme to Firestore if user is logged in
-            if (currentUser) {
-                updateUserTheme(currentUser.uid, theme);
-            }
-        }
-
-        // Firestore functions
-        async function checkAndCreateUserProfile(user) {
-            const userDocRef = doc(db, 'users', user.uid);
-            const userDoc = await getDoc(userDocRef);
-
-            if (!userDoc.exists()) {
-                // Create new user profile
-                await setDoc(userDocRef, {
-                    displayName: user.displayName || `User${Math.floor(1000 + Math.random() * 9000)}`,
-                    bio: 'Hello! I am using iMessage Social.',
-                    photoURL: user.photoURL || '',
-                    followers: 0,
-                    following: 0,
-                    isOnline: true,
-                    lastSeen: serverTimestamp(),
-                    createdAt: serverTimestamp(),
-                    theme: 'light'
-                });
-            } else {
-                // Update UI with existing profile data
-                const userData = userDoc.data();
-                profileName.textContent = userData.displayName;
-                profileBio.textContent = userData.bio;
-                followerCount.textContent = userData.followers || 0;
-                followingCount.textContent = userData.following || 0;
-
-                // Update profile picture if available
-                if (userData.photoURL) {
-                    profilePic.innerHTML = `<img src="${userData.photoURL}" alt="Profile"><div class="status-indicator" id="profileStatus"></div>`;
-                }
-
-                // Update online status
-                if (userData.isOnline) {
-                    profileStatus.classList.remove('offline');
-                } else {
-                    profileStatus.classList.add('offline');
-                }
-            }
-        }
-
-        async function updateUserProfile(uid, displayName, bio) {
-            const userDocRef = doc(db, 'users', uid);
-            await updateDoc(userDocRef, {
-                displayName: displayName,
-                bio: bio
-            });
-        }
-
-        async function updateUserTheme(uid, theme) {
-            const userDocRef = doc(db, 'users', uid);
-            await updateDoc(userDocRef, {
-                theme: theme
-            });
-        }
-
-        async function updateUserOnlineStatus(uid, isOnline) {
-            const userDocRef = doc(db, 'users', uid);
-            await updateDoc(userDocRef, {
-                isOnline: isOnline,
-                lastSeen: serverTimestamp()
-            });
-        }
-
-        async function loadUserTheme(uid) {
-            const userDocRef = doc(db, 'users', uid);
-            const userDoc = await getDoc(userDocRef);
-
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                if (userData.theme) {
-                    setTheme(userData.theme);
-
-                    // Update active theme indicator
-                    themeOptions.forEach(option => {
-                        if (option.dataset.theme === userData.theme) {
-                            option.classList.add('active');
-                        } else {
-                            option.classList.remove('active');
-                        }
-                    });
-                }
-            }
-        }
-
-        function setupFirestoreListeners(uid) {
-            // Listen for users (to populate local cache)
-            const usersQuery = collection(db, 'users');
-            onSnapshot(usersQuery, (snapshot) => {
-                users = [];
-                snapshot.forEach(doc => {
-                    users.push({ id: doc.id, ...doc.data() });
-                });
-                
-                // Once users are loaded, refresh lists that depend on them
-                loadUsers();
-                loadFollowedUsers();
-                loadChats(); // Reload chats to ensure user data is fresh
-            });
-
-            // Listen for follows
-            const followsQuery = query(
-                collection(db, 'follows'),
-                where('followerId', '==', uid)
-            );
-
-            onSnapshot(followsQuery, (snapshot) => {
-                follows = [];
-                snapshot.forEach(doc => {
-                    follows.push({ id: doc.id, ...doc.data() });
-                });
-                followingCount.textContent = follows.length;
-                
-                // Refresh lists that depend on follow data
-                loadUsers();
-                loadFollowedUsers();
-            });
-
-            // Listen for user profile updates (self)
-            const userDocRef = doc(db, 'users', uid);
-            onSnapshot(userDocRef, (doc) => {
-                if (doc.exists()) {
-                    const userData = doc.data();
-                    followerCount.textContent = userData.followers || 0;
-                }
-            });
-            
-            // *** REFACTORED: Set up persistent listener for chat list ***
-            loadChats();
-        }
-
-        function updateProfileUI(user) {
-            profileName.textContent = user.displayName || 'User';
-            if (user.photoURL) {
-                profilePic.innerHTML = `<img src="${user.photoURL}" alt="Profile"><div class="status-indicator" id="profileStatus"></div>`;
-            }
-        }
-
-        function loadUsers() {
-            userList.innerHTML = '';
-            
-            const otherUsers = users.filter(u => u.id !== currentUser.uid);
-
-            if (otherUsers.length === 0) {
-                userList.innerHTML = '<div class="user-item">No other users found.</div>';
+            if (!currentChatId || !currentChatUser) {
+                console.warn("No active chat. Cannot upload image.");
+                alert("Please select a chat before sending an image.");
                 return;
             }
 
-            otherUsers.forEach(user => {
-                const isFollowing = follows.some(follow => follow.followingId === user.id);
-
-                // Limit bio to 5 words for user list to prevent clutter
-                const shortBio = user.bio ?
-                    user.bio.split(' ').slice(0, 5).join(' ') + (user.bio.split(' ').length > 5 ? '...' : '') :
-                    'No bio yet';
-
-                const userElement = document.createElement('div');
-                userElement.className = 'user-item';
-
-                userElement.innerHTML = `
-                    <div class="user-avatar">
-                        ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
-                        <div class="status-indicator ${user.isOnline ? '' : 'offline'}"></div>
-                    </div>
-                    <div class="user-info">
-                        <h4>${user.displayName}</h4>
-                        <p>${shortBio}</p>
-                    </div>
-                    <div class="user-actions">
-                        ${isFollowing ?
-                            `<button class="message-btn" data-userid="${user.id}">Message</button>
-                             <button class="follow-btn following" data-userid="${user.id}">Unfollow</button>` :
-                            `<button class="follow-btn" data-userid="${user.id}">Follow</button>`
-                        }
-                    </div>
-                `;
-
-                userList.appendChild(userElement);
-            });
-
-            // Add event listeners to follow buttons
-            document.querySelectorAll('.follow-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const userId = button.dataset.userid;
-                    const isFollowing = button.classList.contains('following');
-
-                    if (isFollowing) {
-                        unfollowUser(userId);
-                    } else {
-                        followUser(userId);
-                    }
-                });
-            });
-
-            // Add event listeners to message buttons
-            document.querySelectorAll('.message-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const userId = button.dataset.userid;
-                    const user = users.find(u => u.id === userId);
-                    if (user) {
-                        openChat(userId, user);
-                        // Switch to chats tab
-                        tabs.forEach(t => t.classList.remove('active'));
-                        document.querySelector('[data-tab="chats"]').classList.add('active');
-                        chatList.style.display = 'block';
-                        userList.style.display = 'none';
-                        followedList.style.display = 'none';
-                    }
-                });
-            });
+            uploadFileToStorage(file, file.type, currentChatUser.id, currentChatId);
+            
+            // Reset file input to allow uploading the same file again
+            e.target.value = null;
         }
 
-        function loadFollowedUsers() {
-            followedList.innerHTML = '';
-
-            const followedUsers = users.filter(user =>
-                follows.some(follow => follow.followingId === user.id)
-            );
-
-            if (followedUsers.length === 0) {
-                followedList.innerHTML = '<div class="user-item">You are not following anyone yet.</div>';
+        // Start Recording
+        async function startRecording() {
+            if (!currentChatId || !currentChatUser) {
+                console.warn("No active chat. Cannot record audio.");
+                alert("Please select a chat before recording.");
                 return;
             }
-
-            followedUsers.forEach(user => {
-                const shortBio = user.bio ?
-                    user.bio.split(' ').slice(0, 5).join(' ') + (user.bio.split(' ').length > 5 ? '...' : '') :
-                    'No bio yet';
-
-                const userElement = document.createElement('div');
-                userElement.className = 'user-item';
-
-                userElement.innerHTML = `
-                    <div class="user-avatar">
-                        ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
-                        <div class="status-indicator ${user.isOnline ? '' : 'offline'}"></div>
-                    </div>
-                    <div class="user-info">
-                        <h4>${user.displayName}</h4>
-                        <p>${shortBio}</p>
-                    </div>
-                    <div class="user-actions">
-                        <button class="message-btn" data-userid="${user.id}">Message</button>
-                        <button class="follow-btn following" data-userid="${user.id}">Unfollow</button>
-                    </div>
-                `;
-
-                followedList.appendChild(userElement);
-            });
-
-            // Add event listeners to follow buttons
-            document.querySelectorAll('.follow-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const userId = button.dataset.userid;
-                    unfollowUser(userId);
-                });
-            });
-
-            // Add event listeners to message buttons
-            document.querySelectorAll('.message-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const userId = button.dataset.userid;
-                    const user = users.find(u => u.id === userId);
-                    if (user) {
-                        openChat(userId, user);
-                        // Switch to chats tab
-                        tabs.forEach(t => t.classList.remove('active'));
-                        document.querySelector('[data-tab="chats"]').classList.add('active');
-                        chatList.style.display = 'block';
-                        userList.style.display = 'none';
-                        followedList.style.display = 'none';
-                    }
-                });
-            });
-        }
-
-        // *** REFACTORED: Load chat list from 'chats' collection ***
-        function loadChats() {
-            if (!currentUser) return;
-            
-            // Clean up old listener if it exists
-            if (_chatListUnsub) { _chatListUnsub(); }
-
-            const chatsQuery = query(
-                collection(db, 'chats'), 
-                where('members', 'array-contains', currentUser.uid),
-                orderBy('lastMessage.timestamp', 'desc')
-            );
-            
-            _chatListUnsub = onSnapshot(chatsQuery, (snapshot) => {
-                chatList.innerHTML = ''; // Clear list on each update
-                
-                if (snapshot.empty) {
-                    chatList.innerHTML = '<div class="chat-item">No conversations yet. Follow users to start chatting!</div>';
-                    return;
-                }
-
-                snapshot.forEach(doc => {
-                    const chatData = doc.data();
-                    
-                    // Find the *other* user's ID
-                    const otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
-                    
-                    // Find the other user's profile from our local cache
-                    const user = users.find(u => u.id === otherUserId);
-                    
-                    const displayName = user ? user.displayName : 'Unknown User';
-                    const photoURL = user ? user.photoURL : null;
-                    const isOnline = user ? user.isOnline : false;
-                    const lastMessage = chatData.lastMessage ? chatData.lastMessage.text : 'Say hi!';
-
-                    const chatElement = document.createElement('div');
-                    chatElement.className = 'chat-item';
-                    chatElement.innerHTML = `
-                        <div class="chat-avatar">
-                            ${photoURL ? `<img src="${photoURL}">` : '<i class="fas fa-user"></i>'}
-                            <div class="status-indicator ${isOnline ? '' : 'offline'}"></div>
-                        </div>
-                        <div class="chat-info">
-                            <h4>${displayName}</h4>
-                            <p class="last-message">${escapeHtml(lastMessage)}</p>
-                        </div>
-                    `;
-                    
-                    // Add click listener to open this chat
-                    chatElement.addEventListener('click', () => {
-                        if (user) {
-                            openChat(user.id, user);
-                        }
-                    });
-                    
-                    chatList.appendChild(chatElement);
-                });
-            }, err => { 
-                console.error("Error listening to chat list:", err); 
-            });
-        }
-        
-        // *** NEW: Helper function to find or create a chat document ***
-        async function getOrCreateChat(otherUserId) {
-            if (!currentUser) return null;
-            
-            const chatsRef = collection(db, 'chats');
-            
-            // Query for an existing chat between these two users
-            // Firestore limitation: can't query for two 'array-contains'
-            // So we query for one, and filter in the client
-            const q = query(chatsRef, where('members', 'array-contains', currentUser.uid));
-            
-            const querySnapshot = await getDocs(q);
-            let existingChat = null;
-            
-            querySnapshot.forEach(doc => {
-                const data = doc.data();
-                if (data.members && data.members.includes(otherUserId)) {
-                    existingChat = { id: doc.id, ...data };
-                }
-            });
-
-            if (existingChat) {
-                return existingChat.id; // Return existing chat ID
-            }
-            
-            // No chat exists, so create one
-            console.log(`Creating new chat for ${currentUser.uid} and ${otherUserId}`);
-            const newChatDoc = await addDoc(chatsRef, {
-                members: [currentUser.uid, otherUserId],
-                lastMessage: {
-                    text: 'Chat created',
-                    timestamp: serverTimestamp()
-                }
-            });
-            
-            return newChatDoc.id; // Return new chat ID
-        }
-
-        // *** REFACTORED: openChat now listens to a subcollection ***
-        async function openChat(userId, user) {
-            // cleanup previous listeners
-            if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
-
-            currentChatUser = { id: userId, ...user };
-            
-            // Find or create the chat ID
-            const chatId = await getOrCreateChat(userId);
-            if (!chatId) {
-                console.error("Could not get or create chat ID");
-                return;
-            }
-            currentChatId = chatId; // Store the active chat ID
-
-            // update header
-            const headerAvatar = document.querySelector('.chat-header-avatar');
-            headerAvatar.innerHTML = user && user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>';
-            if (headerAvatar.querySelector('.status-indicator')) headerAvatar.querySelector('.status-indicator').classList.toggle('offline', !(user && user.isOnline));
-            chatHeaderTitle.textContent = user ? user.displayName : 'Unknown User';
-            chatHeaderSubtitle.textContent = (user && user.isOnline) ? 'Online' : 'Offline';
-
-            // show loading
-            chatMessages.innerHTML = `<div class="message received"><div class="message-meta">Loading messages...<span class="message-time">Just now</span></div></div>`;
-
-            // *** NEW: Create a single listener for the chat's 'messages' subcollection ***
-            const messagesQuery = query(
-                collection(db, 'chats', currentChatId, 'messages'),
-                orderBy('timestamp', 'asc')
-            );
-            
-            _convoUnsub = onSnapshot(messagesQuery, (snapshot) => {
-                renderConversation(snapshot);
-            }, err => console.error('Error listening to messages:', err));
-
-
-            // bind send handler for this conversation (stable attach)
-            bindSendHandlerForConversation(userId, currentChatId);
-            
-            // Mark messages as read when opening chat
-            markMessagesAsRead(userId, currentChatId);
-        }
-
-        // *** REFACTORED: Simplified render function ***
-        function renderConversation(snapshot) {
-            chatMessages.innerHTML = ''; // Clear messages
-            
-            if (snapshot.empty) {
-                chatMessages.innerHTML = `<div class="message received">Start a conversation with ${currentChatUser ? currentChatUser.displayName : 'this user'}!<div class="message-meta"><span class="message-time">Just now</span></div></div>`;
-            } else {
-                snapshot.forEach(doc => {
-                    const m = doc.data();
-                    const div = document.createElement('div');
-                    div.className = 'message ' + (m.senderId === currentUser.uid ? 'sent' : 'received');
-                    const ts = m.timestamp ? (m.timestamp.toDate ? m.timestamp.toDate() : new Date()) : new Date();
-
-                    let ticksHtml = '';
-                    if (m.senderId === currentUser.uid) {
-                        // Check read status for ticks
-                        if (m.isRead) {
-                            // Read: 2 white ticks
-                            ticksHtml = `<span class="message-ticks read"><i class="fas fa-check-double"></i></span>`;
-                        } else {
-                            // Delivered (but not read): 2 grey ticks
-                            ticksHtml = `<span class="message-ticks delivered"><i class="fas fa-check-double"></i></span>`;
-                        }
-                    }
-
-                    div.innerHTML = `
-                        ${escapeHtml(m.text || '')}
-                        <div class="message-meta">
-                            <span class="message-time">${ts.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-                            ${ticksHtml}
-                        </div>
-                    `;
-                    chatMessages.appendChild(div);
-                });
-            }
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        // *** REFACTORED: bindSendHandler now passes chatId ***
-        function bindSendHandlerForConversation(receiverId, chatId) {
-            if (__sendHandler) sendBtn.removeEventListener('click', __sendHandler);
-            if (__keyHandler) messageInput.removeEventListener('keypress', __keyHandler);
-
-            __sendHandler = () => sendMessage(receiverId, chatId);
-            __keyHandler = (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(receiverId, chatId); } };
-
-            sendBtn.addEventListener('click', __sendHandler);
-            messageInput.addEventListener('keypress', __keyHandler);
-        }
-
-        // *** REFACTORED: sendMessage now writes to a subcollection ***
-        async function sendMessage(receiverId, chatId) {
-            if (!chatId) {
-                console.error("No active chat ID, cannot send message.");
-                return;
-            }
-            
-            const messageText = (messageInput.value || '').trim();
-
-            if (messageText && currentUser) {
-                try {
-                    // optimistic UI append (remains the same)
-                    const tempDiv = document.createElement('div');
-                    tempDiv.className = 'message sent';
-                    const now = new Date();
-                    tempDiv.innerHTML = `
-                        ${escapeHtml(messageText)}
-                        <div class="message-meta">
-                            <span class="message-time">${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-                            <span class="message-ticks delivered">
-                                <i class="fas fa-check-double"></i>
-                            </span>
-                        </div>
-                    `;
-                    chatMessages.appendChild(tempDiv);
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                    
-                    const messageData = {
-                        senderId: currentUser.uid,
-                        receiverId: receiverId, // Still useful for 'mark as read' logic
-                        text: messageText,
-                        timestamp: serverTimestamp(),
-                        isRead: false
-                    };
-
-                    // *** NEW: Add to the 'messages' subcollection ***
-                    await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
-
-                    // *** NEW: Update the 'lastMessage' on the parent chat doc ***
-                    await updateDoc(doc(db, 'chats', chatId), {
-                        lastMessage: {
-                            text: messageText,
-                            timestamp: messageData.timestamp
-                        }
-                    });
-
-                    // Clear input after send
-                    messageInput.value = '';
-                } catch (error) {
-                    console.error('Error sending message:', error);
-                }
-            }
-        }
-        
-        // *** REFACTORED: markMessagesAsRead now queries the subcollection ***
-        async function markMessagesAsRead(senderId, chatId) {
-            if (!currentUser || !chatId) return;
-
-            // Query for unread messages from this sender *in this specific chat*
-            const unreadQuery = query(
-                collection(db, 'chats', chatId, 'messages'),
-                where('senderId', '==', senderId),
-                where('receiverId', '==', currentUser.uid),
-                where('isRead', '==', false)
-            );
 
             try {
-                const querySnapshot = await getDocs(unreadQuery);
-                
-                const updates = [];
-                querySnapshot.forEach((doc) => {
-                    updates.push(updateDoc(doc.ref, { isRead: true }));
-                });
-                
-                await Promise.all(updates);
-                if (updates.length > 0) {
-                    console.log(`Marked ${updates.length} messages from ${senderId} as read.`);
-                }
+                mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(mediaStream);
+                audioChunks = [];
 
-            } catch (error) {
-                console.error('Error marking messages as read:', error);
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = uploadAudio;
+
+                mediaRecorder.start();
+
+                // Update UI
+                toggleRecordingUI(true);
+                
+                // Start timer
+                let seconds = 0;
+                recordTimer.textContent = '0:00';
+                recordTimerInterval = setInterval(() => {
+                    seconds++;
+                    const mins = Math.floor(seconds / 60);
+                    const secs = seconds % 60;
+                    recordTimer.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                }, 1000);
+
+            } catch (err) {
+                console.error("Error starting recording:", err);
+                alert("Could not start recording. Please ensure microphone permissions are granted.");
             }
         }
 
-        async function followUser(userId) {
+        // Stop Recording
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+            
+            // Stop media stream tracks
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+            }
+
+            // Stop timer
+            clearInterval(recordTimerInterval);
+            
+            // Update UI
+            toggleRecordingUI(false);
+        }
+        
+        // Show/Hide Recording UI
+        function toggleRecordingUI(isRecording) {
+            if (isRecording) {
+                recordingStatus.style.display = 'flex';
+                messageInput.style.display = 'none';
+                uploadBtn.style.display = 'none';
+                recordBtn.style.display = 'none';
+                sendBtn.style.display = 'none';
+            } else {
+                recordingStatus.style.display = 'none';
+                messageInput.style.display = 'block';
+                uploadBtn.style.display = 'flex';
+                recordBtn.style.display = 'flex';
+                sendBtn.style.display = 'flex';
+            }
+        }
+
+        // Upload Audio Blob
+        function uploadAudio() {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); // Using webm, common format
+            uploadFileToStorage(audioBlob, 'audio/webm', currentChatUser.id, currentChatId);
+            audioChunks = [];
+        }
+
+        // Upload File to Storage
+        async function uploadFileToStorage(file, mimeType, receiverId, chatId) {
             if (!currentUser) return;
 
             try {
-                // Add follow relationship
-                await addDoc(collection(db, 'follows'), {
-                    followerId: currentUser.uid,
-                    followingId: userId,
-                    timestamp: serverTimestamp()
-                });
+                const fileType = mimeType.startsWith('image/') ? 'image' : 'audio';
+                const fileExtension = mimeType.split('/')[1].split(';')[0]; // e.g., 'png', 'webm'
+                const fileName = `${currentUser.uid}-${Date.now()}.${fileExtension}`;
+                const sRef = storageRef(storage, `chat_media/${chatId}/${fileName}`);
 
-                // Update follower count for the followed user
-                const userDocRef = doc(db, 'users', userId);
-                const userDoc = await getDoc(userDocRef);
+                // Show some uploading indicator (optional, but good UX)
+                // For now, we'll just upload
+                
+                const uploadTask = await uploadBytes(sRef, file);
+                const downloadURL = await getDownloadURL(uploadTask.ref);
 
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    await updateDoc(userDocRef, {
-                        followers: (userData.followers || 0) + 1
-                    });
-                }
+                // Now, send the message with this URL
+                await sendMessage(receiverId, chatId, { type: fileType, url: downloadURL });
 
-                // Update following count for current user
-                const currentUserDocRef = doc(db, 'users', currentUser.uid);
-                const currentUserDoc = await getDoc(currentUserDocRef);
-
-                if (currentUserDoc.exists()) {
-                    const currentUserData = currentUserDoc.data();
-                    await updateDoc(currentUserDocRef, {
-                        following: (currentUserData.following || 0) + 1
-                    });
-                }
             } catch (error) {
-                console.error('Error following user:', error);
+                console.error("Error uploading file:", error);
+                alert(`Error uploading ${mimeType.startsWith('image/') ? 'image' : 'audio'}. Please try again.`);
             }
         }
-
-        async function unfollowUser(userId) {
-            if (!currentUser) return;
-
-            try {
-                // Find and delete follow relationship
-                const followsQuery = query(
-                    collection(db, 'follows'),
-                    where('followerId', '==', currentUser.uid),
-                    where('followingId', '==', userId)
-                );
-
-                const querySnapshot = await getDocs(followsQuery);
-                querySnapshot.forEach(async (followDoc) => {
-                    // Delete the follow document
-                    await deleteDoc(doc(db, 'follows', followDoc.id));
-                });
-
-                // Update follower count for the unfollowed user
-                const userDocRef = doc(db, 'users', userId);
-                const userDoc = await getDoc(userDocRef);
-
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    await updateDoc(userDocRef, {
-                        followers: Math.max(0, (userData.followers || 0) - 1)
-                    });
-                }
-
-                // Update following count for current user
-                const currentUserDocRef = doc(db, 'users', currentUser.uid);
-                const currentUserDoc = await getDoc(currentUserDocRef);
-
-                if (currentUserDoc.exists()) {
-                    const currentUserData = currentUserDoc.data();
-                    await updateDoc(currentUserDocRef, {
-                        following: Math.max(0, (currentUserData.following || 0) - 1)
-                    });
-                }
-            } catch (error) {
-                console.error('Error unfollowing user:', error);
-            }
-        }
+        
+        // === NEW: Add Listeners for Media Buttons ===
+        uploadBtn.addEventListener('click', () => imageUpload.click());
+        recordBtn.addEventListener('click', startRecording);
+        stopRecordBtn.addEventListener('click', stopRecording);
 
         // Initialize with light theme
         document.body.setAttribute('data-theme', 'light');
