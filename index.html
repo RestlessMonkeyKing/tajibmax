@@ -687,31 +687,6 @@
             box-shadow: 0 0 0 2px var(--primary-color);
         }
 
-        /* === NEW: Create Group Chat Button === */
-        #createGroupChatBtn {
-            display: none; /* Hidden by default */
-            padding: 12px;
-            border-radius: 15px;
-            border: none;
-            background: var(--primary-color);
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        
-        #createGroupChatBtn.visible {
-            display: block;
-        }
-
-        #createGroupChatBtn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
-        }
-        /* === END NEW === */
-
         .chat-list, .user-list, .followed-list, .follower-list { 
             flex: 1;
             overflow-y: auto;
@@ -778,13 +753,6 @@
             flex-shrink: 0;
             position: relative; 
         }
-        
-        /* === NEW: Group Chat Avatar Icon === */
-        .chat-avatar.group-avatar {
-            background: linear-gradient(135deg, #FF9500, #FF2D55);
-            font-size: 20px;
-        }
-
 
         .chat-avatar img, .user-avatar img {
             width: 100%;
@@ -943,16 +911,6 @@
             height: 147px; 
         }
         
-        /* === NEW: Group Chat Header (non-expandable) === */
-        .chat-header.is-group {
-             height: 81px !important;
-             cursor: default;
-        }
-        
-        .chat-header.is-group .profile-stats {
-            display: none;
-        }
-        
         .chat-header .profile-header {
             opacity: 1; 
             margin-bottom: 15px;
@@ -973,11 +931,6 @@
             flex-shrink: 0;
         }
         
-        .chat-header-avatar.group-avatar {
-             background: linear-gradient(135deg, #5856D6, #007AFF);
-             font-size: 18px;
-        }
-        
         .chat-header-avatar img {
             width: 100%;
             height: 100%;
@@ -990,10 +943,6 @@
             bottom: 1px;
             right: 16px;
             border-width: 1px;
-        }
-        
-        .chat-header.is-group .avatar-wrapper .status-indicator {
-            display: none;
         }
 
         .chat-messages {
@@ -1017,22 +966,6 @@
             opacity: 0.8;
         }
         [data-theme="dark"] .date-separator {
-             background: rgba(142, 142, 147, 0.4);
-        }
-        
-        /* === NEW: System Message === */
-        .message.system {
-            align-self: center;
-            background: rgba(142, 142, 147, 0.2);
-            color: var(--text-color);
-            font-size: 12px;
-            font-style: italic;
-            opacity: 0.8;
-            padding: 4px 12px;
-            border-radius: 12px;
-            margin: 5px 0 15px 0;
-        }
-        [data-theme="dark"] .message.system {
              background: rgba(142, 142, 147, 0.4);
         }
 
@@ -1087,21 +1020,9 @@
             border-bottom-left-radius: 5px;
         }
         
-        /* === NEW: Sender Name for Group Chat === */
-        .message-sender-name {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--secondary-color);
-            margin-bottom: 4px;
-        }
-        
         [data-theme="dark"] .message.received {
             background: #2C2C2E;
             color: white;
-        }
-        
-        [data-theme="dark"] .message-sender-name {
-            color: #AF52DE;
         }
 
         .message-meta {
@@ -1399,59 +1320,6 @@
             outline: none;
             box-shadow: 0 0 0 2px var(--primary-color);
         }
-        
-        /* === NEW: Group Chat Modal === */
-        #groupMembersList {
-            max-height: 250px;
-            overflow-y: auto;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            padding: 10px;
-            border: 1px solid var(--glass-border);
-        }
-        
-        .member-item {
-            display: flex;
-            align-items: center;
-            padding: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        
-        .member-item:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        
-        .member-item input[type="checkbox"] {
-            margin-right: 15px;
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-        
-        .member-item .user-avatar {
-            width: 40px;
-            height: 40px;
-            font-size: 16px;
-            margin-right: 10px;
-        }
-        
-        .member-item .user-info {
-            flex-basis: auto;
-        }
-        
-        .member-item .user-info h4 {
-            font-size: 15px;
-            margin-bottom: 2px;
-        }
-        
-        .member-item .user-info p {
-             font-size: 12px;
-             -webkit-line-clamp: 1;
-             max-height: 1.4em;
-        }
-
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -1638,11 +1506,6 @@
             <!-- MODIFIED: Added id to search-box -->
             <input type="text" class="search-box" id="searchBox" placeholder="Search...">
             
-            <!-- === NEW: Create Group Chat Button === -->
-            <button id="createGroupChatBtn" class="visible">
-                <i class="fas fa-users-plus"></i> Create Group Chat
-            </button>
-            
             <div class="chat-list" id="chatList">
                 <!-- Chat items will be populated here -->
             </div>
@@ -1735,7 +1598,6 @@
         </div>
     </div>
 
-    <!-- Edit Profile Modal -->
     <div class="modal" id="editProfileModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1752,28 +1614,6 @@
                 <small style="color: #8E8E93; font-size: 12px;">Words remaining: <span id="wordCount">10</span></small>
             </div>
             <button class="btn" id="saveProfileBtn">Save Changes</button>
-        </div>
-    </div>
-    
-    <!-- === NEW: Create Group Chat Modal === -->
-    <div class="modal" id="createGroupChatModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Create Group Chat</h3>
-                <button class="close-btn" id="closeGroupModal">&times;</button>
-            </div>
-            <div class="form-group">
-                <label for="groupNameInput">Group Name</label>
-                <input type="text" id="groupNameInput" class="form-control" placeholder="Your group name" maxlength="40">
-            </div>
-            <div class="form-group">
-                <label>Select Members</label>
-                <div id="groupMembersList">
-                    <!-- Member items will be populated here -->
-                    <div class="member-item">No users found.</div>
-                </div>
-            </div>
-            <button class="btn" id="createGroupBtn">Create Group</button>
         </div>
     </div>
 
@@ -1867,9 +1707,6 @@
         // === NEW: Search Box DOM ===
         const searchBox = document.getElementById('searchBox');
         
-        // === NEW: Group Chat DOM ===
-        const createGroupChatBtn = document.getElementById('createGroupChatBtn');
-        
         const chatList = document.getElementById('chatList');
         const userList = document.getElementById('userList');
         const followedList = document.getElementById('followedList');
@@ -1886,14 +1723,6 @@
         const editName = document.getElementById('editName');
         const editBio = document.getElementById('editBio');
         const wordCount = document.getElementById('wordCount');
-        
-        // === NEW: Group Chat Modal DOM ===
-        const createGroupChatModal = document.getElementById('createGroupChatModal');
-        const closeGroupModal = document.getElementById('closeGroupModal');
-        const createGroupBtn = document.getElementById('createGroupBtn');
-        const groupNameInput = document.getElementById('groupNameInput');
-        const groupMembersList = document.getElementById('groupMembersList');
-
         
         // === MODIFIED: Media DOM Elements ===
         const messageInputContainer = document.getElementById('messageInputContainer');
@@ -1923,7 +1752,6 @@
         let followers = []; 
         let currentChatUser = null;
         let currentChatId = null;
-        let currentChatData = null; // === NEW: To store group chat data
         let currentActiveTab = 'chats'; // === NEW: Track active tab
         
         // === NEW: Notification State ===
@@ -2089,11 +1917,9 @@
                 userList.style.display = 'none';
                 followedList.style.display = 'none';
                 followerList.style.display = 'none'; 
-                createGroupChatBtn.classList.remove('visible'); // === NEW: Hide group button
 
                 if (currentActiveTab === 'chats') {
                     chatList.style.display = 'block';
-                    createGroupChatBtn.classList.add('visible'); // === NEW: Show group button
                     markNotificationsAsRead('message'); // Clear message notifications
                 } else if (currentActiveTab === 'suggested') {
                     userList.style.display = 'block';
@@ -2164,20 +1990,6 @@
         closeModal.addEventListener('click', () => {
             editProfileModal.style.display = 'none';
         });
-        
-        // === NEW: Group Chat Modal Listeners ===
-        createGroupChatBtn.addEventListener('click', () => {
-            openCreateGroupModal();
-        });
-        
-        closeGroupModal.addEventListener('click', () => {
-            createGroupChatModal.style.display = 'none';
-        });
-        
-        createGroupBtn.addEventListener('click', () => {
-            handleCreateGroup();
-        });
-
 
         saveProfileBtn.addEventListener('click', () => {
             const newName = editName.value;
@@ -2218,7 +2030,6 @@
                 currentUser = null;
                 currentChatId = null;
                 currentChatUser = null;
-                currentChatData = null; // === NEW
                 users = [];
                 follows = [];
                 followers = [];
@@ -2387,14 +2198,7 @@
                 loadUsers();
                 loadFollowedUsers();
                 loadFollowers();
-                // loadChats(); // This is now called by _chatListUnsub
-                
-                // === NEW: Re-render chat list if users array updates
-                if (_chatListUnsub) {
-                    // Manually re-trigger render
-                    const chatsQuery = query(collection(db, 'chats'), where('members', 'array-contains', currentUser.uid), orderBy('lastMessage.timestamp', 'desc'));
-                    getDocs(chatsQuery).then(renderChatList);
-                }
+                loadChats(); 
                 
                 syncPresence();
             });
@@ -2523,7 +2327,6 @@
             renderUserList(followerList, followerUserIds, 'You have no followers yet.');
         }
         
-        // === MODIFIED: addListButtonListeners (for group chat) ===
         function addListButtonListeners(container) {
             container.querySelectorAll('.follow-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
@@ -2539,24 +2342,18 @@
             });
 
             container.querySelectorAll('.message-btn').forEach(button => {
-                button.addEventListener('click', async (e) => { // === NEW: async
+                button.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const userId = button.dataset.userid;
                     const user = users.find(u => u.id === userId);
                     if (user) {
-                        // === NEW: Get chat info before opening
-                        const chatId = await getOrCreateChat(userId);
-                        if (!chatId) return;
-                        const chatDoc = await getDoc(doc(db, 'chats', chatId));
-                        
-                        openChat(userId, user, chatId, chatDoc.data());
+                        openChat(userId, user);
                         document.querySelector('[data-tab="chats"]').click();
                     }
                 });
             });
         }
 
-        // === MODIFIED: renderChatList (for group chat) ===
         function renderChatList(snapshot) {
             chatList.innerHTML = '';
             
@@ -2567,68 +2364,52 @@
 
             snapshot.forEach(doc => {
                 const chatData = doc.data();
-                const chatElement = document.createElement('div');
-                chatElement.className = 'chat-item';
-                chatElement.dataset.chatId = doc.id; 
+                const otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
+                const user = users.find(u => u.id === otherUserId);
                 
-                let displayName, photoURL, isOnline, avatarHtml;
-                let user = null;
-
-                if (chatData.isGroup) {
-                    displayName = chatData.groupName || 'Group Chat';
-                    photoURL = null;
-                    isOnline = false; // No online status for groups
-                    avatarHtml = `
-                        <div class="chat-avatar group-avatar">
-                            <i class="fas fa-users"></i>
-                        </div>
-                    `;
-                } else {
-                    const otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
-                    user = users.find(u => u.id === otherUserId);
-                    
-                    displayName = user ? user.displayName : 'Unknown User';
-                    photoURL = user ? user.photoURL : null;
-                    isOnline = user ? user.isOnline : false;
-                    avatarHtml = `
-                        <div class="avatar-wrapper">
-                            <div class="chat-avatar">
-                                ${photoURL ? `<img src="${photoURL}">` : '<i class="fas fa-user"></i>'}
-                            </div>
-                            <div class="status-indicator ${isOnline ? '' : 'offline'}"></div>
-                        </div>
-                    `;
-                }
+                const displayName = user ? user.displayName : 'Unknown User';
+                const photoURL = user ? user.photoURL : null;
+                const isOnline = user ? user.isOnline : false;
                 
-                let lastMessageText = '...';
-                if (chatData.lastMessage) {
+                let lastMessageText = 'Say hi!';
+                if (chatData.lastMessage && chatData.lastMessage.text) {
                     if (chatData.lastMessage.type === 'image') {
                         lastMessageText = '<i class="fas fa-image"></i> Image';
                     } else if (chatData.lastMessage.type === 'audio') {
                         lastMessageText = '<i class="fas fa-microphone"></i> Voice Note';
-                    } else if (chatData.lastMessage.type === 'system') {
-                         lastMessageText = `<i>${escapeHtml(chatData.lastMessage.text)}</i>`;
                     } else {
-                        lastMessageText = escapeHtml(chatData.lastMessage.text);
+                        lastMessageText = chatData.lastMessage.text;
                     }
                 }
 
+                const chatElement = document.createElement('div');
+                chatElement.className = 'chat-item';
+                // Add chat ID as data attribute
+                chatElement.dataset.chatId = doc.id; 
                 chatElement.innerHTML = `
-                    ${avatarHtml}
+                    <div class="avatar-wrapper">
+                        <div class="chat-avatar">
+                            ${photoURL ? `<img src="${photoURL}">` : '<i class="fas fa-user"></i>'}
+                        </div>
+                        <div class="status-indicator ${isOnline ? '' : 'offline'}"></div>
+                    </div>
                     <div class="chat-info">
                         <h4>${escapeHtml(displayName)}</h4>
-                        <p class="last-message">${lastMessageText}</p>
+                        <p class="last-message">${lastMessageText}</p> <!-- HTML is intended here -->
                     </div>
+                    <!-- NEW: Unread dot container -->
                     <div class="unread-dot"></div>
                 `;
                 
+                // === NEW: Highlight active chat ===
                 if (doc.id === currentChatId) {
                     chatElement.classList.add('active');
                 }
                 
                 chatElement.addEventListener('click', () => {
-                    // Pass user (if 1-on-1) and full chat data
-                    openChat(user?.id, user, doc.id, chatData);
+                    if (user) {
+                        openChat(user.id, user);
+                    }
                 });
                 
                 chatList.appendChild(chatElement);
@@ -2641,19 +2422,14 @@
             if (!currentUser) return null;
             
             const chatsRef = collection(db, 'chats');
-            // === MODIFIED: Query now also checks for 1-on-1 chats
-            const q = query(chatsRef, 
-                where('members', 'array-contains', currentUser.uid),
-                where('isGroup', '!=', true) // Look for non-group chats
-            );
+            const q = query(chatsRef, where('members', 'array-contains', currentUser.uid));
             
             const querySnapshot = await getDocs(q);
             let existingChat = null;
             
             querySnapshot.forEach(doc => {
                 const data = doc.data();
-                // Make sure it's a 2-person chat
-                if (data.members && data.members.includes(otherUserId) && data.members.length === 2) {
+                if (data.members && data.members.includes(otherUserId)) {
                     existingChat = { id: doc.id, ...data };
                 }
             });
@@ -2664,75 +2440,54 @@
             
             const newChatDoc = await addDoc(chatsRef, {
                 members: [currentUser.uid, otherUserId],
-                isGroup: false, // Explicitly set as not a group
                 lastMessage: {
                     text: 'Chat created',
                     timestamp: serverTimestamp(),
-                    type: 'system' // Use system type
+                    type: 'text'
                 }
             });
             
             return newChatDoc.id;
         }
 
-        // === MODIFIED: openChat (for group chat) ===
-        async function openChat(userId, user, chatId, chatData) {
+        async function openChat(userId, user) {
             if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
 
-            currentChatId = chatId;
-            currentChatData = chatData; // Store full chat data
+            currentChatUser = { id: userId, ...user };
             
+            const chatId = await getOrCreateChat(userId);
+            if (!chatId) {
+                console.error("Could not get or create chat ID");
+                return;
+            }
+            currentChatId = chatId;
+            
+            // === NEW: Highlight active chat in list ===
             document.querySelectorAll('.chat-item').forEach(item => {
                 item.classList.toggle('active', item.dataset.chatId === currentChatId);
             });
             
+            // Clear any pending media from other chats
             clearMediaPreview();
 
             const headerAvatarDiv = chatHeader.querySelector('.chat-header-avatar');
             const headerImg = headerAvatarDiv.querySelector('img');
             const headerIcon = headerAvatarDiv.querySelector('i');
-            const headerStatus = chatHeader.querySelector('.status-indicator');
-            const headerProfileStats = chatHeader.querySelector('.profile-stats');
-
-            if (chatData.isGroup) {
-                currentChatUser = null; // No single user for groups
-                
+            
+            if (user.photoURL) {
+                headerImg.src = user.photoURL;
+                headerImg.style.display = 'block';
+                headerIcon.style.display = 'none';
+            } else {
                 headerImg.style.display = 'none';
                 headerIcon.style.display = 'block';
-                headerIcon.className = 'fas fa-users';
-                headerAvatarDiv.classList.add('group-avatar');
-                
-                headerStatus.style.display = 'none';
-                headerProfileStats.style.display = 'none';
-                chatHeader.classList.add('is-group');
-                
-                chatHeaderTitle.textContent = chatData.groupName;
-                chatHeaderSubtitle.textContent = `${chatData.members.length} members`;
-
-            } else {
-                currentChatUser = { id: userId, ...user }; // Set 1-on-1 user
-                
-                if (user.photoURL) {
-                    headerImg.src = user.photoURL;
-                    headerImg.style.display = 'block';
-                    headerIcon.style.display = 'none';
-                } else {
-                    headerImg.style.display = 'none';
-                    headerIcon.style.display = 'block';
-                    headerIcon.className = 'fas fa-user-friends';
-                }
-                headerAvatarDiv.classList.remove('group-avatar');
-                
-                headerStatus.style.display = 'block';
-                headerProfileStats.style.display = 'flex';
-                chatHeader.classList.remove('is-group');
-                
-                headerStatus.classList.toggle('offline', !user.isOnline);
-                chatHeaderTitle.textContent = user.displayName;
-                chatHeaderSubtitle.textContent = user.isOnline ? 'Online' : 'Offline';
-                chatFollowerCount.textContent = user.followers || 0;
-                chatFollowingCount.textContent = user.following || 0;
             }
+            
+            chatHeader.querySelector('.status-indicator').classList.toggle('offline', !user.isOnline);
+            chatHeaderTitle.textContent = user.displayName;
+            chatHeaderSubtitle.textContent = user.isOnline ? 'Online' : 'Offline';
+            chatFollowerCount.textContent = user.followers || 0;
+            chatFollowingCount.textContent = user.following || 0;
 
             chatMessages.innerHTML = `<div class="message received"><div class="message-meta">Loading messages...<span class="message-time">Just now</span></div></div>`;
 
@@ -2743,31 +2498,30 @@
             
             _convoUnsub = onSnapshot(messagesQuery, (snapshot) => {
                 renderConversation(snapshot);
-                // Mark messages as read *after* rendering (will be skipped for groups)
+                // Mark messages as read *after* rendering
                 markMessagesAsRead(userId, currentChatId);
             }, err => console.error('Error listening to messages:', err));
 
-            // Pass 1-on-1 receiverId (userId) or null (for groups)
+
             bindSendHandlerForConversation(userId, currentChatId);
             
+            // === NEW: Mark related notifications as read ===
             markNotificationsAsRead('message', userId);
         }
 
-        // === MODIFIED: Render conversation with group support ===
+        // === MODIFIED: Render conversation with media AND date separators ===
         function renderConversation(snapshot) {
             chatMessages.innerHTML = '';
-            let lastMessageDate = null; 
+            let lastMessageDate = null; // --- NEW: Track last date
             
             if (snapshot.empty) {
-                let emptyText = currentChatData?.isGroup 
-                    ? `Group created! Say hi to everyone.`
-                    : `Start a conversation with ${currentChatUser ? escapeHtml(currentChatUser.displayName) : 'this user'}!`;
-                chatMessages.innerHTML = `<div class="message received">${emptyText}<div class="message-meta"><span class="message-time">Just now</span></div></div>`;
+                chatMessages.innerHTML = `<div class="message received">Start a conversation with ${currentChatUser ? escapeHtml(currentChatUser.displayName) : 'this user'}!<div class="message-meta"><span class="message-time">Just now</span></div></div>`;
             } else {
                 snapshot.forEach(doc => {
                     const m = doc.data();
                     const ts = m.timestamp ? m.timestamp.toDate() : new Date();
                     
+                    // --- NEW: Date Separator Logic ---
                     const messageDateStr = ts.toDateString();
                     if (messageDateStr !== lastMessageDate) {
                         const dateDiv = document.createElement('div');
@@ -2776,40 +2530,17 @@
                         chatMessages.appendChild(dateDiv);
                         lastMessageDate = messageDateStr;
                     }
-                    
-                    // === NEW: Handle system messages ===
-                    if (m.type === 'system') {
-                        const systemDiv = document.createElement('div');
-                        systemDiv.className = 'message system';
-                        systemDiv.textContent = escapeHtml(m.text);
-                        chatMessages.appendChild(systemDiv);
-                        return; // Skip normal message rendering
-                    }
+                    // --- END NEW ---
 
                     const div = document.createElement('div');
                     let ticksHtml = '';
-                    
                     if (m.senderId === currentUser.uid) {
-                        if (currentChatData?.isGroup) {
-                            // Groups just get "delivered"
-                            ticksHtml = `<span class="message-ticks delivered"><i class="fas fa-check-double"></i></span>`;
+                        if (m.isRead) {
+                            ticksHtml = `<span class="message-ticks read"><i class="fas fa-check-double"></i></span>`; // 2 Blue
                         } else {
-                            if (m.isRead) {
-                                ticksHtml = `<span class="message-ticks read"><i class="fas fa-check-double"></i></span>`; // 2 Blue
-                            } else {
-                                ticksHtml = `<span class="message-ticks delivered"><i class="fas fa-check-double"></i></span>`; // 2 Grey
-                            }
+                            ticksHtml = `<span class="message-ticks delivered"><i class="fas fa-check-double"></i></span>`; // 2 Grey
                         }
                     }
-                    
-                    // === NEW: Add sender name for groups ===
-                    let senderNameHtml = '';
-                    if (currentChatData?.isGroup && m.senderId !== currentUser.uid) {
-                        const sender = users.find(u => u.id === m.senderId);
-                        const senderName = sender ? sender.displayName : 'User';
-                        senderNameHtml = `<div class="message-sender-name">${escapeHtml(senderName)}</div>`;
-                    }
-
 
                     let messageContent = '';
                     let hasMedia = false;
@@ -2832,7 +2563,6 @@
                     if(hasMedia) div.classList.add('has-media');
 
                     div.innerHTML = `
-                        ${senderNameHtml} <!-- NEW -->
                         ${messageContent}
                         <div class="message-meta">
                             <span class="message-time">${ts.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
@@ -2858,9 +2588,9 @@
             messageInput.addEventListener('keypress', __keyHandler);
         }
 
-        // === MODIFIED: Top-level send handler (for group chat) ===
+        // === NEW: Top-level send handler ===
         async function handleSendMessage(receiverId, chatId) {
-            if (!chatId || !currentUser || !currentChatData) return;
+            if (!chatId || !currentUser) return;
 
             const messageText = (messageInput.value || '').trim();
 
@@ -2869,15 +2599,16 @@
                 const blob = pendingMediaBlob;
                 const type = pendingMediaType;
                 
+                // Clear preview immediately
                 clearMediaPreview();
                 messageInput.value = ''; // Clear caption
                 
-                // Pass receiverId (null for groups)
+                // Start upload
                 uploadFileToStorage(blob, type, receiverId, chatId, messageText);
                 
             // Case 2: Sending text only
             } else if (messageText) {
-                
+                // Optimistic UI for text
                 const optimisticMessage = {
                     text: messageText,
                     timestamp: new Date()
@@ -2901,23 +2632,18 @@
                 // Send text message to Firestore
                 const messageData = {
                     senderId: currentUser.uid,
+                    receiverId: receiverId,
                     timestamp: serverTimestamp(),
+                    isRead: false,
                     type: 'text',
                     text: messageText
                 };
-                
-                // === NEW: Add 1-on-1 specific fields ===
-                if (!currentChatData.isGroup) {
-                    messageData.receiverId = receiverId;
-                    messageData.isRead = false;
-                }
-                
                 await sendFirestoreMessage(chatId, messageData);
             }
         }
 
 
-        // === MODIFIED: Separated Firestore write function (for group chat) ===
+        // === NEW: Separated Firestore write function ===
         async function sendFirestoreMessage(chatId, messageData) {
             try {
                 // Add to messages subcollection
@@ -2942,23 +2668,14 @@
                     }
                 });
                 
-                // === NEW: Add notification for receiver(s) ===
-                if (currentChatData.isGroup) {
-                    // Notify all members except sender
-                    for (const memberId of currentChatData.members) {
-                        if (memberId !== currentUser.uid) {
-                            await addNotification(memberId, 'message', currentUser.uid, chatId);
-                        }
-                    }
-                } else {
-                    // Notify single receiver
-                    await addNotification(
-                        messageData.receiverId, 
-                        'message', 
-                        currentUser.uid,
-                        chatId
-                    );
-                }
+                // === NEW: Add notification for receiver ===
+                // REMOVED the IF condition. Always notify.
+                await addNotification(
+                    messageData.receiverId, 
+                    'message', 
+                    currentUser.uid,
+                    chatId
+                );
                 
             } catch (error) {
                 console.error('Error sending message to Firestore:', error);
@@ -2966,10 +2683,9 @@
         }
 
         
-        // === MODIFIED: Mark messages as read (skip groups) ===
+        // Mark messages as read
         async function markMessagesAsRead(senderId, chatId) {
-            // === NEW: Skip for group chats ===
-            if (!currentUser || !chatId || currentChatData?.isGroup) return;
+            if (!currentUser || !chatId) return;
 
             const unreadQuery = query(
                 collection(db, 'chats', chatId, 'messages'),
@@ -3148,50 +2864,33 @@
                 const notif = doc.data();
                 const sender = users.find(u => u.id === notif.senderId);
                 
-                // Find chat data (for group names)
-                const chatQuery = query(collection(db, 'chats'), where('__name__', '==', notif.chatId));
-                
-                
-                let text = '';
-                
-                if (notif.type === 'message') {
-                    if (!sender) return; // Skip if sender data isn't loaded
-                    text = `<strong>${escapeHtml(sender.displayName)}</strong> sent you a message.`;
-                    item.addEventListener('click', async () => {
-                        // === NEW: Fetch chat doc to open correctly ===
-                        if (notif.chatId) {
-                            const chatDoc = await getDoc(doc(db, 'chats', notif.chatId));
-                            if (chatDoc.exists()) {
-                                const chatData = chatDoc.data();
-                                if (chatData.isGroup) {
-                                    openChat(null, null, chatDoc.id, chatData);
-                                } else {
-                                    openChat(sender.id, sender, chatDoc.id, chatData);
-                                }
-                                document.querySelector('[data-tab="chats"]').click();
-                                notificationBell.classList.remove('expanded');
-                            }
-                        }
-                    });
-                } else if (notif.type === 'follow') {
-                    if (!sender) return; // Skip if sender data isn't loaded
-                    text = `<strong>${escapeHtml(sender.displayName)}</strong> started following you.`;
-                    item.addEventListener('click', () => {
-                        document.querySelector('[data-tab="followers"]').click();
-                        notificationBell.classList.remove('expanded');
-                    });
-                }
-                
+                if (!sender) return; // Skip if sender data isn't loaded yet
+
                 const item = document.createElement('div');
                 item.className = 'notification-item';
                 if (!notif.read) {
                     item.classList.add('unread');
                 }
 
-                const avatar = sender ? (sender.photoURL 
+                const avatar = sender.photoURL 
                     ? `<img src="${sender.photoURL}" alt="${sender.displayName}">` 
-                    : '<i class="fas fa-user"></i>') : '<i class="fas fa-user"></i>';
+                    : '<i class="fas fa-user"></i>';
                 
+                let text = '';
+                if (notif.type === 'message') {
+                    text = `<strong>${escapeHtml(sender.displayName)}</strong> sent you a message.`;
+                    item.addEventListener('click', () => {
+                        openChat(sender.id, sender);
+                        document.querySelector('[data-tab="chats"]').click();
+                        notificationBell.classList.remove('expanded');
+                    });
+                } else if (notif.type === 'follow') {
+                    text = `<strong>${escapeHtml(sender.displayName)}</strong> started following you.`;
+                    item.addEventListener('click', () => {
+                        document.querySelector('[data-tab="followers"]').click();
+                        notificationBell.classList.remove('expanded');
+                    });
+                }
                 
                 const timestamp = notif.timestamp ? timeAgo(notif.timestamp.toDate()) : '';
 
@@ -3278,83 +2977,20 @@
 
         // Bell click handler
         notificationBell.addEventListener('click', () => {
-            // Logic is now at the top to toggle the dropdown
-        });
-        
-        // === NEW: Group Chat Functions ===
-        
-        function openCreateGroupModal() {
-            groupNameInput.value = '';
-            groupMembersList.innerHTML = ''; // Clear previous list
+            // For now, just mark all notifications as read when clicked.
+            // A dropdown menu would be a future enhancement.
+            // markNotificationsAsRead(); // MOVED this to when dropdown opens
             
-            const usersToDisplay = users.filter(user => user.id !== currentUser.uid);
-            
-            if (usersToDisplay.length === 0) {
-                groupMembersList.innerHTML = '<div class="member-item">No other users found.</div>';
-            } else {
-                usersToDisplay.forEach(user => {
-                    const memberElement = document.createElement('label');
-                    memberElement.className = 'member-item';
-                    memberElement.innerHTML = `
-                        <input type="checkbox" data-userid="${user.id}">
-                        <div class="user-avatar">
-                            ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
-                        </div>
-                        <div class="user-info">
-                            <h4>${escapeHtml(user.displayName)}</h4>
-                            <p>${escapeHtml(user.bio) || 'No bio'}</p>
-                        </div>
-                    `;
-                    groupMembersList.appendChild(memberElement);
-                });
-            }
-            
-            createGroupChatModal.style.display = 'flex';
-        }
-        
-        async function handleCreateGroup() {
-            const groupName = groupNameInput.value.trim();
-            if (!groupName) {
-                console.warn("Please enter a group name."); // Use a non-blocking warning
-                return;
-            }
-            
-            const selectedMembers = Array.from(groupMembersList.querySelectorAll('input[type="checkbox"]:checked'))
-                                         .map(input => input.dataset.userid);
-                                         
-            if (selectedMembers.length === 0) {
-                console.warn("Please select at least one member.");
-                return;
-            }
-            
-            // Add the current user
-            const allMemberIds = [currentUser.uid, ...selectedMembers];
-            
-            try {
-                const newChatDoc = await addDoc(collection(db, 'chats'), {
-                    groupName: groupName,
-                    members: allMemberIds,
-                    isGroup: true,
-                    createdBy: currentUser.uid,
-                    createdAt: serverTimestamp(),
-                    lastMessage: {
-                        text: 'Group created',
-                        timestamp: serverTimestamp(),
-                        type: 'system'
-                    }
-                });
-                
-                createGroupChatModal.style.display = 'none';
-                
-                // Open the newly created group chat
-                const chatData = (await getDoc(newChatDoc)).data();
-                openChat(null, null, newChatDoc.id, chatData);
-                
-            } catch (error) {
-                console.error("Error creating group chat:", error);
-            }
-        }
+            // Also, trigger the 'Followers' tab if there were follow notifications,
+            // or 'Chats' tab if there were message notifications.
+            // This is a simple implementation.
+            // if(notificationCount > 0) {
+            //     // This is a bit naive, but good for now
+            //     document.querySelector('[data-tab="chats"]').click();
+            // }
 
+            // NEW: Click toggles dropdown (logic moved to top)
+        });
 
         // === NEW: Media Upload Functions ===
 
@@ -3543,16 +3179,20 @@
             }
         }
 
-        // === MODIFIED: Upload File to Storage (with group support) ===
+        // === MODIFIED: Upload File to Storage (now accepts caption) ===
         async function uploadFileToStorage(file, mimeType, receiverId, chatId, caption = '') {
-            if (!currentUser || !currentChatData) return;
+            if (!currentUser) return;
 
             try {
                 const fileType = mimeType.startsWith('image/') ? 'image' : 'audio';
                 const fileExtension = mimeType.split('/')[1].split(';')[0]; 
                 const fileName = `${currentUser.uid}-${Date.now()}.${fileExtension}`;
                 
+                // === REDESIGNED PATH ===
                 const sRef = storageRef(storage, `user_media/${currentUser.uid}/${chatId}/${fileName}`);
+
+                // Show uploading indicator (e.g., in a temp message)
+                // For now, just upload
                 
                 const uploadTask = await uploadBytes(sRef, file);
                 const downloadURL = await getDownloadURL(uploadTask.ref);
@@ -3560,15 +3200,11 @@
                 // Now, send the message with this URL
                 const messageData = {
                     senderId: currentUser.uid,
+                    receiverId: receiverId,
                     timestamp: serverTimestamp(),
+                    isRead: false,
                     type: fileType,
                 };
-                
-                // === NEW: Add 1-on-1 specific fields ===
-                if (!currentChatData.isGroup) {
-                    messageData.receiverId = receiverId;
-                    messageData.isRead = false;
-                }
                 
                 if (fileType === 'image') messageData.imageUrl = downloadURL;
                 if (fileType === 'audio') messageData.audioUrl = downloadURL;
@@ -3578,6 +3214,7 @@
 
             } catch (error) {
                 console.error("Error uploading file:", error);
+                // Replaced alert with console error
                 console.error(`Error uploading ${mimeType.startsWith('image/') ? 'image' : 'audio'}. Please try again.`);
             }
         }
