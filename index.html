@@ -671,6 +671,30 @@
             transform: scale(1.05);
         }
 
+        /* NEW: Create Group Button */
+        .create-group-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px;
+            border-radius: 15px;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 15px;
+        }
+
+        .create-group-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
+        }
+
         .search-box {
             padding: 12px;
             border-radius: 15px;
@@ -1321,6 +1345,74 @@
             box-shadow: 0 0 0 2px var(--primary-color);
         }
 
+        /* NEW: Group Chat Modal Styles */
+        .member-selection {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .member-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .member-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .member-item.selected {
+            background: rgba(0, 122, 255, 0.2);
+        }
+
+        .member-item .user-avatar {
+            width: 30px;
+            height: 30px;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        .member-item h4 {
+            font-size: 14px;
+            margin: 0;
+        }
+
+        /* NEW: Group Chat Header Styles */
+        .group-members {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .group-member-tag {
+            background: rgba(0, 122, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        /* NEW: Vibration Animation */
+        @keyframes vibrate {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            50% { transform: translateX(2px); }
+            75% { transform: translateX(-2px); }
+            100% { transform: translateX(0); }
+        }
+
+        .notification-bell.vibrate {
+            animation: vibrate 0.5s ease-in-out;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .app-container {
@@ -1503,6 +1595,11 @@
                 <div class="tab" data-tab="followers">Followers</div>
             </div>
             
+            <!-- NEW: Create Group Button -->
+            <button class="create-group-btn" id="createGroupBtn">
+                <i class="fas fa-plus"></i> Create Group Chat
+            </button>
+            
             <!-- MODIFIED: Added id to search-box -->
             <input type="text" class="search-box" id="searchBox" placeholder="Search...">
             
@@ -1535,6 +1632,8 @@
                     <div class="profile-info">
                         <h3 id="chatHeaderTitle">Select a conversation</h3>
                         <p id="chatHeaderSubtitle">Start chatting with friends</p>
+                        <!-- NEW: Group Members Display -->
+                        <div class="group-members" id="groupMembers" style="display: none;"></div>
                     </div>
                 </div>
                 <div class="profile-stats">
@@ -1617,6 +1716,27 @@
         </div>
     </div>
 
+    <!-- NEW: Create Group Chat Modal -->
+    <div class="modal" id="createGroupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Create Group Chat</h3>
+                <button class="close-btn" id="closeGroupModal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="groupName">Group Name</label>
+                <input type="text" id="groupName" class="form-control" placeholder="Enter group name" maxlength="30">
+            </div>
+            <div class="form-group">
+                <label>Select Members</label>
+                <div class="member-selection" id="memberSelection">
+                    <!-- Member items will be populated here -->
+                </div>
+            </div>
+            <button class="btn" id="createGroupConfirmBtn">Create Group</button>
+        </div>
+    </div>
+
     <script type="module">
         // Import Firebase modules (using user's specified version)
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
@@ -1643,7 +1763,9 @@
             getDocs,
             deleteDoc,
             limit,
-            writeBatch
+            writeBatch,
+            arrayUnion,
+            arrayRemove
         } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
         
         import { 
@@ -1744,6 +1866,15 @@
         let sendBtn = document.getElementById('sendBtn'); 
         const themeOptions = document.querySelectorAll('.theme-option');
 
+        // === NEW: Group Chat DOM Elements ===
+        const createGroupBtn = document.getElementById('createGroupBtn');
+        const createGroupModal = document.getElementById('createGroupModal');
+        const closeGroupModal = document.getElementById('closeGroupModal');
+        const groupName = document.getElementById('groupName');
+        const memberSelection = document.getElementById('memberSelection');
+        const createGroupConfirmBtn = document.getElementById('createGroupConfirmBtn');
+        const groupMembers = document.getElementById('groupMembers');
+
         // Current user data
         let currentUser = null;
         let currentTheme = 'light';
@@ -1777,6 +1908,9 @@
         let canvasContext;
         let animationFrameId;
         let dataArray;
+
+        // === NEW: Group Chat State ===
+        let selectedMembers = [];
 
         let _convoUnsub = null;
         let _chatListUnsub = null;
@@ -1869,7 +2003,6 @@
             }
         });
 
-
         // Theme selection
         themeOptions.forEach(option => {
             option.addEventListener('click', () => {
@@ -1938,6 +2071,313 @@
             });
         });
         
+        // === NEW: Create Group Button ===
+        createGroupBtn.addEventListener('click', () => {
+            openCreateGroupModal();
+        });
+        
+        closeGroupModal.addEventListener('click', () => {
+            createGroupModal.style.display = 'none';
+        });
+        
+        createGroupConfirmBtn.addEventListener('click', () => {
+            createGroupChat();
+        });
+
+        // === NEW: Open Create Group Modal ===
+        function openCreateGroupModal() {
+            memberSelection.innerHTML = '';
+            selectedMembers = [];
+            groupName.value = '';
+            
+            // Add followed users to member selection
+            follows.forEach(follow => {
+                const user = users.find(u => u.id === follow.followingId);
+                if (user) {
+                    const memberItem = document.createElement('div');
+                    memberItem.className = 'member-item';
+                    memberItem.innerHTML = `
+                        <div class="user-avatar">
+                            ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
+                        </div>
+                        <h4>${escapeHtml(user.displayName)}</h4>
+                    `;
+                    memberItem.addEventListener('click', () => {
+                        memberItem.classList.toggle('selected');
+                        if (memberItem.classList.contains('selected')) {
+                            selectedMembers.push(user.id);
+                        } else {
+                            selectedMembers = selectedMembers.filter(id => id !== user.id);
+                        }
+                    });
+                    memberSelection.appendChild(memberItem);
+                }
+            });
+            
+            createGroupModal.style.display = 'flex';
+        }
+
+        // === NEW: Create Group Chat ===
+        async function createGroupChat() {
+            if (!currentUser) return;
+            
+            const name = groupName.value.trim();
+            if (!name) {
+                alert('Please enter a group name');
+                return;
+            }
+            
+            if (selectedMembers.length === 0) {
+                alert('Please select at least one member');
+                return;
+            }
+            
+            // Include current user in members
+            const allMembers = [currentUser.uid, ...selectedMembers];
+            
+            try {
+                const groupChatDoc = await addDoc(collection(db, 'chats'), {
+                    isGroup: true,
+                    groupName: name,
+                    members: allMembers,
+                    createdBy: currentUser.uid,
+                    lastMessage: {
+                        text: 'Group created',
+                        timestamp: serverTimestamp(),
+                        type: 'system'
+                    },
+                    createdAt: serverTimestamp()
+                });
+                
+                // Add system message
+                await addDoc(collection(db, 'chats', groupChatDoc.id, 'messages'), {
+                    senderId: 'system',
+                    text: `${currentUser.displayName} created the group "${name}"`,
+                    timestamp: serverTimestamp(),
+                    type: 'system'
+                });
+                
+                createGroupModal.style.display = 'none';
+                
+                // Open the new group chat
+                const groupData = {
+                    id: groupChatDoc.id,
+                    isGroup: true,
+                    groupName: name,
+                    members: allMembers
+                };
+                openGroupChat(groupData);
+                
+            } catch (error) {
+                console.error('Error creating group chat:', error);
+                alert('Error creating group chat. Please try again.');
+            }
+        }
+
+        // === NEW: Open Group Chat ===
+        function openGroupChat(groupData) {
+            if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
+
+            currentChatUser = groupData;
+            currentChatId = groupData.id;
+            
+            // === NEW: Highlight active chat in list ===
+            document.querySelectorAll('.chat-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.chatId === currentChatId);
+            });
+            
+            // Clear any pending media from other chats
+            clearMediaPreview();
+
+            const headerAvatarDiv = chatHeader.querySelector('.chat-header-avatar');
+            const headerImg = headerAvatarDiv.querySelector('img');
+            const headerIcon = headerAvatarDiv.querySelector('i');
+            
+            headerImg.style.display = 'none';
+            headerIcon.style.display = 'block';
+            headerIcon.className = 'fas fa-users';
+            
+            chatHeader.querySelector('.status-indicator').classList.add('offline');
+            chatHeaderTitle.textContent = groupData.groupName;
+            chatHeaderSubtitle.textContent = 'Group Chat';
+            
+            // Show group members
+            groupMembers.style.display = 'flex';
+            groupMembers.innerHTML = '';
+            
+            groupData.members.forEach(memberId => {
+                const member = users.find(u => u.id === memberId);
+                if (member) {
+                    const memberTag = document.createElement('div');
+                    memberTag.className = 'group-member-tag';
+                    memberTag.textContent = member.displayName;
+                    groupMembers.appendChild(memberTag);
+                }
+            });
+            
+            chatFollowerCount.textContent = '0';
+            chatFollowingCount.textContent = '0';
+
+            chatMessages.innerHTML = `<div class="message received"><div class="message-meta">Loading messages...<span class="message-time">Just now</span></div></div>`;
+
+            const messagesQuery = query(
+                collection(db, 'chats', currentChatId, 'messages'),
+                orderBy('timestamp', 'asc')
+            );
+            
+            _convoUnsub = onSnapshot(messagesQuery, (snapshot) => {
+                renderConversation(snapshot);
+            }, err => console.error('Error listening to messages:', err));
+
+            bindSendHandlerForGroupConversation(groupData.id, groupData.members);
+            
+            // === NEW: Mark related notifications as read ===
+            markNotificationsAsRead('message', groupData.id);
+        }
+
+        // === NEW: Bind Send Handler for Group ===
+        function bindSendHandlerForGroupConversation(chatId, members) {
+            if (__sendHandler) sendBtn.removeEventListener('click', __sendHandler);
+            if (__keyHandler) messageInput.removeEventListener('keypress', __keyHandler);
+
+            __sendHandler = () => handleSendGroupMessage(chatId, members);
+            __keyHandler = (e) => { if (e.key === 'Enter') { e.preventDefault(); handleSendGroupMessage(chatId, members); } };
+
+            sendBtn.addEventListener('click', __sendHandler);
+            messageInput.addEventListener('keypress', __keyHandler);
+        }
+
+        // === NEW: Handle Send Group Message ===
+        async function handleSendGroupMessage(chatId, members) {
+            if (!chatId || !currentUser) return;
+
+            const messageText = (messageInput.value || '').trim();
+
+            // Case 1: Sending media (image or audio)
+            if (pendingMediaBlob && pendingMediaType) {
+                const blob = pendingMediaBlob;
+                const type = pendingMediaType;
+                
+                // Clear preview immediately
+                clearMediaPreview();
+                messageInput.value = ''; // Clear caption
+                
+                // Start upload
+                uploadFileToGroupStorage(blob, type, chatId, members, messageText);
+                
+            // Case 2: Sending text only
+            } else if (messageText) {
+                // Optimistic UI for text
+                const optimisticMessage = {
+                    text: messageText,
+                    timestamp: new Date()
+                };
+                const tempDiv = document.createElement('div');
+                tempDiv.className = 'message sent';
+                tempDiv.innerHTML = `
+                    ${escapeHtml(optimisticMessage.text)}
+                    <div class="message-meta">
+                        <span class="message-time">${optimisticMessage.timestamp.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                        <span class="message-ticks pending">
+                            <i class="fas fa-check"></i>
+                        </span>
+                    </div>
+                `;
+                chatMessages.appendChild(tempDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                messageInput.value = '';
+                
+                // Send text message to Firestore
+                const messageData = {
+                    senderId: currentUser.uid,
+                    senderName: currentUser.displayName,
+                    timestamp: serverTimestamp(),
+                    isRead: false,
+                    type: 'text',
+                    text: messageText
+                };
+                await sendFirestoreGroupMessage(chatId, messageData, members);
+            }
+        }
+
+        // === NEW: Send Firestore Group Message ===
+        async function sendFirestoreGroupMessage(chatId, messageData, members) {
+            try {
+                // Add to messages subcollection
+                await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
+
+                // Determine lastMessage text
+                let lastMessageText = '...';
+                if (messageData.type === 'text') {
+                    lastMessageText = messageData.text;
+                } else if (messageData.type === 'image') {
+                    lastMessageText = messageData.text ? `[Image] ${messageData.text}` : '[Image]';
+                } else if (messageData.type === 'audio') {
+                    lastMessageText = messageData.text ? `[Voice] ${messageData.text}` : '[Voice Note]';
+                }
+
+                // Update parent chat doc
+                await updateDoc(doc(db, 'chats', chatId), {
+                    lastMessage: {
+                        text: lastMessageText,
+                        timestamp: messageData.timestamp,
+                        type: messageData.type // Store type for chat list
+                    }
+                });
+                
+                // === NEW: Add notification for all group members except sender ===
+                members.forEach(memberId => {
+                    if (memberId !== currentUser.uid) {
+                        addNotification(
+                            memberId, 
+                            'message', 
+                            currentUser.uid,
+                            chatId
+                        );
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error sending group message to Firestore:', error);
+            }
+        }
+
+        // === NEW: Upload File to Group Storage ===
+        async function uploadFileToGroupStorage(file, mimeType, chatId, members, caption = '') {
+            if (!currentUser) return;
+
+            try {
+                const fileType = mimeType.startsWith('image/') ? 'image' : 'audio';
+                const fileExtension = mimeType.split('/')[1].split(';')[0]; 
+                const fileName = `${currentUser.uid}-${Date.now()}.${fileExtension}`;
+                
+                const sRef = storageRef(storage, `group_media/${chatId}/${fileName}`);
+
+                const uploadTask = await uploadBytes(sRef, file);
+                const downloadURL = await getDownloadURL(uploadTask.ref);
+
+                // Now, send the message with this URL
+                const messageData = {
+                    senderId: currentUser.uid,
+                    senderName: currentUser.displayName,
+                    timestamp: serverTimestamp(),
+                    isRead: false,
+                    type: fileType,
+                };
+                
+                if (fileType === 'image') messageData.imageUrl = downloadURL;
+                if (fileType === 'audio') messageData.audioUrl = downloadURL;
+                if (caption) messageData.text = caption; // Add caption
+
+                await sendFirestoreGroupMessage(chatId, messageData, members);
+
+            } catch (error) {
+                console.error("Error uploading file to group:", error);
+                console.error(`Error uploading ${mimeType.startsWith('image/') ? 'image' : 'audio'}. Please try again.`);
+            }
+        }
+
         // === NEW: Search Box Filter ===
         searchBox.addEventListener('input', filterLists);
 
@@ -2354,6 +2794,7 @@
             });
         }
 
+        // === MODIFIED: Render Chat List with Groups ===
         function renderChatList(snapshot) {
             chatList.innerHTML = '';
             
@@ -2364,12 +2805,23 @@
 
             snapshot.forEach(doc => {
                 const chatData = doc.data();
-                const otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
-                const user = users.find(u => u.id === otherUserId);
+                let displayName, photoURL, isOnline, isGroup = false;
                 
-                const displayName = user ? user.displayName : 'Unknown User';
-                const photoURL = user ? user.photoURL : null;
-                const isOnline = user ? user.isOnline : false;
+                if (chatData.isGroup) {
+                    // Group chat
+                    displayName = chatData.groupName;
+                    photoURL = null;
+                    isOnline = false; // Groups don't have online status
+                    isGroup = true;
+                } else {
+                    // One-on-one chat
+                    const otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
+                    const user = users.find(u => u.id === otherUserId);
+                    
+                    displayName = user ? user.displayName : 'Unknown User';
+                    photoURL = user ? user.photoURL : null;
+                    isOnline = user ? user.isOnline : false;
+                }
                 
                 let lastMessageText = 'Say hi!';
                 if (chatData.lastMessage && chatData.lastMessage.text) {
@@ -2377,6 +2829,8 @@
                         lastMessageText = '<i class="fas fa-image"></i> Image';
                     } else if (chatData.lastMessage.type === 'audio') {
                         lastMessageText = '<i class="fas fa-microphone"></i> Voice Note';
+                    } else if (chatData.lastMessage.type === 'system') {
+                        lastMessageText = '<i class="fas fa-info-circle"></i> ' + chatData.lastMessage.text;
                     } else {
                         lastMessageText = chatData.lastMessage.text;
                     }
@@ -2389,7 +2843,7 @@
                 chatElement.innerHTML = `
                     <div class="avatar-wrapper">
                         <div class="chat-avatar">
-                            ${photoURL ? `<img src="${photoURL}">` : '<i class="fas fa-user"></i>'}
+                            ${isGroup ? '<i class="fas fa-users"></i>' : (photoURL ? `<img src="${photoURL}">` : '<i class="fas fa-user"></i>')}
                         </div>
                         <div class="status-indicator ${isOnline ? '' : 'offline'}"></div>
                     </div>
@@ -2407,8 +2861,14 @@
                 }
                 
                 chatElement.addEventListener('click', () => {
-                    if (user) {
-                        openChat(user.id, user);
+                    if (isGroup) {
+                        openGroupChat({ id: doc.id, ...chatData });
+                    } else {
+                        const otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
+                        const user = users.find(u => u.id === otherUserId);
+                        if (user) {
+                            openChat(user.id, user);
+                        }
                     }
                 });
                 
@@ -2429,7 +2889,7 @@
             
             querySnapshot.forEach(doc => {
                 const data = doc.data();
-                if (data.members && data.members.includes(otherUserId)) {
+                if (!data.isGroup && data.members && data.members.includes(otherUserId)) {
                     existingChat = { id: doc.id, ...data };
                 }
             });
@@ -2489,6 +2949,9 @@
             chatFollowerCount.textContent = user.followers || 0;
             chatFollowingCount.textContent = user.following || 0;
 
+            // Hide group members display for one-on-one chat
+            groupMembers.style.display = 'none';
+
             chatMessages.innerHTML = `<div class="message received"><div class="message-meta">Loading messages...<span class="message-time">Just now</span></div></div>`;
 
             const messagesQuery = query(
@@ -2515,7 +2978,8 @@
             let lastMessageDate = null; // --- NEW: Track last date
             
             if (snapshot.empty) {
-                chatMessages.innerHTML = `<div class="message received">Start a conversation with ${currentChatUser ? escapeHtml(currentChatUser.displayName) : 'this user'}!<div class="message-meta"><span class="message-time">Just now</span></div></div>`;
+                const name = currentChatUser && currentChatUser.displayName ? escapeHtml(currentChatUser.displayName) : 'this user';
+                chatMessages.innerHTML = `<div class="message received">Start a conversation with ${name}!<div class="message-meta"><span class="message-time">Just now</span></div></div>`;
             } else {
                 snapshot.forEach(doc => {
                     const m = doc.data();
@@ -2534,7 +2998,9 @@
 
                     const div = document.createElement('div');
                     let ticksHtml = '';
-                    if (m.senderId === currentUser.uid) {
+                    
+                    // Only show ticks for sent messages (not system messages)
+                    if (m.senderId === currentUser.uid && m.type !== 'system') {
                         if (m.isRead) {
                             ticksHtml = `<span class="message-ticks read"><i class="fas fa-check-double"></i></span>`; // 2 Blue
                         } else {
@@ -2559,7 +3025,17 @@
                         messageContent = escapeHtml(m.text || '');
                     }
                     
-                    div.className = 'message ' + (m.senderId === currentUser.uid ? 'sent' : 'received');
+                    // Determine message class
+                    let messageClass = 'message ';
+                    if (m.type === 'system') {
+                        messageClass += 'received'; // System messages appear as received
+                    } else if (m.senderId === currentUser.uid) {
+                        messageClass += 'sent';
+                    } else {
+                        messageClass += 'received';
+                    }
+                    
+                    div.className = messageClass;
                     if(hasMedia) div.classList.add('has-media');
 
                     div.innerHTML = `
@@ -2604,7 +3080,7 @@
                 messageInput.value = ''; // Clear caption
                 
                 // Start upload
-                uploadFileToStorage(blob, type, receiverId, chatId, messageText);
+                await uploadFileToStorage(blob, type, receiverId, chatId, messageText);
                 
             // Case 2: Sending text only
             } else if (messageText) {
@@ -2669,7 +3145,6 @@
                 });
                 
                 // === NEW: Add notification for receiver ===
-                // REMOVED the IF condition. Always notify.
                 await addNotification(
                     messageData.receiverId, 
                     'message', 
@@ -2824,6 +3299,11 @@
                     
                     // Check if this is a new notification to trigger animation
                     if (animateBell) {
+                        // Add vibration animation
+                        notificationBell.classList.add('vibrate');
+                        setTimeout(() => notificationBell.classList.remove('vibrate'), 500);
+                        
+                        // Also trigger the bell ring animation
                         notificationBell.classList.add('animate');
                         setTimeout(() => notificationBell.classList.remove('animate'), 1000);
                     }
@@ -2880,9 +3360,28 @@
                 if (notif.type === 'message') {
                     text = `<strong>${escapeHtml(sender.displayName)}</strong> sent you a message.`;
                     item.addEventListener('click', () => {
-                        openChat(sender.id, sender);
-                        document.querySelector('[data-tab="chats"]').click();
-                        notificationBell.classList.remove('expanded');
+                        // Find the chat with this sender
+                        const chatQuery = query(
+                            collection(db, 'chats'),
+                            where('members', 'array-contains', currentUser.uid)
+                        );
+                        
+                        getDocs(chatQuery).then(snapshot => {
+                            snapshot.forEach(chatDoc => {
+                                const chatData = chatDoc.data();
+                                if (!chatData.isGroup && chatData.members.includes(sender.id)) {
+                                    openChat(sender.id, sender);
+                                    document.querySelector('[data-tab="chats"]').click();
+                                    notificationBell.classList.remove('expanded');
+                                    return;
+                                } else if (chatData.isGroup && chatDoc.id === notif.chatId) {
+                                    openGroupChat({ id: chatDoc.id, ...chatData });
+                                    document.querySelector('[data-tab="chats"]').click();
+                                    notificationBell.classList.remove('expanded');
+                                    return;
+                                }
+                            });
+                        });
                     });
                 } else if (notif.type === 'follow') {
                     text = `<strong>${escapeHtml(sender.displayName)}</strong> started following you.`;
@@ -2975,23 +3474,6 @@
             }
         }
 
-        // Bell click handler
-        notificationBell.addEventListener('click', () => {
-            // For now, just mark all notifications as read when clicked.
-            // A dropdown menu would be a future enhancement.
-            // markNotificationsAsRead(); // MOVED this to when dropdown opens
-            
-            // Also, trigger the 'Followers' tab if there were follow notifications,
-            // or 'Chats' tab if there were message notifications.
-            // This is a simple implementation.
-            // if(notificationCount > 0) {
-            //     // This is a bit naive, but good for now
-            //     document.querySelector('[data-tab="chats"]').click();
-            // }
-
-            // NEW: Click toggles dropdown (logic moved to top)
-        });
-
         // === NEW: Media Upload Functions ===
 
         // Handle Image Selection
@@ -2999,8 +3481,7 @@
             const file = e.target.files[0];
             if (!file || !file.type.startsWith('image/')) return;
             
-            if (!currentChatId || !currentChatUser) {
-                // Use a less intrusive error
+            if (!currentChatId) {
                 console.warn("Please select a chat before sending an image.");
                 return;
             }
@@ -3046,7 +3527,7 @@
 
         // === MODIFIED: Start Recording ===
         async function startRecording() {
-            if (!currentChatId || !currentChatUser) {
+            if (!currentChatId) {
                 console.warn("Please select a chat before recording.");
                 return;
             }
@@ -3188,7 +3669,6 @@
                 const fileExtension = mimeType.split('/')[1].split(';')[0]; 
                 const fileName = `${currentUser.uid}-${Date.now()}.${fileExtension}`;
                 
-                // === REDESIGNED PATH ===
                 const sRef = storageRef(storage, `user_media/${currentUser.uid}/${chatId}/${fileName}`);
 
                 // Show uploading indicator (e.g., in a temp message)
