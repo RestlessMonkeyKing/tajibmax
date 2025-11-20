@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>iMessage Social</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Use a more recent version of Font Awesome for better icon support -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
             --primary-color: #007AFF;
@@ -484,6 +485,64 @@
             opacity: 0;
             width: 0;
         }
+        
+        /* === NEW: Notification Bell === */
+        .notification-bell {
+            position: relative; 
+            width: 60px; 
+            height: 60px; 
+            border-radius: 50%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            font-size: 20px;
+        }
+        
+        .notification-bell:hover {
+            transform: scale(1.05);
+        }
+
+        .notification-dot {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #FF3B30;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--card-bg);
+        }
+        
+        .notification-dot.visible {
+            display: flex;
+        }
+        
+        @keyframes ring {
+            0% { transform: rotate(0); }
+            10% { transform: rotate(25deg); }
+            20% { transform: rotate(-25deg); }
+            30% { transform: rotate(25deg); }
+            40% { transform: rotate(-25deg); }
+            50% { transform: rotate(0); }
+            100% { transform: rotate(0); }
+        }
+        
+        .notification-bell.animate .fa-bell {
+            animation: ring 1s ease-out;
+        }
+        /* === END NEW === */
 
         /* Sidebar */
         .sidebar {
@@ -569,6 +628,7 @@
             transition: var(--transition);
             animation: slideIn 0.3s ease-out;
             position: relative;
+            flex-wrap: wrap; /* === MODIFIED: Allow wrapping */
         }
 
         @keyframes slideIn {
@@ -623,6 +683,12 @@
             flex: 1;
             min-width: 0;
         }
+        
+        /* === MODIFIED: User Info (for clutter) === */
+        .user-info {
+            flex-basis: calc(100% - 65px); /* Full width minus avatar and gap */
+            min-width: 150px; /* Ensure it doesn't get too squished */
+        }
 
         .chat-info h4, .user-info h4 {
             font-size: 16px;
@@ -639,23 +705,54 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
+        
+        /* === MODIFIED: Bio clamping === */
+        .user-info p {
+            font-size: 14px;
+            color: #8E8E93;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-height: 2.8em; /* 1.4em line-height * 2 */
+            line-height: 1.4em;
+            white-space: normal; /* Allow wrapping */
+            word-break: break-word; /* Break long words if needed */
+        }
+        
+        /* === MODIFIED: User Actions (for clutter) === */
         .user-actions {
-            display: flex;
+            display: none; /* Hide by default */
+            flex-direction: row; /* Side-by-side buttons */
             gap: 8px;
+            margin-top: 10px;
+            width: 100%; /* Take full width when visible */
+        }
+        
+        .user-item.expanded .user-actions {
+            display: flex; /* Show on expanded item */
+        }
+        
+        .user-item.expanded .user-info p {
+             -webkit-line-clamp: unset; /* Show full bio when expanded */
+             max-height: none;
         }
 
+
         .follow-btn, .message-btn {
-            padding: 6px 12px;
+            padding: 8px 12px; /* Slightly larger for touch */
             border-radius: 10px;
             border: none;
             background: var(--primary-color);
             color: white;
             font-size: 12px;
+            font-weight: 500;
             cursor: pointer;
             transition: var(--transition);
             position: relative;
             overflow: hidden;
+            flex: 1; /* Make buttons share space */
         }
 
         .follow-btn::after, .message-btn::after {
@@ -690,6 +787,8 @@
         .message-btn {
             background: #34C759;
         }
+        /* === END MODIFIED === */
+
 
         /* Chat Area */
         .chat-area {
@@ -1134,15 +1233,22 @@
             .app-container {
                 flex-direction: column;
                 padding: 10px;
+                gap: 10px; /* Reduced gap */
+                height: auto; /* Allow scrolling on small screens */
+                min-height: 100vh;
             }
             
             .sidebar {
                 width: 100%;
-                height: 40%;
+                height: auto; /* Fit content */
+                max-height: 45vh; /* Limit height */
+                order: 2; /* Place sidebar after controls */
             }
             
             .chat-area {
-                height: 60%;
+                height: 50vh; /* Take up remaining space */
+                min-height: 300px;
+                order: 3; /* Place chat area last */
             }
             
             .top-right-controls {
@@ -1150,27 +1256,63 @@
                 top: 0;
                 right: 0;
                 width: 100%;
-                margin-bottom: 20px;
+                margin-bottom: 10px; /* Reduced margin */
                 justify-content: space-between;
+                gap: 10px; /* Reduced gap */
+                order: 1; /* Place controls first */
             }
             
             .profile-card {
                 width: 100%;
-                max-width: calc(100% - 80px); /* Full width minus theme selector */
-                height: auto;
-                border-radius: var(--border-radius);
+                /* Adjust max-width to account for bell and theme icons + gaps */
+                max-width: calc(100% - 140px); /* 60 + 60 + 20 */
+                height: 60px; /* Force small height */
+                border-radius: 50px;
+                padding: 0; /* Override padding */
             }
             
             .profile-card.expanded {
                 width: 100%;
+                max-width: 100%;
+                height: auto;
+                border-radius: var(--border-radius);
+                padding: 20px;
+                position: absolute;
+                top: 0;
+                left: 0;
+                background: var(--card-bg); /* Ensure it's opaque */
             }
             
+            .profile-card:not(.expanded) .profile-header {
+                opacity: 1;
+                margin-bottom: 0;
+            }
+            
+            /* Hide all details when not expanded on mobile */
+            .profile-card:not(.expanded) .profile-info,
+            .profile-card:not(.expanded) .profile-stats,
+            .profile-card:not(.expanded) .profile-actions {
+                display: none;
+            }
+            
+            .profile-card:not(.expanded) .profile-pic {
+                margin-right: 0;
+                width: 60px;
+                height: 60px;
+            }
+
             .theme-selector {
                 width: 60px;
+                flex-shrink: 0;
             }
 
             .theme-selector.expanded {
                 width: 180px;
+            }
+            
+            .notification-bell {
+                width: 60px;
+                flex-shrink: 0;
             }
         }
     </style>
@@ -1194,6 +1336,12 @@
     <div class="app-container" id="appContainer">
     
         <div class="top-right-controls">
+            <!-- NEW: Notification Bell -->
+            <div class="notification-bell" id="notificationBell" title="Notifications">
+                <i class="fas fa-bell"></i>
+                <div class="notification-dot" id="notificationDot">0</div>
+            </div>
+
             <div class="theme-selector" id="themeSelector">
                 <div class="theme-icon">
                     <i class="fas fa-palette"></i>
@@ -1250,25 +1398,30 @@
             <div class="app-title-bar">iMessage Social</div>
             
             <div class="tabs">
-                <div class="tab active" data-tab="chats">町 Chats</div>
-                <div class="tab" data-tab="suggested">則 Suggested</div>
-                <div class="tab" data-tab="followed">笶､ｸFollowed</div>
+                <div class="tab active" data-tab="chats"><i class="fas fa-comments"></i> Chats</div>
+                <div class="tab" data-tab="suggested"><i class="fas fa-users"></i> Suggested</div>
+                <div class="tab" data-tab="followed"><i class="fas fa-user-check"></i> Followed</div>
                 <div class="tab" data-tab="followers">Followers</div>
             </div>
             
-            <input type="text" class="search-box" placeholder="Search...">
+            <!-- MODIFIED: Added id to search-box -->
+            <input type="text" class="search-box" id="searchBox" placeholder="Search...">
             
             <div class="chat-list" id="chatList">
-                </div>
+                <!-- Chat items will be populated here -->
+            </div>
             
             <div class="user-list" id="userList" style="display: none;">
-                </div>
+                <!-- User items will be populated here -->
+            </div>
             
             <div class="followed-list" id="followedList" style="display: none;">
-                </div>
+                <!-- Followed items will be populated here -->
+            </div>
             
             <div class="follower-list" id="followerList" style="display: none;">
-                </div>
+                <!-- Follower items will be populated here -->
+            </div>
         </div>
         
         <div class="chat-area">
@@ -1390,7 +1543,8 @@
             getDoc,
             getDocs,
             deleteDoc,
-            limit
+            limit,
+            writeBatch
         } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
         
         import { 
@@ -1433,6 +1587,11 @@
         const appContainer = document.getElementById('appContainer');
         const googleSignInBtn = document.getElementById('googleSignInBtn');
         const themeSelector = document.getElementById('themeSelector');
+        
+        // === NEW: Notification Bell DOM ===
+        const notificationBell = document.getElementById('notificationBell');
+        const notificationDot = document.getElementById('notificationDot');
+        
         const profileCard = document.getElementById('profileCard');
         const profilePic = document.getElementById('profilePic');
         const profileName = document.getElementById('profileName');
@@ -1445,6 +1604,10 @@
         const editProfileBtn = document.getElementById('editProfileBtn');
         const logoutBtn = document.getElementById('logoutBtn');
         const tabs = document.querySelectorAll('.tab');
+        
+        // === NEW: Search Box DOM ===
+        const searchBox = document.getElementById('searchBox');
+        
         const chatList = document.getElementById('chatList');
         const userList = document.getElementById('userList');
         const followedList = document.getElementById('followedList');
@@ -1490,6 +1653,11 @@
         let followers = []; 
         let currentChatUser = null;
         let currentChatId = null;
+        let currentActiveTab = 'chats'; // === NEW: Track active tab
+        
+        // === NEW: Notification State ===
+        let notificationCount = 0;
+        let _notificationsUnsub = null;
         
         // === NEW: Media & Recording Variables ===
         let mediaRecorder;
@@ -1560,6 +1728,14 @@
                 profileCard.classList.remove('expanded');
             }, 300);
         });
+        
+        // Handle profile card click for mobile (toggle)
+        profileCard.addEventListener('click', (e) => {
+             // Only toggle on mobile if not clicking a button inside
+            if (window.innerWidth <= 768 && !e.target.closest('button')) {
+                profileCard.classList.toggle('expanded');
+            }
+        });
 
         // Theme selector hover behavior
         let themeSelectorTimeout;
@@ -1627,25 +1803,64 @@
                 tabs.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 
+                currentActiveTab = tab.dataset.tab; // === NEW: Update active tab
+                
                 chatList.style.display = 'none';
                 userList.style.display = 'none';
                 followedList.style.display = 'none';
                 followerList.style.display = 'none'; 
 
-                if (tab.dataset.tab === 'chats') {
+                if (currentActiveTab === 'chats') {
                     chatList.style.display = 'block';
-                } else if (tab.dataset.tab === 'suggested') {
+                    markNotificationsAsRead('message'); // Clear message notifications
+                } else if (currentActiveTab === 'suggested') {
                     userList.style.display = 'block';
                     loadUsers();
-                } else if (tab.dataset.tab === 'followed') {
+                } else if (currentActiveTab === 'followed') {
                     followedList.style.display = 'block';
                     loadFollowedUsers();
-                } else if (tab.dataset.tab === 'followers') { 
+                } else if (currentActiveTab === 'followers') { 
                     followerList.style.display = 'block';
                     loadFollowers();
+                    markNotificationsAsRead('follow'); // Clear follow notifications
                 }
+                
+                // Re-apply search filter
+                filterLists();
             });
         });
+        
+        // === NEW: Search Box Filter ===
+        searchBox.addEventListener('input', filterLists);
+
+        function filterLists() {
+            const searchText = searchBox.value.toLowerCase().trim();
+
+            if (currentActiveTab === 'chats') {
+                filterList(chatList, '.chat-item', 'h4', searchText);
+            } else if (currentActiveTab === 'suggested') {
+                filterList(userList, '.user-item', 'h4', searchText);
+            } else if (currentActiveTab === 'followed') {
+                filterList(followedList, '.user-item', 'h4', searchText);
+            } else if (currentActiveTab === 'followers') {
+                filterList(followerList, '.user-item', 'h4', searchText);
+            }
+        }
+
+        function filterList(listContainer, itemSelector, nameSelector, searchText) {
+            const items = listContainer.querySelectorAll(itemSelector);
+            items.forEach(item => {
+                const nameElement = item.querySelector(nameSelector);
+                if (nameElement) {
+                    const name = nameElement.textContent.toLowerCase();
+                    if (name.includes(searchText)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                }
+            });
+        }
         
         followersBtn.addEventListener('click', () => {
             document.querySelector('[data-tab="followers"]').click();
@@ -1694,11 +1909,13 @@
                 await updateUserOnlineStatus(currentUser.uid, false).catch(()=>{});
             }
 
+            // Unsubscribe from all listeners
             if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
             if (_chatListUnsub) { _chatListUnsub(); _chatListUnsub = null; }
             if (_usersUnsub) { _usersUnsub(); _usersUnsub = null; }
             if (_followsUnsub) { _followsUnsub(); _followsUnsub = null; }
             if (_followersUnsub) { _followersUnsub(); _followersUnsub = null; }
+            if (_notificationsUnsub) { _notificationsUnsub(); _notificationsUnsub = null; } // NEW
 
             signOut(auth).then(() => {
                 currentUser = null;
@@ -1726,6 +1943,7 @@
                 checkAndCreateUserProfile(user);
                 loadUserTheme(user.uid);
                 setupFirestoreListeners(user.uid);
+                setupNotificationListener(user.uid); // === NEW
                 updateProfileUI(user);
             } else {
                 loginScreen.style.display = 'flex';
@@ -1922,20 +2140,20 @@
             }
         }
         
+        // === MODIFIED: renderUserList for expandable items ===
         function renderUserList(container, userIds, emptyMessage) {
             container.innerHTML = '';
             
             const usersToDisplay = users.filter(user => userIds.includes(user.id) && user.id !== currentUser.uid);
 
             if (usersToDisplay.length === 0) {
-                container.innerHTML = `<div class="user-item">${emptyMessage}</div>`;
+                container.innerHTML = `<div class="user-item" style="display: flex;">${emptyMessage}</div>`;
                 return;
             }
 
             usersToDisplay.forEach(user => {
                 const isFollowing = follows.some(follow => follow.followingId === user.id);
-                const shortBio = user.bio ? user.bio.split(' ').slice(0, 5).join(' ') + (user.bio.split(' ').length > 5 ? '...' : '') : 'No bio yet';
-
+                
                 const userElement = document.createElement('div');
                 userElement.className = 'user-item';
 
@@ -1947,8 +2165,8 @@
                         <div class="status-indicator ${user.isOnline ? '' : 'offline'}"></div>
                     </div>
                     <div class="user-info">
-                        <h4>${user.displayName}</h4>
-                        <p>${shortBio}</p>
+                        <h4>${escapeHtml(user.displayName)}</h4>
+                        <p>${escapeHtml(user.bio) || 'No bio yet'}</p>
                     </div>
                     <div class="user-actions">
                         ${isFollowing ?
@@ -1959,9 +2177,29 @@
                     </div>
                 `;
                 container.appendChild(userElement);
+                
+                // Add click listener to the item itself
+                userElement.addEventListener('click', (e) => {
+                    // Don't toggle if a button was clicked
+                    if (e.target.tagName === 'BUTTON') return;
+                    
+                    // Toggle 'expanded' class
+                    const isExpanded = userElement.classList.contains('expanded');
+                    
+                    // Close all others
+                    container.querySelectorAll('.user-item.expanded').forEach(item => {
+                        item.classList.remove('expanded');
+                    });
+                    
+                    // Toggle current
+                    if (!isExpanded) {
+                        userElement.classList.add('expanded');
+                    }
+                });
             });
             
             addListButtonListeners(container);
+            filterLists(); // Re-apply filter after rendering
         }
 
         function loadUsers() {
@@ -2010,7 +2248,7 @@
             chatList.innerHTML = '';
             
             if (snapshot.empty) {
-                chatList.innerHTML = '<div class="chat-item">No conversations yet. Follow users to start chatting!</div>';
+                chatList.innerHTML = '<div class="chat-item" style="display: flex;">No conversations yet.</div>';
                 return;
             }
 
@@ -2026,9 +2264,9 @@
                 let lastMessageText = 'Say hi!';
                 if (chatData.lastMessage && chatData.lastMessage.text) {
                     if (chatData.lastMessage.type === 'image') {
-                        lastMessageText = '胴 Image';
+                        lastMessageText = '<i class="fas fa-image"></i> Image';
                     } else if (chatData.lastMessage.type === 'audio') {
-                        lastMessageText = '痔 Voice Note';
+                        lastMessageText = '<i class="fas fa-microphone"></i> Voice Note';
                     } else {
                         lastMessageText = chatData.lastMessage.text;
                     }
@@ -2036,6 +2274,8 @@
 
                 const chatElement = document.createElement('div');
                 chatElement.className = 'chat-item';
+                // Add chat ID as data attribute
+                chatElement.dataset.chatId = doc.id; 
                 chatElement.innerHTML = `
                     <div class="avatar-wrapper">
                         <div class="chat-avatar">
@@ -2044,10 +2284,15 @@
                         <div class="status-indicator ${isOnline ? '' : 'offline'}"></div>
                     </div>
                     <div class="chat-info">
-                        <h4>${displayName}</h4>
-                        <p class="last-message">${escapeHtml(lastMessageText)}</p>
+                        <h4>${escapeHtml(displayName)}</h4>
+                        <p class="last-message">${lastMessageText}</p> <!-- HTML is intended here -->
                     </div>
                 `;
+                
+                // === NEW: Highlight active chat ===
+                if (doc.id === currentChatId) {
+                    chatElement.classList.add('active');
+                }
                 
                 chatElement.addEventListener('click', () => {
                     if (user) {
@@ -2057,6 +2302,8 @@
                 
                 chatList.appendChild(chatElement);
             });
+            
+            filterLists(); // Re-apply filter
         }
         
         async function getOrCreateChat(otherUserId) {
@@ -2083,7 +2330,8 @@
                 members: [currentUser.uid, otherUserId],
                 lastMessage: {
                     text: 'Chat created',
-                    timestamp: serverTimestamp()
+                    timestamp: serverTimestamp(),
+                    type: 'text'
                 }
             });
             
@@ -2101,6 +2349,11 @@
                 return;
             }
             currentChatId = chatId;
+            
+            // === NEW: Highlight active chat in list ===
+            document.querySelectorAll('.chat-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.chatId === currentChatId);
+            });
             
             // Clear any pending media from other chats
             clearMediaPreview();
@@ -2133,11 +2386,15 @@
             
             _convoUnsub = onSnapshot(messagesQuery, (snapshot) => {
                 renderConversation(snapshot);
+                // Mark messages as read *after* rendering
+                markMessagesAsRead(userId, currentChatId);
             }, err => console.error('Error listening to messages:', err));
 
 
             bindSendHandlerForConversation(userId, currentChatId);
-            markMessagesAsRead(userId, currentChatId);
+            
+            // === NEW: Mark related notifications as read ===
+            markNotificationsAsRead('message', userId);
         }
 
         // === MODIFIED: Render conversation with media AND date separators ===
@@ -2146,7 +2403,7 @@
             let lastMessageDate = null; // --- NEW: Track last date
             
             if (snapshot.empty) {
-                chatMessages.innerHTML = `<div class="message received">Start a conversation with ${currentChatUser ? currentChatUser.displayName : 'this user'}!<div class="message-meta"><span class="message-time">Just now</span></div></div>`;
+                chatMessages.innerHTML = `<div class="message received">Start a conversation with ${currentChatUser ? escapeHtml(currentChatUser.displayName) : 'this user'}!<div class="message-meta"><span class="message-time">Just now</span></div></div>`;
             } else {
                 snapshot.forEach(doc => {
                     const m = doc.data();
@@ -2285,9 +2542,9 @@
                 if (messageData.type === 'text') {
                     lastMessageText = messageData.text;
                 } else if (messageData.type === 'image') {
-                    lastMessageText = messageData.text ? `胴 ${messageData.text}` : '胴 Image';
+                    lastMessageText = messageData.text ? `[Image] ${messageData.text}` : '[Image]';
                 } else if (messageData.type === 'audio') {
-                    lastMessageText = messageData.text ? `痔 ${messageData.text}` : '痔 Voice Note';
+                    lastMessageText = messageData.text ? `[Voice] ${messageData.text}` : '[Voice Note]';
                 }
 
                 // Update parent chat doc
@@ -2298,6 +2555,19 @@
                         type: messageData.type // Store type for chat list
                     }
                 });
+                
+                // === NEW: Add notification for receiver ===
+                const receiverUser = users.find(u => u.id === messageData.receiverId);
+                // Only notify if user is offline OR user is online but not in this chat
+                if (receiverUser && (!receiverUser.isOnline || (receiverUser.isOnline && currentChatId !== chatId))) {
+                    await addNotification(
+                        messageData.receiverId, 
+                        'message', 
+                        currentUser.uid,
+                        chatId
+                    );
+                }
+                
             } catch (error) {
                 console.error('Error sending message to Firestore:', error);
             }
@@ -2317,11 +2587,11 @@
 
             try {
                 const querySnapshot = await getDocs(unreadQuery);
-                const updates = [];
+                const batch = writeBatch(db);
                 querySnapshot.forEach((doc) => {
-                    updates.push(updateDoc(doc.ref, { isRead: true }));
+                    batch.update(doc.ref, { isRead: true });
                 });
-                await Promise.all(updates);
+                await batch.commit();
             } catch (error) {
                 console.error('Error marking messages as read:', error);
             }
@@ -2336,10 +2606,13 @@
                     timestamp: serverTimestamp()
                 });
                 
+                // Update follower/following counts in a batch
+                const batch = writeBatch(db);
+                
                 const userDocRef = doc(db, 'users', userId);
                 const userDoc = await getDoc(userDocRef);
                 if (userDoc.exists()) {
-                    await updateDoc(userDocRef, {
+                    batch.update(userDocRef, {
                         followers: (userDoc.data().followers || 0) + 1
                     });
                 }
@@ -2347,10 +2620,16 @@
                 const currentUserDocRef = doc(db, 'users', currentUser.uid);
                 const currentUserDoc = await getDoc(currentUserDocRef);
                 if (currentUserDoc.exists()) {
-                    await updateDoc(currentUserDocRef, {
+                     batch.update(currentUserDocRef, {
                         following: (currentUserDoc.data().following || 0) + 1
                     });
                 }
+                
+                await batch.commit();
+                
+                // === NEW: Add notification for the followed user ===
+                await addNotification(userId, 'follow', currentUser.uid);
+
             } catch (error) {
                 console.error('Error following user:', error);
             }
@@ -2364,15 +2643,18 @@
                     where('followerId', '==', currentUser.uid),
                     where('followingId', '==', userId)
                 );
+                
                 const querySnapshot = await getDocs(followsQuery);
-                querySnapshot.forEach(async (followDoc) => {
-                    await deleteDoc(doc(db, 'follows', followDoc.id));
+                const batch = writeBatch(db);
+
+                querySnapshot.forEach((followDoc) => {
+                    batch.delete(doc(db, 'follows', followDoc.id));
                 });
 
                 const userDocRef = doc(db, 'users', userId);
                 const userDoc = await getDoc(userDocRef);
                 if (userDoc.exists()) {
-                    await updateDoc(userDocRef, {
+                    batch.update(userDocRef, {
                         followers: Math.max(0, (userDoc.data().followers || 0) - 1)
                     });
                 }
@@ -2380,14 +2662,120 @@
                 const currentUserDocRef = doc(db, 'users', currentUser.uid);
                 const currentUserDoc = await getDoc(currentUserDocRef);
                 if (currentUserDoc.exists()) {
-                    await updateDoc(currentUserDocRef, {
+                    batch.update(currentUserDocRef, {
                         following: Math.max(0, (currentUserDoc.data().following || 0) - 1)
                     });
                 }
+                
+                await batch.commit();
+                
             } catch (error) {
                 console.error('Error unfollowing user:', error);
             }
         }
+        
+        // === NEW: Notification Functions ===
+        
+        // Listener for new notifications
+        function setupNotificationListener(uid) {
+            if (_notificationsUnsub) _notificationsUnsub();
+            
+            const notifQuery = query(
+                collection(db, 'users', uid, 'notifications'),
+                where('read', '==', false),
+                orderBy('timestamp', 'desc')
+            );
+            
+            _notificationsUnsub = onSnapshot(notifQuery, (snapshot) => {
+                const newCount = snapshot.size;
+                
+                if (newCount > 0) {
+                    notificationDot.textContent = newCount > 9 ? '9+' : newCount;
+                    notificationDot.classList.add('visible');
+                    
+                    // Check if this is a new notification to trigger animation
+                    if (newCount > notificationCount) {
+                        notificationBell.classList.add('animate');
+                        setTimeout(() => notificationBell.classList.remove('animate'), 1000);
+                    }
+                } else {
+                    notificationDot.classList.remove('visible');
+                }
+                
+                notificationCount = newCount;
+                
+            }, err => console.error("Error listening to notifications:", err));
+        }
+        
+        // Add a new notification
+        async function addNotification(receiverId, type, senderId, chatId = null) {
+            try {
+                await addDoc(collection(db, 'users', receiverId, 'notifications'), {
+                    type: type, // 'message' or 'follow'
+                    senderId: senderId,
+                    chatId: chatId, // null for follows
+                    read: false,
+                    timestamp: serverTimestamp()
+                });
+            } catch (error) {
+                console.error("Error adding notification:", error);
+            }
+        }
+        
+        // Mark notifications as read
+        async function markNotificationsAsRead(type, senderId = null) {
+            if (!currentUser) return;
+            
+            let notifQuery;
+            const notifRef = collection(db, 'users', currentUser.uid, 'notifications');
+
+            if (type === 'message' && senderId) {
+                // Mark all messages from a specific sender as read
+                notifQuery = query(notifRef, 
+                    where('read', '==', false),
+                    where('type', '==', 'message'),
+                    where('senderId', '==', senderId)
+                );
+            } else if (type) {
+                 // Mark all of a certain type as read (e.g., all follows)
+                 notifQuery = query(notifRef, 
+                    where('read', '==', false),
+                    where('type', '==', type)
+                );
+            } else {
+                // Mark ALL as read
+                notifQuery = query(notifRef, where('read', '==', false));
+            }
+
+            try {
+                const snapshot = await getDocs(notifQuery);
+                if (snapshot.empty) return;
+                
+                const batch = writeBatch(db);
+                snapshot.forEach(doc => {
+                    batch.update(doc.ref, { read: true });
+                });
+                await batch.commit();
+                
+            } catch (error) {
+                console.error("Error marking notifications as read:", error);
+            }
+        }
+
+        // Bell click handler
+        notificationBell.addEventListener('click', () => {
+            // For now, just mark all notifications as read when clicked.
+            // A dropdown menu would be a future enhancement.
+            markNotificationsAsRead();
+            
+            // Also, trigger the 'Followers' tab if there were follow notifications,
+            // or 'Chats' tab if there were message notifications.
+            // This is a simple implementation.
+            if(notificationCount > 0) {
+                // This is a bit naive, but good for now
+                document.querySelector('[data-tab="chats"]').click();
+            }
+        });
 
         // === NEW: Media Upload Functions ===
 
@@ -2397,7 +2785,8 @@
             if (!file || !file.type.startsWith('image/')) return;
             
             if (!currentChatId || !currentChatUser) {
-                alert("Please select a chat before sending an image.");
+                // Use a less intrusive error
+                console.warn("Please select a chat before sending an image.");
                 return;
             }
 
@@ -2443,7 +2832,7 @@
         // === MODIFIED: Start Recording ===
         async function startRecording() {
             if (!currentChatId || !currentChatUser) {
-                alert("Please select a chat before recording.");
+                console.warn("Please select a chat before recording.");
                 return;
             }
             // Clear any pending image
@@ -2505,7 +2894,7 @@
 
             } catch (err) {
                 console.error("Error starting recording:", err);
-                alert("Could not start recording. Please ensure microphone permissions are granted.");
+                console.warn("Could not start recording. Please ensure microphone permissions are granted.");
             }
         }
         
@@ -2583,7 +2972,9 @@
                 const fileType = mimeType.startsWith('image/') ? 'image' : 'audio';
                 const fileExtension = mimeType.split('/')[1].split(';')[0]; 
                 const fileName = `${currentUser.uid}-${Date.now()}.${fileExtension}`;
-                const sRef = storageRef(storage, `chat_media/${chatId}/${fileName}`);
+                
+                // === REDESIGNED PATH ===
+                const sRef = storageRef(storage, `user_media/${currentUser.uid}/${chatId}/${fileName}`);
 
                 // Show uploading indicator (e.g., in a temp message)
                 // For now, just upload
@@ -2608,7 +2999,8 @@
 
             } catch (error) {
                 console.error("Error uploading file:", error);
-                alert(`Error uploading ${mimeType.startsWith('image/') ? 'image' : 'audio'}. Please try again.`);
+                // Replaced alert with console error
+                console.error(`Error uploading ${mimeType.startsWith('image/') ? 'image' : 'audio'}. Please try again.`);
             }
         }
         
