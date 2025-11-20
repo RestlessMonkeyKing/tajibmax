@@ -1917,6 +1917,7 @@
         let _usersUnsub = null; 
         let _followsUnsub = null; 
         let _followersUnsub = null; 
+        let _lastChatSnapshot = null; // *** FIX: Store last chat snapshot to fix race condition ***
 
         // stable send handlers
         let __sendHandler = null;
@@ -2629,6 +2630,7 @@
             if (_followersUnsub) _followersUnsub();
             if (_chatListUnsub) _chatListUnsub();
 
+            // *** FIX: This listener now re-renders the chat list when user data updates ***
             _usersUnsub = onSnapshot(collection(db, 'users'), (snapshot) => {
                 users = [];
                 snapshot.forEach(doc => {
@@ -2638,7 +2640,11 @@
                 loadUsers();
                 loadFollowedUsers();
                 loadFollowers();
-                loadChats(); 
+                // loadChats(); // <-- Removed buggy function call
+                
+                if (_lastChatSnapshot) {
+                    renderChatList(_lastChatSnapshot); // Re-render chat list with new user data
+                }
                 
                 syncPresence();
             });
@@ -2662,7 +2668,9 @@
                 loadFollowers(); 
             });
             
+            // *** FIX: This listener now stores the snapshot before rendering ***
             _chatListUnsub = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', uid), orderBy('lastMessage.timestamp', 'desc')), (snapshot) => {
+                _lastChatSnapshot = snapshot; // Store snapshot
                 renderChatList(snapshot);
             }, err => console.error("Error listening to chat list:", err));
         }
@@ -2798,7 +2806,7 @@
         function renderChatList(snapshot) {
             chatList.innerHTML = '';
             
-            if (snapshot.empty) {
+            if (!snapshot || snapshot.empty) { // *** FIX: Check if snapshot is null or empty ***
                 chatList.innerHTML = '<div class="chat-item" style="display: flex;">No conversations yet.</div>';
                 return;
             }
