@@ -542,6 +542,80 @@
         .notification-bell.animate .fa-bell {
             animation: ring 1s ease-out;
         }
+        
+        /* === NEW: Notification Dropdown === */
+        .notification-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 320px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            z-index: 1001;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: var(--transition);
+        }
+        
+        .notification-bell.expanded .notification-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .notification-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .notification-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .notification-item:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .notification-item.unread {
+            font-weight: 600;
+        }
+        
+        .notification-item .user-avatar {
+            width: 40px;
+            height: 40px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        
+        .notification-item p {
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.3;
+        }
+        
+        .notification-item .timestamp {
+            font-size: 11px;
+            color: #8E8E93;
+            margin-left: 10px;
+        }
+        
+        .no-notifications {
+            padding: 20px;
+            text-align: center;
+            color: #8E8E93;
+        }
+        
         /* === END NEW === */
 
         /* Sidebar */
@@ -644,6 +718,25 @@
         .chat-item.active {
             background: rgba(0, 122, 255, 0.2);
         }
+
+        /* === NEW: Unread Dot for Chat List === */
+        .unread-dot {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: none;
+            border: 1px solid var(--card-bg);
+        }
+        
+        .unread-dot.visible {
+            display: block;
+        }
+        /* === END NEW === */
 
         .chat-avatar, .user-avatar {
             width: 50px;
@@ -1340,6 +1433,12 @@
             <div class="notification-bell" id="notificationBell" title="Notifications">
                 <i class="fas fa-bell"></i>
                 <div class="notification-dot" id="notificationDot">0</div>
+                <!-- NEW: Notification Dropdown -->
+                <div class="notification-dropdown" id="notificationDropdown">
+                    <div class="notification-list" id="notificationList">
+                        <div class="no-notifications">No notifications yet.</div>
+                    </div>
+                </div>
             </div>
 
             <div class="theme-selector" id="themeSelector">
@@ -1658,6 +1757,9 @@
         // === NEW: Notification State ===
         let notificationCount = 0;
         let _notificationsUnsub = null;
+        let _notificationDropdownUnsub = null; // Listener for dropdown
+        const notificationList = document.getElementById('notificationList');
+        const notificationDropdown = document.getElementById('notificationDropdown');
         
         // === NEW: Media & Recording Variables ===
         let mediaRecorder;
@@ -1685,7 +1787,7 @@
         // stable send handlers
         let __sendHandler = null;
         let __keyHandler = null;
-
+ 
         // helpers
         function escapeHtml(unsafe) {
             if (!unsafe) return '';
@@ -1715,6 +1817,22 @@
                 return date.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
             }
         }
+ 
+        // === NEW: Time Ago Helper ===
+        function timeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + "y";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + "m";
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + "d";
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + "h";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + "m";
+            return "now";
+        }
 
         // Profile card hover behavior
         let profileCardTimeout;
@@ -1729,38 +1847,28 @@
             }, 300);
         });
         
-        // Handle profile card click for mobile (toggle)
-        profileCard.addEventListener('click', (e) => {
-             // Only toggle on mobile if not clicking a button inside
-            if (window.innerWidth <= 768 && !e.target.closest('button')) {
-                profileCard.classList.toggle('expanded');
+        // === NEW: Notification Bell Click (replaces hover) ===
+        let notificationBellTimeout;
+        notificationBell.addEventListener('click', (e) => {
+            // Prevent dropdown from closing if clicking inside it
+            if (e.target.closest('.notification-dropdown')) {
+                return;
+            }
+            
+            const isExpanded = notificationBell.classList.toggle('expanded');
+            if (isExpanded) {
+                // Mark all as read when opening
+                markNotificationsAsRead();
+            }
+        });
+        
+        // Close dropdown if clicking outside
+        document.addEventListener('click', (e) => {
+            if (!notificationBell.contains(e.target) && notificationBell.classList.contains('expanded')) {
+                notificationBell.classList.remove('expanded');
             }
         });
 
-        // Theme selector hover behavior
-        let themeSelectorTimeout;
-        themeSelector.addEventListener('mouseenter', () => {
-            clearTimeout(themeSelectorTimeout);
-            themeSelector.classList.add('expanded');
-        });
-
-        themeSelector.addEventListener('mouseleave', () => {
-            themeSelectorTimeout = setTimeout(() => {
-                themeSelector.classList.remove('expanded');
-            }, 300);
-        });
-        
-        let chatHeaderTimeout;
-        chatHeader.addEventListener('mouseenter', () => {
-            clearTimeout(chatHeaderTimeout);
-            chatHeader.classList.add('expanded');
-        });
-
-        chatHeader.addEventListener('mouseleave', () => {
-            chatHeaderTimeout = setTimeout(() => {
-                chatHeader.classList.remove('expanded');
-            }, 300);
-        });
 
         // Theme selection
         themeOptions.forEach(option => {
@@ -1916,6 +2024,7 @@
             if (_followsUnsub) { _followsUnsub(); _followsUnsub = null; }
             if (_followersUnsub) { _followersUnsub(); _followersUnsub = null; }
             if (_notificationsUnsub) { _notificationsUnsub(); _notificationsUnsub = null; } // NEW
+            if (_notificationDropdownUnsub) { _notificationDropdownUnsub(); _notificationDropdownUnsub = null; } // NEW
 
             signOut(auth).then(() => {
                 currentUser = null;
@@ -1944,6 +2053,7 @@
                 loadUserTheme(user.uid);
                 setupFirestoreListeners(user.uid);
                 setupNotificationListener(user.uid); // === NEW
+                setupNotificationDropdownListener(user.uid); // === NEW
                 updateProfileUI(user);
             } else {
                 loginScreen.style.display = 'flex';
@@ -2287,6 +2397,8 @@
                         <h4>${escapeHtml(displayName)}</h4>
                         <p class="last-message">${lastMessageText}</p> <!-- HTML is intended here -->
                     </div>
+                    <!-- NEW: Unread dot container -->
+                    <div class="unread-dot"></div>
                 `;
                 
                 // === NEW: Highlight active chat ===
@@ -2557,16 +2669,13 @@
                 });
                 
                 // === NEW: Add notification for receiver ===
-                const receiverUser = users.find(u => u.id === messageData.receiverId);
-                // Only notify if user is offline OR user is online but not in this chat
-                if (receiverUser && (!receiverUser.isOnline || (receiverUser.isOnline && currentChatId !== chatId))) {
-                    await addNotification(
-                        messageData.receiverId, 
-                        'message', 
-                        currentUser.uid,
-                        chatId
-                    );
-                }
+                // REMOVED the IF condition. Always notify.
+                await addNotification(
+                    messageData.receiverId, 
+                    'message', 
+                    currentUser.uid,
+                    chatId
+                );
                 
             } catch (error) {
                 console.error('Error sending message to Firestore:', error);
@@ -2688,13 +2797,33 @@
             
             _notificationsUnsub = onSnapshot(notifQuery, (snapshot) => {
                 const newCount = snapshot.size;
+                const unreadChatIds = new Set(); // === NEW: For chat dots
+                let animateBell = false;
+
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        animateBell = true; // Animate on new notification
+                        const notif = change.doc.data();
+                        if (notif.type === 'message' && notif.chatId) {
+                            unreadChatIds.add(notif.chatId);
+                        }
+                    }
+                });
+
+                // Update unread dots based on *all* unread messages
+                snapshot.docs.forEach(doc => {
+                     const notif = doc.data();
+                        if (notif.type === 'message' && notif.chatId) {
+                            unreadChatIds.add(notif.chatId);
+                        }
+                });
                 
                 if (newCount > 0) {
                     notificationDot.textContent = newCount > 9 ? '9+' : newCount;
                     notificationDot.classList.add('visible');
                     
                     // Check if this is a new notification to trigger animation
-                    if (newCount > notificationCount) {
+                    if (animateBell) {
                         notificationBell.classList.add('animate');
                         setTimeout(() => notificationBell.classList.remove('animate'), 1000);
                     }
@@ -2703,8 +2832,92 @@
                 }
                 
                 notificationCount = newCount;
+                updateChatListUnreadDots(unreadChatIds); // === NEW
                 
             }, err => console.error("Error listening to notifications:", err));
+        }
+
+        // === NEW: Listener for the dropdown content ===
+        function setupNotificationDropdownListener(uid) {
+            if (_notificationDropdownUnsub) _notificationDropdownUnsub();
+
+            const dropdownQuery = query(
+                collection(db, 'users', uid, 'notifications'),
+                orderBy('timestamp', 'desc'),
+                limit(20) // Get last 20 notifications (read or unread)
+            );
+
+            _notificationDropdownUnsub = onSnapshot(dropdownQuery, (snapshot) => {
+                renderNotificationDropdown(snapshot);
+            }, err => console.error("Error listening to dropdown notifications:", err));
+        }
+
+        // === NEW: Render the notification dropdown ===
+        function renderNotificationDropdown(snapshot) {
+            if (snapshot.empty) {
+                notificationList.innerHTML = '<div class="no-notifications">No notifications yet.</div>';
+                return;
+            }
+
+            notificationList.innerHTML = '';
+            snapshot.forEach(doc => {
+                const notif = doc.data();
+                const sender = users.find(u => u.id === notif.senderId);
+                
+                if (!sender) return; // Skip if sender data isn't loaded yet
+
+                const item = document.createElement('div');
+                item.className = 'notification-item';
+                if (!notif.read) {
+                    item.classList.add('unread');
+                }
+
+                const avatar = sender.photoURL 
+                    ? `<img src="${sender.photoURL}" alt="${sender.displayName}">` 
+                    : '<i class="fas fa-user"></i>';
+                
+                let text = '';
+                if (notif.type === 'message') {
+                    text = `<strong>${escapeHtml(sender.displayName)}</strong> sent you a message.`;
+                    item.addEventListener('click', () => {
+                        openChat(sender.id, sender);
+                        document.querySelector('[data-tab="chats"]').click();
+                        notificationBell.classList.remove('expanded');
+                    });
+                } else if (notif.type === 'follow') {
+                    text = `<strong>${escapeHtml(sender.displayName)}</strong> started following you.`;
+                    item.addEventListener('click', () => {
+                        document.querySelector('[data-tab="followers"]').click();
+                        notificationBell.classList.remove('expanded');
+                    });
+                }
+                
+                const timestamp = notif.timestamp ? timeAgo(notif.timestamp.toDate()) : '';
+
+                item.innerHTML = `
+                    <div class="user-avatar">
+                        ${avatar}
+                    </div>
+                    <p>${text}</p>
+                    <span class="timestamp">${timestamp}</span>
+                `;
+                notificationList.appendChild(item);
+            });
+        }
+        
+        // === NEW: Update blue dots on chat list ===
+        function updateChatListUnreadDots(unreadChatIds) {
+            document.querySelectorAll('.chat-item').forEach(item => {
+                const dot = item.querySelector('.unread-dot');
+                if (!dot) return;
+                
+                const chatId = item.dataset.chatId;
+                if (unreadChatIds.has(chatId)) {
+                    dot.classList.add('visible');
+                } else {
+                    dot.classList.remove('visible');
+                }
+            });
         }
         
         // Add a new notification
@@ -2766,15 +2979,17 @@
         notificationBell.addEventListener('click', () => {
             // For now, just mark all notifications as read when clicked.
             // A dropdown menu would be a future enhancement.
-            markNotificationsAsRead();
+            // markNotificationsAsRead(); // MOVED this to when dropdown opens
             
             // Also, trigger the 'Followers' tab if there were follow notifications,
             // or 'Chats' tab if there were message notifications.
             // This is a simple implementation.
-            if(notificationCount > 0) {
-                // This is a bit naive, but good for now
-                document.querySelector('[data-tab="chats"]').click();
-            }
+            // if(notificationCount > 0) {
+            //     // This is a bit naive, but good for now
+            //     document.querySelector('[data-tab="chats"]').click();
+            // }
+
+            // NEW: Click toggles dropdown (logic moved to top)
         });
 
         // === NEW: Media Upload Functions ===
