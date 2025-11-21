@@ -3304,6 +3304,9 @@
                     notificationDot.classList.add('visible');
                     
                     if (animateBell) {
+                        // === NEW: Debugging line ===
+                        console.log("New Notification! Animating bell...");
+                        
                         notificationBell.classList.add('vibrate');
                         setTimeout(() => notificationBell.classList.remove('vibrate'), 500);
                         
