@@ -2238,6 +2238,7 @@
             messageInput.addEventListener('keypress', __keyHandler);
         }
 
+        // === MODIFIED: handleSendGroupMessage (for optimistic UI) ===
         async function handleSendGroupMessage(chatId, members) {
             if (!chatId || !currentUser) return;
 
@@ -2246,13 +2247,27 @@
             if (pendingMediaBlob && pendingMediaType) {
                 const blob = pendingMediaBlob;
                 const type = pendingMediaType;
+                const localUrl = (previewContent.querySelector('img, audio') || {}).src;
+
+                // Optimistic UI
+                if (localUrl) {
+                     const optimisticMessage = {
+                        text: messageText,
+                        timestamp: new Date(),
+                        type: type.startsWith('image/') ? 'image' : 'audio',
+                        localUrl: localUrl
+                    };
+                    addOptimisticMediaMessage(optimisticMessage);
+                }
                 
                 clearMediaPreview();
                 messageInput.value = ''; 
                 
+                // Upload in background (no await)
                 uploadFileToGroupStorage(blob, type, chatId, members, messageText);
                 
             } else if (messageText) {
+                // Optimistic UI for text
                 const optimisticMessage = {
                     text: messageText,
                     timestamp: new Date()
@@ -2273,6 +2288,7 @@
 
                 messageInput.value = '';
                 
+                // Send text message to Firestore
                 const messageData = {
                     senderId: currentUser.uid,
                     senderName: currentUser.displayName,
@@ -2281,9 +2297,12 @@
                     type: 'text',
                     text: messageText
                 };
-                await sendFirestoreGroupMessage(chatId, messageData, members);
+                // Send in background (no await)
+                sendFirestoreGroupMessage(chatId, messageData, members);
             }
         }
+        // === END MODIFIED ===
+
 
         async function sendFirestoreGroupMessage(chatId, messageData, members) {
             try {
@@ -3007,7 +3026,37 @@
             }
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
+        
+        // === NEW Function: Add Optimistic Media Message ===
+        function addOptimisticMediaMessage(message) {
+            const tempDiv = document.createElement('div');
+            tempDiv.className = 'message sent has-media'; // Apply media styles
+            
+            let mediaContent = '';
+            if (message.type === 'image') {
+                mediaContent = `<img src="${escapeHtml(message.localUrl)}" alt="Sending image..." style="opacity: 0.7;">`;
+            } else if (message.type === 'audio') {
+                mediaContent = `<audio controls src="${escapeHtml(message.localUrl)}"></audio>`;
+            }
+            
+            if (message.text) {
+                mediaContent += `<div class="media-caption">${escapeHtml(message.text)}</div>`;
+            }
 
+            tempDiv.innerHTML = `
+                ${mediaContent}
+                <div class="message-meta">
+                    <span class="message-time">${message.timestamp.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                    <span class="message-ticks pending">
+                        <i class="fas fa-check"></i>
+                    </span>
+                </div>
+            `;
+            chatMessages.appendChild(tempDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // bind send handler
         function bindSendHandlerForConversation(receiverId, chatId) {
             if (__sendHandler) sendBtn.removeEventListener('click', __sendHandler);
             if (__keyHandler) messageInput.removeEventListener('keypress', __keyHandler);
@@ -3019,21 +3068,37 @@
             messageInput.addEventListener('keypress', __keyHandler);
         }
 
+        // === MODIFIED: handleSendMessage (for optimistic UI) ===
         async function handleSendMessage(receiverId, chatId) {
             if (!chatId || !currentUser) return;
 
             const messageText = (messageInput.value || '').trim();
 
+            // Case 1: Sending media (image or audio)
             if (pendingMediaBlob && pendingMediaType) {
                 const blob = pendingMediaBlob;
                 const type = pendingMediaType;
+                const localUrl = (previewContent.querySelector('img, audio') || {}).src; // Get the local blob URL
+
+                // Optimistic UI for media
+                if (localUrl) {
+                    const optimisticMessage = {
+                        text: messageText,
+                        timestamp: new Date(),
+                        type: type.startsWith('image/') ? 'image' : 'audio',
+                        localUrl: localUrl
+                    };
+                    addOptimisticMediaMessage(optimisticMessage);
+                }
                 
                 clearMediaPreview();
-                messageInput.value = ''; 
+                messageInput.value = '';
                 
-                await uploadFileToStorage(blob, type, receiverId, chatId, messageText);
+                // Start upload IN THE BACKGROUND (no await)
+                uploadFileToStorage(blob, type, receiverId, chatId, messageText);
                 
             } else if (messageText) {
+                // Optimistic UI for text
                 const optimisticMessage = {
                     text: messageText,
                     timestamp: new Date()
@@ -3054,6 +3119,7 @@
 
                 messageInput.value = '';
                 
+                // Send text message to Firestore
                 const messageData = {
                     senderId: currentUser.uid,
                     receiverId: receiverId,
@@ -3062,9 +3128,11 @@
                     type: 'text',
                     text: messageText
                 };
-                await sendFirestoreMessage(chatId, messageData);
+                // Send in background (no await)
+                sendFirestoreMessage(chatId, messageData);
             }
         }
+        // === END MODIFIED ===
 
 
         async function sendFirestoreMessage(chatId, messageData) {
