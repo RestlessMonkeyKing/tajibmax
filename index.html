@@ -395,8 +395,9 @@
             color: var(--primary-color);
         }
 
+        /* === MODIFIED: Theme Selector (Dropdown) === */
         .theme-selector {
-            position: relative; 
+            position: relative; /* Changed for absolute positioning of children */
             width: 60px; 
             height: 60px; 
             border-radius: 50%;
@@ -409,84 +410,113 @@
             cursor: pointer;
             box-shadow: var(--shadow);
             transition: var(--transition);
-            overflow: hidden;
+            z-index: 1002; /* Ensure it's above other controls */
         }
-
-        .theme-selector.expanded {
-            width: 200px;
-            border-radius: 30px; 
-            padding: 0 10px;
+        
+        .theme-selector:hover {
+            transform: scale(1.05);
         }
 
         .theme-options {
+            position: absolute;
+            top: calc(100% + 10px); /* Position below the button */
+            right: 0; /* Align to the right */
+            width: 200px; /* Fixed width for dropdown */
+            background: var(--card-bg); /* Use card background */
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 10px;
             display: flex;
+            flex-direction: column; /* Stack options vertically */
             gap: 8px;
             opacity: 0;
-            width: 0;
-            transition: opacity 0.3s ease, width 0.3s ease;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: var(--transition);
         }
 
         .theme-selector.expanded .theme-options {
             opacity: 1;
-            width: auto;
+            visibility: visible;
+            transform: translateY(0);
         }
-
+        
         .theme-option {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+            width: 100%; /* Make options fill width */
+            height: 40px; /* Taller for easier clicking */
+            border-radius: 10px; /* Rounded rectangles */
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start; /* Align icon/text to start */
+            padding: 0 15px; /* Add padding */
+            gap: 10px;
             cursor: pointer;
             transition: var(--transition);
             font-size: 14px;
         }
+        
+        /* Add text labels for clarity */
+        .theme-option::after {
+            content: attr(title); /* Use the title attribute as text */
+        }
 
         .theme-option:hover {
-            transform: scale(1.1);
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .theme-option.active {
-            transform: scale(1.15);
-            box-shadow: 0 0 0 2px var(--text-color);
+            transform: scale(1.02);
+            box-shadow: 0 0 0 2px var(--primary-color); /* Use primary color for active */
+            background: rgba(0, 122, 255, 0.2);
         }
 
         .theme-light {
             background: #F2F2F7;
             color: #1C1C1E;
         }
+        .theme-light:hover { background: #E5E5EA; }
 
         .theme-dark {
             background: #000000;
             color: #FFFFFF;
         }
+        .theme-dark:hover { background: #2C2C2E; }
 
         .theme-liquid {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #FFFFFF;
         }
+        .theme-liquid:hover { background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); }
 
         .theme-sunset {
             background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
             color: #FFFFFF;
         }
+        .theme-sunset:hover { background: linear-gradient(135deg, #feb47b 0%, #ff7e5f 100%); }
 
         .theme-forest {
             background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
             color: #FFFFFF;
         }
+        .theme-forest:hover { background: linear-gradient(135deg, #3cba92 0%, #0ba360 100%); }
+
 
         .theme-icon {
             transition: var(--transition);
-        }
-
-        .theme-selector.expanded .theme-icon {
-            opacity: 0;
-            width: 0;
+            font-size: 20px; /* Ensure icon is visible */
         }
         
-        /* === NEW: Notification Bell === */
+        /* Keep the icon visible, don't hide it */
+        .theme-selector.expanded .theme-icon {
+            opacity: 1;
+            width: auto;
+        }
+        /* === END MODIFIED === */
+        
+        /* === Notification Bell === */
         .notification-bell {
             position: relative; 
             width: 60px; 
@@ -524,11 +554,17 @@
             align-items: center;
             justify-content: center;
             border: 2px solid var(--card-bg);
+            /* Add animation for the dot appearing */
+            transform: scale(0.5);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
         }
         
         /* This class makes the badge visible */
         .notification-dot.visible {
             display: flex;
+            transform: scale(1);
+            opacity: 1;
         }
         
         /* Ring animation (side to side) */
@@ -546,7 +582,7 @@
             animation: ring 1s ease-out;
         }
         
-        /* === NEW: Notification Dropdown === */
+        /* === Notification Dropdown === */
         .notification-dropdown {
             position: absolute;
             top: calc(100% + 10px);
@@ -673,6 +709,7 @@
             background: var(--primary-color);
             color: white;
             transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3); /* Add shadow for active tab */
         }
 
         /* NEW: Create Group Button */
@@ -743,8 +780,11 @@
             transform: translateY(-2px);
         }
 
+        /* === MODIFIED: Smoother active transition === */
         .chat-item.active {
             background: rgba(0, 122, 255, 0.2);
+            transform: translateY(-2px) scale(1.02); /* Add scale for pop */
+            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.2);
         }
 
         /* === NEW: Unread Dot for Chat List === */
@@ -752,17 +792,21 @@
             position: absolute;
             right: 15px;
             top: 50%;
-            transform: translateY(-50%);
+            transform: translateY(-50%) scale(0.5); /* Start small */
             width: 10px;
             height: 10px;
             border-radius: 50%;
             background: var(--primary-color);
             display: none;
             border: 1px solid var(--card-bg);
+            opacity: 0;
+            transition: var(--transition);
         }
         
         .unread-dot.visible {
             display: block;
+            transform: translateY(-50%) scale(1); /* Animate to full size */
+            opacity: 1;
         }
         /* === END NEW === */
 
@@ -1496,8 +1540,9 @@
                 flex-shrink: 0;
             }
 
-            .theme-selector.expanded {
-                width: 180px;
+            /* === MODIFIED: Responsive theme dropdown === */
+            .theme-options {
+                width: 180px; /* Smaller width on mobile */
             }
             
             .notification-bell {
@@ -1526,12 +1571,12 @@
     <div class="app-container" id="appContainer">
     
         <div class="top-right-controls">
-            <!-- NEW: Notification Bell -->
+            <!-- Notification Bell -->
             <div class="notification-bell" id="notificationBell" title="Notifications">
                 <i class="fas fa-bell"></i>
                 <!-- This is the red badge, it will be made visible by JS -->
                 <div class="notification-dot" id="notificationDot">0</div>
-                <!-- NEW: Notification Dropdown -->
+                <!-- Notification Dropdown -->
                 <div class="notification-dropdown" id="notificationDropdown">
                     <div class="notification-list" id="notificationList">
                         <div class="no-notifications">No notifications yet.</div>
@@ -1539,6 +1584,7 @@
                 </div>
             </div>
 
+            <!-- === MODIFIED: Theme Selector (Dropdown) === -->
             <div class="theme-selector" id="themeSelector">
                 <div class="theme-icon">
                     <i class="fas fa-palette"></i>
@@ -1561,6 +1607,7 @@
                     </div>
                 </div>
             </div>
+            <!-- === END MODIFIED === -->
 
             <div class="profile-card" id="profileCard">
                 <div class="profile-header">
@@ -1595,7 +1642,7 @@
             <div class="app-title-bar">Tajib Max</div>
             
             <div class="tabs">
-                <div class="tab active" data-tab="chats"><i class="fas fa-comments"></i> Chats (Beta under redev) </div>
+                <div class="tab active" data-tab="chats"><i class="fas fa-comments"></i> Chats</div>
                 <div class="tab" data-tab="suggested"><i class="fas fa-users"></i> Suggested</div>
                 <div class="tab" data-tab="followed"><i class="fas fa-user-check"></i> Followed</div>
                 <div class="tab" data-tab="followers">Followers</div>
@@ -1996,7 +2043,6 @@
         });
         
         // === NEW: Notification Bell Click (replaces hover) ===
-        let notificationBellTimeout;
         notificationBell.addEventListener('click', (e) => {
             // Prevent dropdown from closing if clicking inside it
             if (e.target.closest('.notification-dropdown')) {
@@ -2007,13 +2053,29 @@
             if (isExpanded) {
                 // Mark all as read when opening
                 markNotificationsAsRead();
+                // Close theme selector if open
+                themeSelector.classList.remove('expanded');
             }
         });
         
-        // Close dropdown if clicking outside
+        // === NEW: Theme Selector Click ===
+        themeSelector.addEventListener('click', (e) => {
+             // Don't toggle if an option was clicked
+            if (e.target.closest('.theme-option')) {
+                return;
+            }
+            themeSelector.classList.toggle('expanded');
+            // Close notification bell if open
+            notificationBell.classList.remove('expanded');
+        });
+
+        // Close dropdowns if clicking outside
         document.addEventListener('click', (e) => {
             if (!notificationBell.contains(e.target) && notificationBell.classList.contains('expanded')) {
                 notificationBell.classList.remove('expanded');
+            }
+            if (!themeSelector.contains(e.target) && themeSelector.classList.contains('expanded')) {
+                themeSelector.classList.remove('expanded');
             }
         });
 
@@ -2024,6 +2086,7 @@
                 setTheme(theme);
                 themeOptions.forEach(opt => opt.classList.remove('active'));
                 option.classList.add('active');
+                themeSelector.classList.remove('expanded'); // Close dropdown on selection
             });
         });
 
