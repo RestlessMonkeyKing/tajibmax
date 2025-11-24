@@ -395,9 +395,9 @@
             color: var(--primary-color);
         }
 
-        /* === MODIFIED: Theme Selector (Dropdown) === */
+        /* === MODIFIED: Theme selector opens downwards === */
         .theme-selector {
-            position: relative; /* Changed for absolute positioning of children */
+            position: relative; 
             width: 60px; 
             height: 60px; 
             border-radius: 50%;
@@ -410,113 +410,97 @@
             cursor: pointer;
             box-shadow: var(--shadow);
             transition: var(--transition);
-            z-index: 1002; /* Ensure it's above other controls */
+            overflow: hidden;
         }
-        
-        .theme-selector:hover {
-            transform: scale(1.05);
+
+        .theme-selector.expanded {
+            width: 60px; /* Keep the same width */
+            height: auto;
+            border-radius: 30px;
+            padding: 10px 0;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            z-index: 1000;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
         }
 
         .theme-options {
-            position: absolute;
-            top: calc(100% + 10px); /* Position below the button */
-            right: 0; /* Align to the right */
-            width: 200px; /* Fixed width for dropdown */
-            background: var(--card-bg); /* Use card background */
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            padding: 10px;
             display: flex;
-            flex-direction: column; /* Stack options vertically */
+            flex-direction: column;
             gap: 8px;
             opacity: 0;
-            visibility: hidden;
-            transform: translateY(10px);
-            transition: var(--transition);
+            height: 0;
+            transition: opacity 0.3s ease, height 0.3s ease;
         }
 
         .theme-selector.expanded .theme-options {
             opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
+            height: auto;
         }
-        
+
         .theme-option {
-            width: 100%; /* Make options fill width */
-            height: 40px; /* Taller for easier clicking */
-            border-radius: 10px; /* Rounded rectangles */
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            justify-content: flex-start; /* Align icon/text to start */
-            padding: 0 15px; /* Add padding */
-            gap: 10px;
+            justify-content: center;
             cursor: pointer;
             transition: var(--transition);
             font-size: 14px;
         }
-        
-        /* Add text labels for clarity */
-        .theme-option::after {
-            content: attr(title); /* Use the title attribute as text */
-        }
 
         .theme-option:hover {
-            transform: scale(1.02);
-            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
         }
 
         .theme-option.active {
-            transform: scale(1.02);
-            box-shadow: 0 0 0 2px var(--primary-color); /* Use primary color for active */
-            background: rgba(0, 122, 255, 0.2);
+            transform: scale(1.15);
+            box-shadow: 0 0 0 2px var(--text-color);
         }
 
         .theme-light {
             background: #F2F2F7;
             color: #1C1C1E;
         }
-        .theme-light:hover { background: #E5E5EA; }
 
         .theme-dark {
             background: #000000;
             color: #FFFFFF;
         }
-        .theme-dark:hover { background: #2C2C2E; }
 
         .theme-liquid {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #FFFFFF;
         }
-        .theme-liquid:hover { background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); }
 
         .theme-sunset {
             background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
             color: #FFFFFF;
         }
-        .theme-sunset:hover { background: linear-gradient(135deg, #feb47b 0%, #ff7e5f 100%); }
 
         .theme-forest {
             background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);
             color: #FFFFFF;
         }
-        .theme-forest:hover { background: linear-gradient(135deg, #3cba92 0%, #0ba360 100%); }
-
 
         .theme-icon {
             transition: var(--transition);
-            font-size: 20px; /* Ensure icon is visible */
         }
-        
-        /* Keep the icon visible, don't hide it */
+
         .theme-selector.expanded .theme-icon {
-            opacity: 1;
-            width: auto;
+            opacity: 0;
+            width: 0;
         }
-        /* === END MODIFIED === */
         
-        /* === Notification Bell === */
+        /* === ENHANCED: Notification Bell === */
         .notification-bell {
             position: relative; 
             width: 60px; 
@@ -554,17 +538,20 @@
             align-items: center;
             justify-content: center;
             border: 2px solid var(--card-bg);
-            /* Add animation for the dot appearing */
-            transform: scale(0.5);
-            opacity: 0;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+            z-index: 10;
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
         
         /* This class makes the badge visible */
         .notification-dot.visible {
             display: flex;
-            transform: scale(1);
-            opacity: 1;
+            animation: pulse-badge 0.5s ease-out;
+        }
+        
+        @keyframes pulse-badge {
+            0% { transform: scale(0.8); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
         }
         
         /* Ring animation (side to side) */
@@ -582,7 +569,7 @@
             animation: ring 1s ease-out;
         }
         
-        /* === Notification Dropdown === */
+        /* === ENHANCED: Notification Dropdown === */
         .notification-dropdown {
             position: absolute;
             top: calc(100% + 10px);
@@ -596,8 +583,8 @@
             z-index: 1001;
             opacity: 0;
             visibility: hidden;
-            transform: translateY(10px);
-            transition: var(--transition);
+            transform: translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         
         .notification-bell.expanded .notification-dropdown {
@@ -656,7 +643,7 @@
             color: #8E8E93;
         }
         
-        /* === END NEW === */
+        /* === END ENHANCED === */
 
         /* Sidebar */
         .sidebar {
@@ -709,10 +696,9 @@
             background: var(--primary-color);
             color: white;
             transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3); /* Add shadow for active tab */
         }
 
-        /* NEW: Create Group Button */
+        /* ENHANCED: Create Group Button */
         .create-group-btn {
             display: flex;
             align-items: center;
@@ -767,7 +753,7 @@
             transition: var(--transition);
             animation: slideIn 0.3s ease-out;
             position: relative;
-            flex-wrap: wrap; /* === MODIFIED: Allow wrapping */
+            flex-wrap: wrap; /* Allow wrapping */
         }
 
         @keyframes slideIn {
@@ -780,35 +766,36 @@
             transform: translateY(-2px);
         }
 
-        /* === MODIFIED: Smoother active transition === */
         .chat-item.active {
             background: rgba(0, 122, 255, 0.2);
-            transform: translateY(-2px) scale(1.02); /* Add scale for pop */
-            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.2);
         }
 
-        /* === NEW: Unread Dot for Chat List === */
+        /* === ENHANCED: Unread Dot for Chat List === */
         .unread-dot {
             position: absolute;
             right: 15px;
             top: 50%;
-            transform: translateY(-50%) scale(0.5); /* Start small */
+            transform: translateY(-50%);
             width: 10px;
             height: 10px;
             border-radius: 50%;
             background: var(--primary-color);
             display: none;
             border: 1px solid var(--card-bg);
-            opacity: 0;
-            transition: var(--transition);
+            transition: transform 0.3s ease;
         }
         
         .unread-dot.visible {
             display: block;
-            transform: translateY(-50%) scale(1); /* Animate to full size */
-            opacity: 1;
+            animation: pulse-dot 0.5s ease-out;
         }
-        /* === END NEW === */
+        
+        @keyframes pulse-dot {
+            0% { transform: translateY(-50%) scale(0.8); }
+            50% { transform: translateY(-50%) scale(1.2); }
+            100% { transform: translateY(-50%) scale(1); }
+        }
+        /* === END ENHANCED === */
 
         .chat-avatar, .user-avatar {
             width: 50px;
@@ -849,7 +836,7 @@
             min-width: 0;
         }
         
-        /* === MODIFIED: User Info (for clutter) === */
+        /* MODIFIED: User Info (for clutter) */
         .user-info {
             flex-basis: calc(100% - 65px); /* Full width minus avatar and gap */
             min-width: 150px; /* Ensure it doesn't get too squished */
@@ -871,7 +858,7 @@
             text-overflow: ellipsis;
         }
         
-        /* === MODIFIED: Bio clamping === */
+        /* MODIFIED: Bio clamping */
         .user-info p {
             font-size: 14px;
             color: #8E8E93;
@@ -886,7 +873,7 @@
             word-break: break-word; /* Break long words if needed */
         }
         
-        /* === MODIFIED: User Actions (for clutter) === */
+        /* MODIFIED: User Actions (for clutter) */
         .user-actions {
             display: none; /* Hide by default */
             flex-direction: row; /* Side-by-side buttons */
@@ -1025,7 +1012,7 @@
             flex-direction: column;
         }
 
-        /* === NEW: Day Separator === */
+        /* ENHANCED: Day Separator */
         .date-separator {
             align-self: center;
             background: rgba(142, 142, 147, 0.2);
@@ -1036,6 +1023,7 @@
             border-radius: 12px;
             margin: 10px 0;
             opacity: 0.8;
+            transition: all 0.3s ease;
         }
         [data-theme="dark"] .date-separator {
              background: rgba(142, 142, 147, 0.4);
@@ -1144,7 +1132,7 @@
              color: #40C6FF;
         }
 
-        /* === MODIFIED: Message Input Area === */
+        /* MODIFIED: Message Input Area */
         .message-input-area {
             border-top: 1px solid var(--glass-border);
             display: flex;
@@ -1153,13 +1141,20 @@
             backdrop-filter: blur(20px);
         }
 
-        /* === NEW: Media Preview === */
+        /* ENHANCED: Media Preview */
         .media-preview {
             display: none; /* Hidden by default */
             padding: 10px 20px 5px 20px;
             position: relative;
             background: rgba(0,0,0,0.05);
+            animation: slideUp 0.3s ease-out;
         }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
         [data-theme="dark"] .media-preview {
              background: rgba(255,255,255,0.05);
         }
@@ -1194,6 +1189,12 @@
             justify-content: center;
             font-size: 12px;
             line-height: 1;
+            transition: var(--transition);
+        }
+        
+        .remove-media-btn:hover {
+            transform: scale(1.1);
+            background: rgba(0,0,0,0.6);
         }
 
         .message-input-container {
@@ -1204,7 +1205,7 @@
             transition: var(--transition);
         }
 
-        /* === NEW: Voice Recorder UI === */
+        /* ENHANCED: Voice Recorder UI */
         .voice-recorder-ui {
             display: none; /* Hidden by default */
             height: 0;
@@ -1224,6 +1225,7 @@
             height: 74px; /* Same as input container */
             opacity: 1;
             padding: 15px 20px;
+            animation: slideUp 0.3s ease-out;
         }
 
         #voiceWaveCanvas {
@@ -1252,7 +1254,7 @@
             color: #FF3B30;
             font-weight: 600;
         }
-        /* === END NEW === */
+        /* === END ENHANCED === */
 
 
         .message-input {
@@ -1393,7 +1395,7 @@
             box-shadow: 0 0 0 2px var(--primary-color);
         }
 
-        /* NEW: Group Chat Modal Styles */
+        /* ENHANCED: Group Chat Modal Styles */
         .member-selection {
             max-height: 200px;
             overflow-y: auto;
@@ -1433,7 +1435,7 @@
             margin: 0;
         }
 
-        /* NEW: Group Chat Header Styles */
+        /* ENHANCED: Group Chat Header Styles */
         .group-members {
             display: flex;
             flex-wrap: wrap;
@@ -1448,7 +1450,7 @@
             font-size: 12px;
         }
 
-        /* NEW: Vibration Animation */
+        /* ENHANCED: Vibration Animation */
         @keyframes vibrate {
             0% { transform: translateX(0); }
             25% { transform: translateX(-2px); }
@@ -1540,9 +1542,11 @@
                 flex-shrink: 0;
             }
 
-            /* === MODIFIED: Responsive theme dropdown === */
-            .theme-options {
-                width: 180px; /* Smaller width on mobile */
+            .theme-selector.expanded {
+                width: 60px;
+                position: absolute;
+                top: 100%;
+                right: 0;
             }
             
             .notification-bell {
@@ -1571,12 +1575,12 @@
     <div class="app-container" id="appContainer">
     
         <div class="top-right-controls">
-            <!-- Notification Bell -->
+            <!-- ENHANCED: Notification Bell -->
             <div class="notification-bell" id="notificationBell" title="Notifications">
                 <i class="fas fa-bell"></i>
                 <!-- This is the red badge, it will be made visible by JS -->
                 <div class="notification-dot" id="notificationDot">0</div>
-                <!-- Notification Dropdown -->
+                <!-- ENHANCED: Notification Dropdown -->
                 <div class="notification-dropdown" id="notificationDropdown">
                     <div class="notification-list" id="notificationList">
                         <div class="no-notifications">No notifications yet.</div>
@@ -1584,7 +1588,7 @@
                 </div>
             </div>
 
-            <!-- === MODIFIED: Theme Selector (Dropdown) === -->
+            <!-- MODIFIED: Theme selector opens downwards -->
             <div class="theme-selector" id="themeSelector">
                 <div class="theme-icon">
                     <i class="fas fa-palette"></i>
@@ -1607,7 +1611,6 @@
                     </div>
                 </div>
             </div>
-            <!-- === END MODIFIED === -->
 
             <div class="profile-card" id="profileCard">
                 <div class="profile-header">
@@ -1648,7 +1651,7 @@
                 <div class="tab" data-tab="followers">Followers</div>
             </div>
             
-            <!-- NEW: Create Group Button -->
+            <!-- ENHANCED: Create Group Button -->
             <button class="create-group-btn" id="createGroupBtn">
                 <i class="fas fa-plus"></i> Create Group Chat
             </button>
@@ -1685,7 +1688,7 @@
                     <div class="profile-info">
                         <h3 id="chatHeaderTitle">Select a conversation</h3>
                         <p id="chatHeaderSubtitle">Start chatting with friends</p>
-                        <!-- NEW: Group Members Display -->
+                        <!-- ENHANCED: Group Members Display -->
                         <div class="group-members" id="groupMembers" style="display: none;"></div>
                     </div>
                 </div>
@@ -1710,10 +1713,10 @@
                 </div>
             </div>
             
-            <!-- === MODIFIED: New Input Area Structure === -->
+            <!-- MODIFIED: New Input Area Structure -->
             <div class="message-input-area">
                 
-                <!-- NEW: Media Preview -->
+                <!-- ENHANCED: Media Preview -->
                 <div class="media-preview" id="mediaPreview">
                     <div id="previewContent">
                         <!-- e.g., <img src="..." alt="Preview"> -->
@@ -1722,7 +1725,7 @@
                     <button class="remove-media-btn" id="removeMediaBtn">&times;</button>
                 </div>
 
-                <!-- NEW: Voice Recorder UI -->
+                <!-- ENHANCED: Voice Recorder UI -->
                 <div class="voice-recorder-ui" id="voiceRecorderUI">
                     <i class="fas fa-stop-circle" id="stopRecordBtn"></i>
                     <span id="recordTimer">0:00</span>
@@ -1769,7 +1772,7 @@
         </div>
     </div>
 
-    <!-- NEW: Create Group Chat Modal -->
+    <!-- ENHANCED: Create Group Chat Modal -->
     <div class="modal" id="createGroupModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1862,7 +1865,7 @@
         const googleSignInBtn = document.getElementById('googleSignInBtn');
         const themeSelector = document.getElementById('themeSelector');
         
-        // === NEW: Notification Bell DOM ===
+        // ENHANCED: Notification Bell DOM
         const notificationBell = document.getElementById('notificationBell');
         const notificationDot = document.getElementById('notificationDot');
         
@@ -1879,7 +1882,7 @@
         const logoutBtn = document.getElementById('logoutBtn');
         const tabs = document.querySelectorAll('.tab');
         
-        // === NEW: Search Box DOM ===
+        // MODIFIED: Search Box DOM
         const searchBox = document.getElementById('searchBox');
         
         const chatList = document.getElementById('chatList');
@@ -1899,13 +1902,13 @@
         const editBio = document.getElementById('editBio');
         const wordCount = document.getElementById('wordCount');
         
-        // === MODIFIED: Media DOM Elements ===
+        // MODIFIED: Media DOM Elements
         const messageInputContainer = document.getElementById('messageInputContainer');
         const uploadBtn = document.getElementById('uploadBtn');
         const imageUpload = document.getElementById('imageUpload');
         const recordBtn = document.getElementById('recordBtn');
         
-        // === NEW: Voice Recorder & Preview UI Elements ===
+        // ENHANCED: Voice Recorder & Preview UI Elements
         const voiceRecorderUI = document.getElementById('voiceRecorderUI');
         const voiceWaveCanvas = document.getElementById('voiceWaveCanvas');
         const recordTimer = document.getElementById('recordTimer');
@@ -1919,7 +1922,7 @@
         let sendBtn = document.getElementById('sendBtn'); 
         const themeOptions = document.querySelectorAll('.theme-option');
 
-        // === NEW: Group Chat DOM Elements ===
+        // ENHANCED: Group Chat DOM Elements
         const createGroupBtn = document.getElementById('createGroupBtn');
         const createGroupModal = document.getElementById('createGroupModal');
         const closeGroupModal = document.getElementById('closeGroupModal');
@@ -1936,33 +1939,33 @@
         let followers = []; 
         let currentChatUser = null;
         let currentChatId = null;
-        let currentActiveTab = 'chats'; // === NEW: Track active tab
+        let currentActiveTab = 'chats'; // Track active tab
         
-        // === NEW: Notification State ===
+        // ENHANCED: Notification State
         let notificationCount = 0;
         let _notificationsUnsub = null;
         let _notificationDropdownUnsub = null; // Listener for dropdown
         const notificationList = document.getElementById('notificationList');
         const notificationDropdown = document.getElementById('notificationDropdown');
         
-        // === NEW: Media & Recording Variables ===
+        // ENHANCED: Media & Recording Variables
         let mediaRecorder;
         let audioChunks = [];
         let recordTimerInterval;
         let mediaStream;
         
-        // --- NEW: Pending Media for Preview ---
+        // Pending Media for Preview
         let pendingMediaBlob = null;
         let pendingMediaType = null;
         
-        // --- NEW: Audio Visualization ---
+        // Audio Visualization
         let audioContext;
         let analyser;
         let canvasContext;
         let animationFrameId;
         let dataArray;
 
-        // === NEW: Group Chat State ===
+        // ENHANCED: Group Chat State
         let selectedMembers = [];
 
         let _convoUnsub = null;
@@ -1990,7 +1993,7 @@
             });
         }
         
-        // === NEW: Date Formatting Helper ===
+        // ENHANCED: Date Formatting Helper
         function formatDateSeparator(date) {
             const today = new Date();
             const yesterday = new Date(today);
@@ -2005,7 +2008,7 @@
             }
         }
  
-        // === MODIFIED: Replaced timeAgo with specific timestamp formatting for notifications ===
+        // MODIFIED: Replaced timeAgo with specific timestamp formatting for notifications
         function formatNotificationTimestamp(date) {
             if (!date) return "";
             
@@ -2042,7 +2045,8 @@
             }, 300);
         });
         
-        // === NEW: Notification Bell Click (replaces hover) ===
+        // ENHANCED: Notification Bell Click (replaces hover)
+        let notificationBellTimeout;
         notificationBell.addEventListener('click', (e) => {
             // Prevent dropdown from closing if clicking inside it
             if (e.target.closest('.notification-dropdown')) {
@@ -2053,27 +2057,30 @@
             if (isExpanded) {
                 // Mark all as read when opening
                 markNotificationsAsRead();
-                // Close theme selector if open
-                themeSelector.classList.remove('expanded');
             }
         });
         
-        // === NEW: Theme Selector Click ===
+        // MODIFIED: Theme selector click behavior (opens downwards)
         themeSelector.addEventListener('click', (e) => {
-             // Don't toggle if an option was clicked
-            if (e.target.closest('.theme-option')) {
+            // Prevent closing if clicking inside the theme options
+            if (e.target.closest('.theme-options')) {
                 return;
             }
-            themeSelector.classList.toggle('expanded');
-            // Close notification bell if open
-            notificationBell.classList.remove('expanded');
+            
+            const isExpanded = themeSelector.classList.toggle('expanded');
+            
+            // Close other expanded elements
+            if (isExpanded) {
+                notificationBell.classList.remove('expanded');
+            }
         });
-
+        
         // Close dropdowns if clicking outside
         document.addEventListener('click', (e) => {
             if (!notificationBell.contains(e.target) && notificationBell.classList.contains('expanded')) {
                 notificationBell.classList.remove('expanded');
             }
+            
             if (!themeSelector.contains(e.target) && themeSelector.classList.contains('expanded')) {
                 themeSelector.classList.remove('expanded');
             }
@@ -2086,7 +2093,7 @@
                 setTheme(theme);
                 themeOptions.forEach(opt => opt.classList.remove('active'));
                 option.classList.add('active');
-                themeSelector.classList.remove('expanded'); // Close dropdown on selection
+                themeSelector.classList.remove('expanded');
             });
         });
 
@@ -2121,7 +2128,7 @@
                 tabs.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 
-                currentActiveTab = tab.dataset.tab; // === NEW: Update active tab
+                currentActiveTab = tab.dataset.tab; // Update active tab
                 
                 chatList.style.display = 'none';
                 userList.style.display = 'none';
@@ -2148,7 +2155,7 @@
             });
         });
         
-        // === NEW: Create Group Button ===
+        // ENHANCED: Create Group Button
         createGroupBtn.addEventListener('click', () => {
             openCreateGroupModal();
         });
@@ -2161,7 +2168,7 @@
             createGroupChat();
         });
 
-        // === NEW: Open Create Group Modal ===
+        // ENHANCED: Open Create Group Modal
         function openCreateGroupModal() {
             memberSelection.innerHTML = '';
             selectedMembers = [];
@@ -2194,19 +2201,17 @@
             createGroupModal.style.display = 'flex';
         }
 
-        // === NEW: Create Group Chat ===
+        // ENHANCED: Create Group Chat
         async function createGroupChat() {
             if (!currentUser) return;
             
             const name = groupName.value.trim();
             if (!name) {
-                // Replaced alert with console error
                 console.error('Please enter a group name');
                 return;
             }
             
             if (selectedMembers.length === 0) {
-                // Replaced alert with console error
                 console.error('Please select at least one member');
                 return;
             }
@@ -2249,19 +2254,18 @@
                 
             } catch (error) {
                 console.error('Error creating group chat:', error);
-                // Replaced alert with console error
                 console.error('Error creating group chat. Please try again.');
             }
         }
 
-        // === NEW: Open Group Chat ===
+        // ENHANCED: Open Group Chat
         function openGroupChat(groupData) {
             if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
 
             currentChatUser = groupData;
             currentChatId = groupData.id;
             
-            // === NEW: Highlight active chat in list ===
+            // ENHANCED: Highlight active chat in list
             document.querySelectorAll('.chat-item').forEach(item => {
                 item.classList.toggle('active', item.dataset.chatId === currentChatId);
             });
@@ -2311,11 +2315,11 @@
 
             bindSendHandlerForGroupConversation(groupData.id, groupData.members);
             
-            // === NEW: Mark related notifications as read ===
+            // ENHANCED: Mark related notifications as read
             markNotificationsAsRead('message', groupData.id);
         }
 
-        // === NEW: Bind Send Handler for Group ===
+        // ENHANCED: Bind Send Handler for Group
         function bindSendHandlerForGroupConversation(chatId, members) {
             if (__sendHandler) sendBtn.removeEventListener('click', __sendHandler);
             if (__keyHandler) messageInput.removeEventListener('keypress', __keyHandler);
@@ -2327,7 +2331,7 @@
             messageInput.addEventListener('keypress', __keyHandler);
         }
 
-        // === NEW: Handle Send Group Message ===
+        // ENHANCED: Handle Send Group Message
         async function handleSendGroupMessage(chatId, members) {
             if (!chatId || !currentUser) return;
 
@@ -2381,7 +2385,7 @@
             }
         }
 
-        // === NEW: Send Firestore Group Message ===
+        // ENHANCED: Send Firestore Group Message
         async function sendFirestoreGroupMessage(chatId, messageData, members) {
             try {
                 // Add to messages subcollection
@@ -2406,7 +2410,7 @@
                     }
                 });
                 
-                // === NEW: Add notification for all group members except sender ===
+                // ENHANCED: Add notification for all group members except sender
                 members.forEach(memberId => {
                     if (memberId !== currentUser.uid) {
                         addNotification(
@@ -2423,7 +2427,7 @@
             }
         }
 
-        // === NEW: Upload File to Group Storage ===
+        // ENHANCED: Upload File to Group Storage
         async function uploadFileToGroupStorage(file, mimeType, chatId, members, caption = '') {
             if (!currentUser) return;
 
@@ -2458,7 +2462,7 @@
             }
         }
 
-        // === NEW: Search Box Filter ===
+        // ENHANCED: Search Box Filter
         searchBox.addEventListener('input', filterLists);
 
         function filterLists() {
@@ -2543,8 +2547,8 @@
             if (_usersUnsub) { _usersUnsub(); _usersUnsub = null; }
             if (_followsUnsub) { _followsUnsub(); _followsUnsub = null; }
             if (_followersUnsub) { _followersUnsub(); _followersUnsub = null; }
-            if (_notificationsUnsub) { _notificationsUnsub(); _notificationsUnsub = null; } // NEW
-            if (_notificationDropdownUnsub) { _notificationDropdownUnsub(); _notificationDropdownUnsub = null; } // NEW
+            if (_notificationsUnsub) { _notificationsUnsub(); _notificationsUnsub = null; } // ENHANCED
+            if (_notificationDropdownUnsub) { _notificationDropdownUnsub(); _notificationDropdownUnsub = null; } // ENHANCED
 
             signOut(auth).then(() => {
                 currentUser = null;
@@ -2572,8 +2576,8 @@
                 checkAndCreateUserProfile(user);
                 loadUserTheme(user.uid);
                 setupFirestoreListeners(user.uid);
-                setupNotificationListener(user.uid); // === NEW
-                setupNotificationDropdownListener(user.uid); // === NEW
+                setupNotificationListener(user.uid); // ENHANCED
+                setupNotificationDropdownListener(user.uid); // ENHANCED
                 updateProfileUI(user);
             } else {
                 loginScreen.style.display = 'flex';
@@ -2770,7 +2774,7 @@
             }
         }
         
-        // === MODIFIED: renderUserList for expandable items ===
+        // MODIFIED: renderUserList for expandable items
         function renderUserList(container, userIds, emptyMessage) {
             container.innerHTML = '';
             
@@ -2874,7 +2878,7 @@
             });
         }
 
-        // === MODIFIED: Render Chat List with Groups ===
+        // MODIFIED: Render Chat List with Groups
         function renderChatList(snapshot) {
             chatList.innerHTML = '';
             
@@ -2931,11 +2935,11 @@
                         <h4>${escapeHtml(displayName)}</h4>
                         <p class="last-message">${lastMessageText}</p> <!-- HTML is intended here -->
                     </div>
-                    <!-- NEW: Unread dot container -->
+                    <!-- ENHANCED: Unread dot container -->
                     <div class="unread-dot"></div>
                 `;
                 
-                // === NEW: Highlight active chat ===
+                // ENHANCED: Highlight active chat
                 if (doc.id === currentChatId) {
                     chatElement.classList.add('active');
                 }
@@ -3002,7 +3006,7 @@
             }
             currentChatId = chatId;
             
-            // === NEW: Highlight active chat in list ===
+            // ENHANCED: Highlight active chat in list
             document.querySelectorAll('.chat-item').forEach(item => {
                 item.classList.toggle('active', item.dataset.chatId === currentChatId);
             });
@@ -3048,14 +3052,14 @@
 
             bindSendHandlerForConversation(userId, currentChatId);
             
-            // === NEW: Mark related notifications as read ===
+            // ENHANCED: Mark related notifications as read
             markNotificationsAsRead('message', userId);
         }
 
-        // === MODIFIED: Render conversation with media AND date separators ===
+        // MODIFIED: Render conversation with media AND date separators
         function renderConversation(snapshot) {
             chatMessages.innerHTML = '';
-            let lastMessageDate = null; // --- NEW: Track last date
+            let lastMessageDate = null; // Track last date
             
             if (snapshot.empty) {
                 const name = currentChatUser && currentChatUser.displayName ? escapeHtml(currentChatUser.displayName) : 'this user';
@@ -3065,7 +3069,7 @@
                     const m = doc.data();
                     const ts = m.timestamp ? m.timestamp.toDate() : new Date();
                     
-                    // --- NEW: Date Separator Logic ---
+                    // Date Separator Logic
                     const messageDateStr = ts.toDateString();
                     if (messageDateStr !== lastMessageDate) {
                         const dateDiv = document.createElement('div');
@@ -3074,7 +3078,6 @@
                         chatMessages.appendChild(dateDiv);
                         lastMessageDate = messageDateStr;
                     }
-                    // --- END NEW ---
 
                     const div = document.createElement('div');
                     let ticksHtml = '';
@@ -3136,7 +3139,7 @@
             if (__sendHandler) sendBtn.removeEventListener('click', __sendHandler);
             if (__keyHandler) messageInput.removeEventListener('keypress', __keyHandler);
 
-            // === MODIFIED: This handler now decides what to send ===
+            // MODIFIED: This handler now decides what to send
             __sendHandler = () => handleSendMessage(receiverId, chatId);
             __keyHandler = (e) => { if (e.key === 'Enter') { e.preventDefault(); handleSendMessage(receiverId, chatId); } };
 
@@ -3144,7 +3147,7 @@
             messageInput.addEventListener('keypress', __keyHandler);
         }
 
-        // === NEW: Top-level send handler ===
+        // ENHANCED: Top-level send handler
         async function handleSendMessage(receiverId, chatId) {
             if (!chatId || !currentUser) return;
 
@@ -3199,7 +3202,7 @@
         }
 
 
-        // === NEW: Separated Firestore write function ===
+        // ENHANCED: Separated Firestore write function
         async function sendFirestoreMessage(chatId, messageData) {
             try {
                 // Add to messages subcollection
@@ -3224,7 +3227,7 @@
                     }
                 });
                 
-                // === NEW: Add notification for receiver ===
+                // ENHANCED: Add notification for receiver
                 await addNotification(
                     messageData.receiverId, 
                     'message', 
@@ -3291,7 +3294,7 @@
                 
                 await batch.commit();
                 
-                // === NEW: Add notification for the followed user ===
+                // ENHANCED: Add notification for the followed user
                 await addNotification(userId, 'follow', currentUser.uid);
 
             } catch (error) {
@@ -3338,7 +3341,7 @@
             }
         }
         
-        // === NEW: Notification Functions ===
+        // ENHANCED: Notification Functions
         
         // Listener for new notifications
         function setupNotificationListener(uid) {
@@ -3352,7 +3355,7 @@
             
             _notificationsUnsub = onSnapshot(notifQuery, (snapshot) => {
                 const newCount = snapshot.size;
-                const unreadChatIds = new Set(); // === NEW: For chat dots
+                const unreadChatIds = new Set(); // For chat dots
                 let animateBell = false;
 
                 snapshot.docChanges().forEach(change => {
@@ -3395,12 +3398,12 @@
                 }
                 
                 notificationCount = newCount;
-                updateChatListUnreadDots(unreadChatIds); // === NEW
+                updateChatListUnreadDots(unreadChatIds); // Update chat list dots
                 
             }, err => console.error("Error listening to notifications:", err));
         }
 
-        // === NEW: Listener for the dropdown content ===
+        // ENHANCED: Listener for the dropdown content
         function setupNotificationDropdownListener(uid) {
             if (_notificationDropdownUnsub) _notificationDropdownUnsub();
 
@@ -3415,7 +3418,7 @@
             }, err => console.error("Error listening to dropdown notifications:", err));
         }
 
-        // === NEW: Render the notification dropdown ===
+        // ENHANCED: Render the notification dropdown
         function renderNotificationDropdown(snapshot) {
             if (snapshot.empty) {
                 notificationList.innerHTML = '<div class="no-notifications">No notifications yet.</div>';
@@ -3476,7 +3479,7 @@
                     });
                 }
                 
-                // === MODIFIED: Use new timestamp formatting function ===
+                // MODIFIED: Use new timestamp formatting function
                 const timestamp = notif.timestamp ? formatNotificationTimestamp(notif.timestamp.toDate()) : '';
 
                 item.innerHTML = `
@@ -3490,7 +3493,7 @@
             });
         }
         
-        // === NEW: Update blue dots on chat list ===
+        // ENHANCED: Update blue dots on chat list
         function updateChatListUnreadDots(unreadChatIds) {
             document.querySelectorAll('.chat-item').forEach(item => {
                 const dot = item.querySelector('.unread-dot');
@@ -3586,7 +3589,7 @@
             }
         }
 
-        // === NEW: Media Upload Functions ===
+        // ENHANCED: Media Upload Functions
 
         // Handle Image Selection
         function handleImageUpload(e) {
@@ -3598,7 +3601,7 @@
                 return;
             }
 
-            // --- NEW: Set pending media, don't upload ---
+            // Set pending media, don't upload
             pendingMediaBlob = file;
             pendingMediaType = file.type;
 
@@ -3611,7 +3614,7 @@
             e.target.value = null;
         }
         
-        // === NEW: Show/Hide Media Preview ===
+        // ENHANCED: Show/Hide Media Preview
         function showMediaPreview(type, url) {
             if (type === 'image') {
                 previewContent.innerHTML = `<img src="${url}" alt="Image Preview">`;
@@ -3625,7 +3628,7 @@
             recordBtn.style.display = 'none';
         }
         
-        // === NEW: Clear Media Preview ===
+        // ENHANCED: Clear Media Preview
         function clearMediaPreview() {
             mediaPreview.classList.remove('active');
             previewContent.innerHTML = '';
@@ -3637,7 +3640,7 @@
             recordBtn.style.display = 'flex';
         }
 
-        // === MODIFIED: Start Recording ===
+        // MODIFIED: Start Recording
         async function startRecording() {
             if (!currentChatId) {
                 console.warn("Please select a chat before recording.");
@@ -3649,7 +3652,7 @@
             try {
                 mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 
-                // --- Start Audio Visualization ---
+                // Start Audio Visualization
                 if (!audioContext) {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 }
@@ -3664,7 +3667,7 @@
                 dataArray = new Uint8Array(bufferLength);
                 
                 drawSoundWaves();
-                // --- End Visualization Setup ---
+                // End Visualization Setup
                 
                 mediaRecorder = new MediaRecorder(mediaStream);
                 audioChunks = [];
@@ -3673,7 +3676,7 @@
                     audioChunks.push(event.data);
                 };
 
-                // --- MODIFIED: onstop now just creates the preview ---
+                // MODIFIED: onstop now just creates the preview
                 mediaRecorder.onstop = () => {
                     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                     const audioUrl = URL.createObjectURL(audioBlob);
@@ -3706,7 +3709,7 @@
             }
         }
         
-        // === NEW: Sound Wave Drawing Function ===
+        // ENHANCED: Sound Wave Drawing Function
         function drawSoundWaves() {
             animationFrameId = requestAnimationFrame(drawSoundWaves);
             
@@ -3739,7 +3742,7 @@
             canvasContext.stroke();
         }
 
-        // === MODIFIED: Stop Recording ===
+        // MODIFIED: Stop Recording
         function stopAndPreviewRecording() {
             if (mediaRecorder && mediaRecorder.state === 'recording') {
                 mediaRecorder.stop();
@@ -3761,7 +3764,7 @@
             toggleRecordingUI(false);
         }
         
-        // === MODIFIED: Show/Hide Recording UI ===
+        // MODIFIED: Show/Hide Recording UI
         function toggleRecordingUI(isRecording) {
             if (isRecording) {
                 voiceRecorderUI.classList.add('active');
@@ -3772,7 +3775,7 @@
             }
         }
 
-        // === MODIFIED: Upload File to Storage (now accepts caption) ===
+        // MODIFIED: Upload File to Storage (now accepts caption)
         async function uploadFileToStorage(file, mimeType, receiverId, chatId, caption = '') {
             if (!currentUser) return;
 
@@ -3806,12 +3809,11 @@
 
             } catch (error) {
                 console.error("Error uploading file:", error);
-                // Replaced alert with console error
                 console.error(`Error uploading ${mimeType.startsWith('image/') ? 'image' : 'audio'}. Please try again.`);
             }
         }
         
-        // === MODIFIED: Add Listeners for Media Buttons ===
+        // MODIFIED: Add Listeners for Media Buttons
         uploadBtn.addEventListener('click', () => imageUpload.click());
         imageUpload.addEventListener('change', handleImageUpload); // Listen for file selection
         
