@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tajib Max</title>
-    <!-- Use a more recent version of Font Awesome for better icon support -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
@@ -1363,40 +1362,14 @@
             <!-- Fixed Notification Bell -->
             <div class="notification-bell" id="notificationBell">
                 <i class="fas fa-bell bell-icon"></i>
-                <div class="notification-badge" id="notificationBadge">3</div>
+                <div class="notification-badge" id="notificationBadge">0</div>
                 <div class="notification-dropdown">
                     <div class="notification-header">
                         <div class="notification-title">Notifications</div>
                         <button class="mark-read-btn" id="markAllReadBtn">Mark all as read</button>
                     </div>
                     <div class="notification-list" id="notificationList">
-                        <div class="notification-item unread">
-                            <div class="notification-avatar">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div class="notification-content">
-                                <div class="notification-text"><strong>John Doe</strong> sent you a message</div>
-                                <div class="notification-time">2 min ago</div>
-                            </div>
-                        </div>
-                        <div class="notification-item unread">
-                            <div class="notification-avatar">
-                                <i class="fas fa-user-friends"></i>
-                            </div>
-                            <div class="notification-content">
-                                <div class="notification-text"><strong>Design Team</strong> added you to a group</div>
-                                <div class="notification-time">1 hour ago</div>
-                            </div>
-                        </div>
-                        <div class="notification-item">
-                            <div class="notification-avatar">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div class="notification-content">
-                                <div class="notification-text"><strong>Jane Smith</strong> started following you</div>
-                                <div class="notification-time">Yesterday</div>
-                            </div>
-                        </div>
+                        <div class="no-notifications">No notifications yet.</div>
                     </div>
                 </div>
             </div>
@@ -1476,70 +1449,19 @@
             <input type="text" class="search-box" id="searchBox" placeholder="Search...">
             
             <div class="chat-list" id="chatList">
-                <div class="chat-item active">
-                    <div class="chat-avatar">
-                        <i class="fas fa-user"></i>
-                        <div class="status-indicator"></div>
-                    </div>
-                    <div class="chat-info">
-                        <h4>John Doe</h4>
-                        <p class="last-message">Hey, how are you doing?</p>
-                    </div>
-                    <div class="chat-meta">
-                        <div class="chat-time">10:30 AM</div>
-                        <div class="unread-count">2</div>
-                    </div>
-                </div>
-                <div class="chat-item">
-                    <div class="chat-avatar group">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="chat-info">
-                        <h4>Design Team</h4>
-                        <p class="last-message">Sarah: Let's meet tomorrow at 3 PM</p>
-                    </div>
-                    <div class="chat-meta">
-                        <div class="chat-time">Yesterday</div>
-                    </div>
-                </div>
-                <div class="chat-item">
-                    <div class="chat-avatar">
-                        <i class="fas fa-user"></i>
-                        <div class="status-indicator offline"></div>
-                    </div>
-                    <div class="chat-info">
-                        <h4>Jane Smith</h4>
-                        <p class="last-message">Thanks for your help with the project!</p>
-                    </div>
-                    <div class="chat-meta">
-                        <div class="chat-time">Monday</div>
-                    </div>
-                </div>
-                <div class="chat-item">
-                    <div class="chat-avatar group">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="chat-info">
-                        <h4>Family Group</h4>
-                        <p class="last-message">Mom: Don't forget about dinner on Sunday</p>
-                    </div>
-                    <div class="chat-meta">
-                        <div class="chat-time">Sunday</div>
-                        <div class="unread-count">5</div>
-                    </div>
-                </div>
+                <!-- Chat items will be populated by Firebase -->
             </div>
             
             <div class="user-list" id="userList" style="display: none;">
-                <!-- User items will be populated here -->
+                <!-- User items will be populated by Firebase -->
             </div>
             
             <div class="followed-list" id="followedList" style="display: none;">
-                <!-- Followed items will be populated here -->
+                <!-- Followed items will be populated by Firebase -->
             </div>
             
             <div class="follower-list" id="followerList" style="display: none;">
-                <!-- Follower items will be populated here -->
+                <!-- Follower items will be populated by Firebase -->
             </div>
         </div>
         
@@ -1590,7 +1512,7 @@
                         <i class="fas fa-microphone"></i>
                     </button>
                     
-                    <input type="text" class="message-input" placeholder="Type a message...">
+                    <input type="text" class="message-input" id="messageInput" placeholder="Type a message...">
                     <button class="send-btn" id="sendBtn">
                         <i class="fas fa-paper-plane"></i>
                     </button>
@@ -1632,167 +1554,207 @@
             <div class="form-group">
                 <label>Select Members</label>
                 <div class="member-selection" id="memberSelection">
-                    <!-- Member items will be populated here -->
+                    <!-- Member items will be populated by Firebase -->
                 </div>
             </div>
             <button class="btn" id="createGroupConfirmBtn">Create Group</button>
         </div>
     </div>
 
-    <script>
-        // === FIXED THEME SELECTOR FUNCTIONALITY ===
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
+        import { 
+            getAuth, 
+            GoogleAuthProvider, 
+            signInWithPopup,
+            onAuthStateChanged,
+            signOut 
+        } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            onSnapshot, 
+            serverTimestamp, 
+            query, 
+            where, 
+            orderBy,
+            updateDoc,
+            doc,
+            setDoc,
+            getDoc,
+            getDocs,
+            deleteDoc,
+            limit,
+            writeBatch,
+            arrayUnion,
+            arrayRemove
+        } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
+        
+        import { 
+            getDatabase, 
+            ref, 
+            onDisconnect, 
+            set, 
+            serverTimestamp as rtdbServerTimestamp, 
+            onValue 
+        } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js';
+
+        import {
+            getStorage,
+            ref as storageRef,
+            uploadBytes,
+            getDownloadURL
+        } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-storage.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCvaWRvpDY-BOOg_oitS4oVGDoQkiWMR6A",
+            authDomain: "windowsassistant-36760.firebaseapp.com",
+            projectId: "windowsassistant-36760",
+            storageBucket: "windowsassistant-36760.firebasestorage.app",
+            messagingSenderId: "125638102938",
+            appId: "1:125638102938:web:42e36690e0b74096003423",
+            databaseURL: "https://windowsassistant-36760-default-rtdb.firebaseio.com",
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const rtdb = getDatabase(app); 
+        const storage = getStorage(app); 
+        const provider = new GoogleAuthProvider();
+
+        // DOM Elements
+        const loginScreen = document.getElementById('loginScreen');
+        const appContainer = document.getElementById('appContainer');
+        const googleSignInBtn = document.getElementById('googleSignInBtn');
+        
+        // Fixed Components
         const themeSelector = document.getElementById('themeSelector');
         const themeOptions = document.querySelectorAll('.theme-option');
-        
-        // Toggle theme dropdown
-        themeSelector.addEventListener('click', (e) => {
-            e.stopPropagation();
-            themeSelector.classList.toggle('active');
-            
-            // Close notification dropdown if open
-            notificationBell.classList.remove('active');
-        });
-        
-        // Handle theme selection
-        themeOptions.forEach(option => {
-            option.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const theme = option.dataset.theme;
-                
-                // Remove active class from all options
-                themeOptions.forEach(opt => opt.classList.remove('active'));
-                
-                // Add active class to selected option
-                option.classList.add('active');
-                
-                // Apply theme
-                document.body.setAttribute('data-theme', theme);
-                
-                // Close dropdown
-                themeSelector.classList.remove('active');
-                
-                // Save theme preference (you can implement localStorage here)
-                console.log(`Theme changed to: ${theme}`);
-            });
-        });
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', () => {
-            themeSelector.classList.remove('active');
-        });
-        
-        // === FIXED NOTIFICATION BELL FUNCTIONALITY ===
         const notificationBell = document.getElementById('notificationBell');
         const notificationBadge = document.getElementById('notificationBadge');
         const notificationList = document.getElementById('notificationList');
         const markAllReadBtn = document.getElementById('markAllReadBtn');
         
-        // Toggle notification dropdown
-        notificationBell.addEventListener('click', (e) => {
-            e.stopPropagation();
-            notificationBell.classList.toggle('active');
-            
-            // Close theme dropdown if open
-            themeSelector.classList.remove('active');
-        });
+        // Profile Elements
+        const profileCard = document.getElementById('profileCard');
+        const profilePic = document.getElementById('profilePic');
+        const profileName = document.getElementById('profileName');
+        const profileBio = document.getElementById('profileBio');
+        const profileStatus = document.getElementById('profileStatus');
+        const followerCount = document.getElementById('followerCount');
+        const followingCount = document.getElementById('followingCount');
+        const followersBtn = document.getElementById('followersBtn');
+        const followingBtn = document.getElementById('followingBtn');
+        const editProfileBtn = document.getElementById('editProfileBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
         
-        // Mark all notifications as read
-        markAllReadBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            
-            // Remove unread class from all notifications
-            document.querySelectorAll('.notification-item.unread').forEach(item => {
-                item.classList.remove('unread');
-            });
-            
-            // Update badge count to 0
-            notificationBadge.textContent = '0';
-            notificationBadge.classList.remove('visible');
-            
-            // You would typically also update the backend here
-            console.log('All notifications marked as read');
-        });
+        // Sidebar Elements
+        const tabs = document.querySelectorAll('.tab');
+        const searchBox = document.getElementById('searchBox');
+        const chatList = document.getElementById('chatList');
+        const userList = document.getElementById('userList');
+        const followedList = document.getElementById('followedList');
+        const followerList = document.getElementById('followerList');
+        const createGroupBtn = document.getElementById('createGroupBtn');
         
-        // Close dropdown when clicking outside
-        document.addEventListener('click', () => {
+        // Chat Area Elements
+        const chatHeader = document.getElementById('chatHeader'); 
+        const chatHeaderTitle = document.getElementById('chatHeaderTitle');
+        const chatHeaderSubtitle = document.getElementById('chatHeaderSubtitle');
+        const chatFollowerCount = document.getElementById('chatFollowerCount'); 
+        const chatFollowingCount = document.getElementById('chatFollowingCount'); 
+        const chatMessages = document.getElementById('chatMessages');
+        const groupMembers = document.getElementById('groupMembers');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        
+        // Modal Elements
+        const editProfileModal = document.getElementById('editProfileModal');
+        const closeModal = document.getElementById('closeModal');
+        const saveProfileBtn = document.getElementById('saveProfileBtn');
+        const editName = document.getElementById('editName');
+        const editBio = document.getElementById('editBio');
+        const wordCount = document.getElementById('wordCount');
+        const createGroupModal = document.getElementById('createGroupModal');
+        const closeGroupModal = document.getElementById('closeGroupModal');
+        const groupName = document.getElementById('groupName');
+        const memberSelection = document.getElementById('memberSelection');
+        const createGroupConfirmBtn = document.getElementById('createGroupConfirmBtn');
+
+        // Current user data
+        let currentUser = null;
+        let currentTheme = 'light';
+        let users = []; 
+        let follows = [];
+        let followers = []; 
+        let currentChatUser = null;
+        let currentChatId = null;
+        let currentActiveTab = 'chats';
+        let selectedMembers = [];
+
+        // Firebase listeners
+        let _convoUnsub = null;
+        let _chatListUnsub = null;
+        let _usersUnsub = null; 
+        let _followsUnsub = null; 
+        let _followersUnsub = null; 
+        let _notificationsUnsub = null;
+
+        // === FIXED COMPONENTS FUNCTIONALITY ===
+        
+        // Theme selector
+        themeSelector.addEventListener('click', (e) => {
+            e.stopPropagation();
+            themeSelector.classList.toggle('active');
             notificationBell.classList.remove('active');
         });
         
-        // === FIXED CHATS SIDEBAR FUNCTIONALITY ===
-        const chatList = document.getElementById('chatList');
-        const chatItems = document.querySelectorAll('.chat-item');
-        const searchBox = document.getElementById('searchBox');
-        
-        // Handle chat selection
-        chatItems.forEach(item => {
-            item.addEventListener('click', () => {
-                // Remove active class from all items
-                chatItems.forEach(chat => chat.classList.remove('active'));
+        themeOptions.forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const theme = option.dataset.theme;
                 
-                // Add active class to selected item
-                item.classList.add('active');
+                themeOptions.forEach(opt => opt.classList.remove('active'));
+                option.classList.add('active');
                 
-                // Reset unread count for this chat
-                const unreadCount = item.querySelector('.unread-count');
-                if (unreadCount) {
-                    unreadCount.style.display = 'none';
-                    
-                    // Update total notification badge
-                    updateNotificationBadge();
-                }
+                document.body.setAttribute('data-theme', theme);
+                themeSelector.classList.remove('active');
                 
-                // You would typically load the chat messages here
-                console.log(`Chat selected: ${item.querySelector('h4').textContent}`);
-            });
-        });
-        
-        // Search functionality
-        searchBox.addEventListener('input', () => {
-            const searchTerm = searchBox.value.toLowerCase();
-            
-            chatItems.forEach(item => {
-                const chatName = item.querySelector('h4').textContent.toLowerCase();
-                const lastMessage = item.querySelector('.last-message').textContent.toLowerCase();
-                
-                if (chatName.includes(searchTerm) || lastMessage.includes(searchTerm)) {
-                    item.style.display = 'flex';
-                } else {
-                    item.style.display = 'none';
+                if (currentUser) {
+                    updateUserTheme(currentUser.uid, theme);
                 }
             });
         });
         
-        // Update notification badge based on unread chats
-        function updateNotificationBadge() {
-            const unreadChats = document.querySelectorAll('.unread-count:not([style*="display: none"])');
-            const totalUnread = unreadChats.length;
+        // Notification bell
+        notificationBell.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notificationBell.classList.toggle('active');
+            themeSelector.classList.remove('active');
             
-            if (totalUnread > 0) {
-                notificationBadge.textContent = totalUnread > 9 ? '9+' : totalUnread;
-                notificationBadge.classList.add('visible');
-            } else {
-                notificationBadge.classList.remove('visible');
+            if (notificationBell.classList.contains('active')) {
+                markNotificationsAsRead();
             }
-        }
-        
-        // Initialize
-        updateNotificationBadge();
-
-        // === ORIGINAL FUNCTIONALITY (simplified for demo) ===
-        const loginScreen = document.getElementById('loginScreen');
-        const appContainer = document.getElementById('appContainer');
-        const googleSignInBtn = document.getElementById('googleSignInBtn');
-        
-        // Demo login
-        googleSignInBtn.addEventListener('click', () => {
-            loginScreen.style.display = 'none';
-            appContainer.style.display = 'flex';
         });
         
+        markAllReadBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            markNotificationsAsRead();
+        });
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', () => {
+            themeSelector.classList.remove('active');
+            notificationBell.classList.remove('active');
+        });
+
         // Profile card hover behavior
         let profileCardTimeout;
-        const profileCard = document.getElementById('profileCard');
-        
         profileCard.addEventListener('mouseenter', () => {
             clearTimeout(profileCardTimeout);
             profileCard.classList.add('expanded');
@@ -1804,35 +1766,1172 @@
             }, 300);
         });
         
-        // Tab switching functionality
-        const tabs = document.querySelectorAll('.tab');
-        const userList = document.getElementById('userList');
-        const followedList = document.getElementById('followedList');
-        const followerList = document.getElementById('followerList');
-        
+        // Tab switching
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 tabs.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 
-                const tabName = tab.dataset.tab;
+                currentActiveTab = tab.dataset.tab;
                 
                 chatList.style.display = 'none';
                 userList.style.display = 'none';
                 followedList.style.display = 'none';
-                followerList.style.display = 'none';
+                followerList.style.display = 'none'; 
 
-                if (tabName === 'chats') {
+                if (currentActiveTab === 'chats') {
                     chatList.style.display = 'block';
-                } else if (tabName === 'suggested') {
+                } else if (currentActiveTab === 'suggested') {
                     userList.style.display = 'block';
-                } else if (tabName === 'followed') {
+                    loadUsers();
+                } else if (currentActiveTab === 'followed') {
                     followedList.style.display = 'block';
-                } else if (tabName === 'followers') {
+                    loadFollowedUsers();
+                } else if (currentActiveTab === 'followers') { 
                     followerList.style.display = 'block';
+                    loadFollowers();
                 }
+                
+                filterLists();
             });
         });
+        
+        // Search functionality
+        searchBox.addEventListener('input', filterLists);
+
+        function filterLists() {
+            const searchText = searchBox.value.toLowerCase().trim();
+
+            if (currentActiveTab === 'chats') {
+                filterList(chatList, '.chat-item', 'h4', searchText);
+            } else if (currentActiveTab === 'suggested') {
+                filterList(userList, '.user-item', 'h4', searchText);
+            } else if (currentActiveTab === 'followed') {
+                filterList(followedList, '.user-item', 'h4', searchText);
+            } else if (currentActiveTab === 'followers') {
+                filterList(followerList, '.user-item', 'h4', searchText);
+            }
+        }
+
+        function filterList(listContainer, itemSelector, nameSelector, searchText) {
+            const items = listContainer.querySelectorAll(itemSelector);
+            items.forEach(item => {
+                const nameElement = item.querySelector(nameSelector);
+                if (nameElement) {
+                    const name = nameElement.textContent.toLowerCase();
+                    if (name.includes(searchText)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                }
+            });
+        }
+        
+        // Followers/Following buttons
+        followersBtn.addEventListener('click', () => {
+            document.querySelector('[data-tab="followers"]').click();
+        });
+        
+        followingBtn.addEventListener('click', () => {
+            document.querySelector('[data-tab="followed"]').click();
+        });
+
+        // === FIREBASE AUTHENTICATION ===
+        
+        // Google Sign-In
+        googleSignInBtn.addEventListener('click', () => {
+            signInWithPopup(auth, provider)
+                .catch((error) => {
+                    console.error('Sign-in error:', error);
+                });
+        });
+
+        // Auth state observer
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                console.log('User signed in:', user);
+                loginScreen.style.display = 'none';
+                appContainer.style.display = 'flex';
+
+                setupPresence(user.uid);
+                checkAndCreateUserProfile(user);
+                loadUserTheme(user.uid);
+                setupFirestoreListeners(user.uid);
+                setupNotificationListener(user.uid);
+                updateProfileUI(user);
+            } else {
+                loginScreen.style.display = 'flex';
+                appContainer.style.display = 'none';
+            }
+        });
+        
+        // === FIREBASE FUNCTIONS ===
+        
+        function setupPresence(uid) {
+            const userStatusRef = ref(rtdb, 'status/' + uid);
+            const connectedRef = ref(rtdb, '.info/connected');
+            
+            const isOnlineForRTDB = { 
+                state: 'online', 
+                last_changed: rtdbServerTimestamp() 
+            };
+            const isOfflineForRTDB = { 
+                state: 'offline', 
+                last_changed: rtdbServerTimestamp() 
+            };
+
+            onValue(connectedRef, (snap) => {
+                if (snap.val() === false) {
+                    return;
+                }
+                
+                onDisconnect(userStatusRef).set(isOfflineForRTDB).then(() => {
+                    set(userStatusRef, isOnlineForRTDB);
+                    updateUserOnlineStatus(uid, true);
+                });
+            });
+        }
+        
+        async function checkAndCreateUserProfile(user) {
+            const userDocRef = doc(db, 'users', user.uid);
+            const userDoc = await getDoc(userDocRef);
+
+            if (!userDoc.exists()) {
+                await setDoc(userDocRef, {
+                    displayName: user.displayName || `User${Math.floor(1000 + Math.random() * 9000)}`,
+                    bio: 'Hello! I am using Tajib Max.',
+                    photoURL: user.photoURL || '',
+                    followers: 0,
+                    following: 0,
+                    isOnline: true,
+                    lastSeen: serverTimestamp(),
+                    createdAt: serverTimestamp(),
+                    theme: 'light'
+                });
+            } else {
+                const userData = userDoc.data();
+                profileName.textContent = userData.displayName;
+                profileBio.textContent = userData.bio;
+                followerCount.textContent = userData.followers || 0;
+                followingCount.textContent = userData.following || 0;
+                
+                updateProfileUI(user, userData);
+            }
+        }
+
+        function setupFirestoreListeners(uid) {
+            if (_usersUnsub) _usersUnsub();
+            if (_followsUnsub) _followsUnsub();
+            if (_followersUnsub) _followersUnsub();
+            if (_chatListUnsub) _chatListUnsub();
+
+            // Users listener
+            _usersUnsub = onSnapshot(collection(db, 'users'), (snapshot) => {
+                users = [];
+                snapshot.forEach(doc => {
+                    users.push({ id: doc.id, ...doc.data() });
+                });
+                
+                loadUsers();
+                loadFollowedUsers();
+                loadFollowers();
+                loadChats(); 
+            });
+
+            // Follows listener
+            _followsUnsub = onSnapshot(query(collection(db, 'follows'), where('followerId', '==', uid)), (snapshot) => {
+                follows = [];
+                snapshot.forEach(doc => {
+                    follows.push({ id: doc.id, ...doc.data() });
+                });
+                followingCount.textContent = follows.length;
+                loadUsers(); 
+                loadFollowedUsers(); 
+            });
+            
+            // Followers listener
+            _followersUnsub = onSnapshot(query(collection(db, 'follows'), where('followingId', '==', uid)), (snapshot) => {
+                followers = [];
+                snapshot.forEach(doc => {
+                    followers.push({ id: doc.id, ...doc.data() });
+                });
+                followerCount.textContent = followers.length;
+                loadFollowers(); 
+            });
+            
+            // Chats listener
+            _chatListUnsub = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', uid), orderBy('lastMessage.timestamp', 'desc')), (snapshot) => {
+                renderChatList(snapshot);
+            }, err => console.error("Error listening to chat list:", err));
+        }
+
+        function setupNotificationListener(uid) {
+            if (_notificationsUnsub) _notificationsUnsub();
+            
+            const notifQuery = query(
+                collection(db, 'users', uid, 'notifications'),
+                where('read', '==', false),
+                orderBy('timestamp', 'desc')
+            );
+            
+            _notificationsUnsub = onSnapshot(notifQuery, (snapshot) => {
+                const newCount = snapshot.size;
+                
+                if (newCount > 0) {
+                    notificationBadge.textContent = newCount > 9 ? '9+' : newCount;
+                    notificationBadge.classList.add('visible');
+                } else {
+                    notificationBadge.classList.remove('visible');
+                }
+                
+                renderNotificationDropdown(snapshot);
+            }, err => console.error("Error listening to notifications:", err));
+        }
+
+        function renderNotificationDropdown(snapshot) {
+            if (snapshot.empty) {
+                notificationList.innerHTML = '<div class="no-notifications">No notifications yet.</div>';
+                return;
+            }
+
+            notificationList.innerHTML = '';
+            snapshot.forEach(doc => {
+                const notif = doc.data();
+                const sender = users.find(u => u.id === notif.senderId);
+                
+                if (!sender) return;
+
+                const item = document.createElement('div');
+                item.className = 'notification-item unread';
+                
+                const avatar = sender.photoURL 
+                    ? `<img src="${sender.photoURL}" alt="${sender.displayName}">` 
+                    : '<i class="fas fa-user"></i>';
+                
+                let text = '';
+                if (notif.type === 'message') {
+                    text = `<strong>${escapeHtml(sender.displayName)}</strong> sent you a message.`;
+                } else if (notif.type === 'follow') {
+                    text = `<strong>${escapeHtml(sender.displayName)}</strong> started following you.`;
+                }
+                
+                const timestamp = notif.timestamp ? formatNotificationTimestamp(notif.timestamp.toDate()) : '';
+
+                item.innerHTML = `
+                    <div class="notification-avatar">
+                        ${avatar}
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-text">${text}</div>
+                        <div class="notification-time">${timestamp}</div>
+                    </div>
+                `;
+                notificationList.appendChild(item);
+            });
+        }
+
+        function renderChatList(snapshot) {
+            chatList.innerHTML = '';
+            
+            if (snapshot.empty) {
+                chatList.innerHTML = '<div class="chat-item" style="display: flex;">No conversations yet.</div>';
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const chatData = doc.data();
+                let displayName, photoURL, isOnline, isGroup = false;
+                
+                if (chatData.isGroup) {
+                    // Group chat
+                    displayName = chatData.groupName;
+                    photoURL = null;
+                    isOnline = false;
+                    isGroup = true;
+                } else {
+                    // One-on-one chat
+                    const otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
+                    const user = users.find(u => u.id === otherUserId);
+                    
+                    displayName = user ? user.displayName : 'Unknown User';
+                    photoURL = user ? user.photoURL : null;
+                    isOnline = user ? user.isOnline : false;
+                }
+                
+                let lastMessageText = 'Say hi!';
+                if (chatData.lastMessage && chatData.lastMessage.text) {
+                    if (chatData.lastMessage.type === 'image') {
+                        lastMessageText = '<i class="fas fa-image"></i> Image';
+                    } else if (chatData.lastMessage.type === 'audio') {
+                        lastMessageText = '<i class="fas fa-microphone"></i> Voice Note';
+                    } else if (chatData.lastMessage.type === 'system') {
+                        lastMessageText = '<i class="fas fa-info-circle"></i> ' + chatData.lastMessage.text;
+                    } else {
+                        lastMessageText = chatData.lastMessage.text;
+                    }
+                }
+
+                const chatElement = document.createElement('div');
+                chatElement.className = 'chat-item';
+                chatElement.dataset.chatId = doc.id; 
+                chatElement.innerHTML = `
+                    <div class="avatar-wrapper">
+                        <div class="chat-avatar ${isGroup ? 'group' : ''}">
+                            ${isGroup ? '<i class="fas fa-users"></i>' : (photoURL ? `<img src="${photoURL}">` : '<i class="fas fa-user"></i>')}
+                        </div>
+                        <div class="status-indicator ${isOnline ? '' : 'offline'}"></div>
+                    </div>
+                    <div class="chat-info">
+                        <h4>${escapeHtml(displayName)}</h4>
+                        <p class="last-message">${lastMessageText}</p>
+                    </div>
+                    <div class="chat-meta">
+                        <div class="chat-time">${formatTime(chatData.lastMessage?.timestamp?.toDate())}</div>
+                        <div class="unread-count" style="display: none;">0</div>
+                    </div>
+                `;
+                
+                if (doc.id === currentChatId) {
+                    chatElement.classList.add('active');
+                }
+                
+                chatElement.addEventListener('click', () => {
+                    if (isGroup) {
+                        openGroupChat({ id: doc.id, ...chatData });
+                    } else {
+                        const otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
+                        const user = users.find(u => u.id === otherUserId);
+                        if (user) {
+                            openChat(user.id, user);
+                        }
+                    }
+                });
+                
+                chatList.appendChild(chatElement);
+            });
+            
+            filterLists();
+        }
+
+        function loadUsers() {
+            const allOtherUserIds = users.map(u => u.id);
+            renderUserList(userList, allOtherUserIds, 'No other users found.');
+        }
+
+        function loadFollowedUsers() {
+            const followedUserIds = follows.map(f => f.followingId);
+            renderUserList(followedList, followedUserIds, 'You are not following anyone yet.');
+        }
+
+        function loadFollowers() {
+            const followerUserIds = followers.map(f => f.followerId);
+            renderUserList(followerList, followerUserIds, 'You have no followers yet.');
+        }
+
+        function renderUserList(container, userIds, emptyMessage) {
+            container.innerHTML = '';
+            
+            const usersToDisplay = users.filter(user => userIds.includes(user.id) && user.id !== currentUser.uid);
+
+            if (usersToDisplay.length === 0) {
+                container.innerHTML = `<div class="user-item" style="display: flex;">${emptyMessage}</div>`;
+                return;
+            }
+
+            usersToDisplay.forEach(user => {
+                const isFollowing = follows.some(follow => follow.followingId === user.id);
+                
+                const userElement = document.createElement('div');
+                userElement.className = 'user-item';
+
+                userElement.innerHTML = `
+                    <div class="avatar-wrapper">
+                        <div class="user-avatar">
+                            ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
+                        </div>
+                        <div class="status-indicator ${user.isOnline ? '' : 'offline'}"></div>
+                    </div>
+                    <div class="user-info">
+                        <h4>${escapeHtml(user.displayName)}</h4>
+                        <p>${escapeHtml(user.bio) || 'No bio yet'}</p>
+                    </div>
+                    <div class="user-actions">
+                        ${isFollowing ?
+                            `<button class="message-btn" data-userid="${user.id}">Message</button>
+                             <button class="follow-btn following" data-userid="${user.id}">Unfollow</button>` :
+                            `<button class="follow-btn" data-userid="${user.id}">Follow</button>`
+                        }
+                    </div>
+                `;
+                container.appendChild(userElement);
+                
+                // Add click listener to the item itself
+                userElement.addEventListener('click', (e) => {
+                    if (e.target.tagName === 'BUTTON') return;
+                    
+                    const isExpanded = userElement.classList.contains('expanded');
+                    
+                    container.querySelectorAll('.user-item.expanded').forEach(item => {
+                        item.classList.remove('expanded');
+                    });
+                    
+                    if (!isExpanded) {
+                        userElement.classList.add('expanded');
+                    }
+                });
+            });
+            
+            addListButtonListeners(container);
+            filterLists();
+        }
+
+        function addListButtonListeners(container) {
+            container.querySelectorAll('.follow-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const userId = button.dataset.userid;
+                    const isFollowing = button.classList.contains('following');
+                    if (isFollowing) {
+                        unfollowUser(userId);
+                    } else {
+                        followUser(userId);
+                    }
+                });
+            });
+
+            container.querySelectorAll('.message-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const userId = button.dataset.userid;
+                    const user = users.find(u => u.id === userId);
+                    if (user) {
+                        openChat(userId, user);
+                        document.querySelector('[data-tab="chats"]').click();
+                    }
+                });
+            });
+        }
+
+        async function openChat(userId, user) {
+            if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
+
+            currentChatUser = { id: userId, ...user };
+            
+            const chatId = await getOrCreateChat(userId);
+            if (!chatId) {
+                console.error("Could not get or create chat ID");
+                return;
+            }
+            currentChatId = chatId;
+            
+            // Highlight active chat in list
+            document.querySelectorAll('.chat-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.chatId === currentChatId);
+            });
+            
+            const headerAvatarDiv = chatHeader.querySelector('.chat-header-avatar');
+            const headerImg = headerAvatarDiv.querySelector('img');
+            const headerIcon = headerAvatarDiv.querySelector('i');
+            
+            if (user.photoURL) {
+                headerImg.src = user.photoURL;
+                headerImg.style.display = 'block';
+                headerIcon.style.display = 'none';
+            } else {
+                headerImg.style.display = 'none';
+                headerIcon.style.display = 'block';
+            }
+            
+            chatHeader.querySelector('.status-indicator').classList.toggle('offline', !user.isOnline);
+            chatHeaderTitle.textContent = user.displayName;
+            chatHeaderSubtitle.textContent = user.isOnline ? 'Online' : 'Offline';
+            chatFollowerCount.textContent = user.followers || 0;
+            chatFollowingCount.textContent = user.following || 0;
+
+            // Hide group members display for one-on-one chat
+            groupMembers.style.display = 'none';
+
+            chatMessages.innerHTML = `<div class="message received"><div class="message-meta">Loading messages...<span class="message-time">Just now</span></div></div>`;
+
+            const messagesQuery = query(
+                collection(db, 'chats', currentChatId, 'messages'),
+                orderBy('timestamp', 'asc')
+            );
+            
+            _convoUnsub = onSnapshot(messagesQuery, (snapshot) => {
+                renderConversation(snapshot);
+            }, err => console.error('Error listening to messages:', err));
+
+            bindSendHandlerForConversation(userId, currentChatId);
+        }
+
+        function renderConversation(snapshot) {
+            chatMessages.innerHTML = '';
+            
+            if (snapshot.empty) {
+                const name = currentChatUser && currentChatUser.displayName ? escapeHtml(currentChatUser.displayName) : 'this user';
+                chatMessages.innerHTML = `<div class="message received">Start a conversation with ${name}!<div class="message-meta"><span class="message-time">Just now</span></div></div>`;
+            } else {
+                snapshot.forEach(doc => {
+                    const m = doc.data();
+                    const ts = m.timestamp ? m.timestamp.toDate() : new Date();
+                    
+                    const div = document.createElement('div');
+                    let ticksHtml = '';
+                    
+                    if (m.senderId === currentUser.uid && m.type !== 'system') {
+                        if (m.isRead) {
+                            ticksHtml = `<span class="message-ticks read"><i class="fas fa-check-double"></i></span>`;
+                        } else {
+                            ticksHtml = `<span class="message-ticks delivered"><i class="fas fa-check-double"></i></span>`;
+                        }
+                    }
+
+                    let messageContent = '';
+                    
+                    if (m.type === 'image' && m.imageUrl) {
+                        messageContent += `<img src="${escapeHtml(m.imageUrl)}" alt="Sent image" onclick="window.open('${escapeHtml(m.imageUrl)}', '_blank')">`;
+                    } else if (m.type === 'audio' && m.audioUrl) {
+                        messageContent += `<audio controls src="${escapeHtml(m.audioUrl)}"></audio>`;
+                    }
+
+                    if (m.text) {
+                        messageContent += `<div>${escapeHtml(m.text)}</div>`;
+                    } else if (!messageContent) {
+                        messageContent = escapeHtml(m.text || '');
+                    }
+                    
+                    let messageClass = 'message ';
+                    if (m.type === 'system') {
+                        messageClass += 'received';
+                    } else if (m.senderId === currentUser.uid) {
+                        messageClass += 'sent';
+                    } else {
+                        messageClass += 'received';
+                    }
+                    
+                    div.className = messageClass;
+
+                    div.innerHTML = `
+                        ${messageContent}
+                        <div class="message-meta">
+                            <span class="message-time">${ts.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                            ${ticksHtml}
+                        </div>
+                    `;
+                    chatMessages.appendChild(div);
+                });
+            }
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function bindSendHandlerForConversation(receiverId, chatId) {
+            sendBtn.onclick = () => handleSendMessage(receiverId, chatId);
+            messageInput.onkeypress = (e) => { 
+                if (e.key === 'Enter') { 
+                    e.preventDefault(); 
+                    handleSendMessage(receiverId, chatId); 
+                } 
+            };
+        }
+
+        async function handleSendMessage(receiverId, chatId) {
+            if (!chatId || !currentUser) return;
+
+            const messageText = messageInput.value.trim();
+            
+            if (messageText) {
+                messageInput.value = '';
+                
+                const messageData = {
+                    senderId: currentUser.uid,
+                    receiverId: receiverId,
+                    timestamp: serverTimestamp(),
+                    isRead: false,
+                    type: 'text',
+                    text: messageText
+                };
+                
+                await sendFirestoreMessage(chatId, messageData);
+            }
+        }
+
+        async function sendFirestoreMessage(chatId, messageData) {
+            try {
+                await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
+
+                let lastMessageText = '...';
+                if (messageData.type === 'text') {
+                    lastMessageText = messageData.text;
+                } else if (messageData.type === 'image') {
+                    lastMessageText = messageData.text ? `[Image] ${messageData.text}` : '[Image]';
+                } else if (messageData.type === 'audio') {
+                    lastMessageText = messageData.text ? `[Voice] ${messageData.text}` : '[Voice Note]';
+                }
+
+                await updateDoc(doc(db, 'chats', chatId), {
+                    lastMessage: {
+                        text: lastMessageText,
+                        timestamp: messageData.timestamp,
+                        type: messageData.type
+                    }
+                });
+                
+                await addNotification(
+                    messageData.receiverId, 
+                    'message', 
+                    currentUser.uid,
+                    chatId
+                );
+                
+            } catch (error) {
+                console.error('Error sending message to Firestore:', error);
+            }
+        }
+
+        async function getOrCreateChat(otherUserId) {
+            if (!currentUser) return null;
+            
+            const chatsRef = collection(db, 'chats');
+            const q = query(chatsRef, where('members', 'array-contains', currentUser.uid));
+            
+            const querySnapshot = await getDocs(q);
+            let existingChat = null;
+            
+            querySnapshot.forEach(doc => {
+                const data = doc.data();
+                if (!data.isGroup && data.members && data.members.includes(otherUserId)) {
+                    existingChat = { id: doc.id, ...data };
+                }
+            });
+
+            if (existingChat) {
+                return existingChat.id;
+            }
+            
+            const newChatDoc = await addDoc(chatsRef, {
+                members: [currentUser.uid, otherUserId],
+                lastMessage: {
+                    text: 'Chat created',
+                    timestamp: serverTimestamp(),
+                    type: 'text'
+                }
+            });
+            
+            return newChatDoc.id;
+        }
+
+        async function followUser(userId) {
+            if (!currentUser) return;
+            try {
+                await addDoc(collection(db, 'follows'), {
+                    followerId: currentUser.uid,
+                    followingId: userId,
+                    timestamp: serverTimestamp()
+                });
+                
+                const batch = writeBatch(db);
+                
+                const userDocRef = doc(db, 'users', userId);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    batch.update(userDocRef, {
+                        followers: (userDoc.data().followers || 0) + 1
+                    });
+                }
+
+                const currentUserDocRef = doc(db, 'users', currentUser.uid);
+                const currentUserDoc = await getDoc(currentUserDocRef);
+                if (currentUserDoc.exists()) {
+                     batch.update(currentUserDocRef, {
+                        following: (currentUserDoc.data().following || 0) + 1
+                    });
+                }
+                
+                await batch.commit();
+                
+                await addNotification(userId, 'follow', currentUser.uid);
+
+            } catch (error) {
+                console.error('Error following user:', error);
+            }
+        }
+
+        async function unfollowUser(userId) {
+            if (!currentUser) return;
+            try {
+                const followsQuery = query(
+                    collection(db, 'follows'),
+                    where('followerId', '==', currentUser.uid),
+                    where('followingId', '==', userId)
+                );
+                
+                const querySnapshot = await getDocs(followsQuery);
+                const batch = writeBatch(db);
+
+                querySnapshot.forEach((followDoc) => {
+                    batch.delete(doc(db, 'follows', followDoc.id));
+                });
+
+                const userDocRef = doc(db, 'users', userId);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    batch.update(userDocRef, {
+                        followers: Math.max(0, (userDoc.data().followers || 0) - 1)
+                    });
+                }
+
+                const currentUserDocRef = doc(db, 'users', currentUser.uid);
+                const currentUserDoc = await getDoc(currentUserDocRef);
+                if (currentUserDoc.exists()) {
+                    batch.update(currentUserDocRef, {
+                        following: Math.max(0, (currentUserDoc.data().following || 0) - 1)
+                    });
+                }
+                
+                await batch.commit();
+                
+            } catch (error) {
+                console.error('Error unfollowing user:', error);
+            }
+        }
+
+        async function addNotification(receiverId, type, senderId, chatId = null) {
+            try {
+                await addDoc(collection(db, 'users', receiverId, 'notifications'), {
+                    type: type,
+                    senderId: senderId,
+                    chatId: chatId,
+                    read: false,
+                    timestamp: serverTimestamp()
+                });
+            } catch (error) {
+                console.error("Error adding notification:", error);
+            }
+        }
+        
+        async function markNotificationsAsRead() {
+            if (!currentUser) return;
+            
+            const notifQuery = query(
+                collection(db, 'users', currentUser.uid, 'notifications'),
+                where('read', '==', false)
+            );
+
+            try {
+                const snapshot = await getDocs(notifQuery);
+                if (snapshot.empty) return;
+                
+                const batch = writeBatch(db);
+                snapshot.forEach(doc => {
+                    batch.update(doc.ref, { read: true });
+                });
+                await batch.commit();
+                
+            } catch (error) {
+                console.error("Error marking notifications as read:", error);
+            }
+        }
+
+        // === HELPER FUNCTIONS ===
+        
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return String(unsafe).replace(/[&<"'>]/g, (m) => {
+                switch (m) {
+                    case '&': return '&amp;';
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '"': return '&quot;';
+                    case "'": return '&#039;';
+                    default: return m;
+                }
+            });
+        }
+        
+        function formatNotificationTimestamp(date) {
+            if (!date) return "";
+            
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const notifDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+            if (today.getTime() === notifDate.getTime()) {
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                return `${hours}:${minutes}`;
+            } else {
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                const year = date.getFullYear();
+                return `${month}/${day}/${year}`;
+            }
+        }
+
+        function formatTime(date) {
+            if (!date) return '';
+            return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+        }
+
+        function updateProfileUI(user, userData = null) {
+            const pfp = user.photoURL || (userData ? userData.photoURL : null);
+            const dispName = user.displayName || (userData ? userData.displayName : 'User');
+            
+            profileName.textContent = dispName;
+            
+            const img = profilePic.querySelector('img');
+            const icon = profilePic.querySelector('i');
+
+            if (pfp) {
+                img.src = pfp;
+                img.style.display = 'block';
+                icon.style.display = 'none';
+            } else {
+                img.style.display = 'none';
+                icon.style.display = 'block';
+            }
+            
+            if (userData) {
+                profileStatus.classList.toggle('offline', !userData.isOnline);
+            }
+        }
+
+        async function updateUserTheme(uid, theme) {
+            const userDocRef = doc(db, 'users', uid);
+            await updateDoc(userDocRef, {
+                theme: theme
+            });
+        }
+
+        async function updateUserOnlineStatus(uid, isOnline) {
+            const userDocRef = doc(db, 'users', uid);
+            await updateDoc(userDocRef, {
+                isOnline: isOnline,
+                lastSeen: serverTimestamp()
+            });
+        }
+
+        async function loadUserTheme(uid) {
+            const userDocRef = doc(db, 'users', uid);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                if (userData.theme) {
+                    document.body.setAttribute('data-theme', userData.theme);
+                    themeOptions.forEach(option => {
+                        option.classList.toggle('active', option.dataset.theme === userData.theme);
+                    });
+                }
+            }
+        }
+
+        // === MODAL FUNCTIONALITY ===
+        
+        editProfileBtn.addEventListener('click', () => {
+            editName.value = profileName.textContent;
+            editBio.value = profileBio.textContent;
+            const words = editBio.value.trim().split(/\s+/).filter(word => word.length > 0);
+            wordCount.textContent = 10 - words.length;
+            editProfileModal.style.display = 'flex';
+        });
+
+        closeModal.addEventListener('click', () => {
+            editProfileModal.style.display = 'none';
+        });
+
+        saveProfileBtn.addEventListener('click', () => {
+            const newName = editName.value;
+            let newBio = editBio.value;
+            const words = newBio.trim().split(/\s+/).filter(word => word.length > 0);
+            if (words.length > 10) {
+                newBio = words.slice(0, 10).join(' ');
+            }
+            profileName.textContent = newName;
+            profileBio.textContent = newBio;
+            if (currentUser) {
+                updateUserProfile(currentUser.uid, newName, newBio);
+            }
+            editProfileModal.style.display = 'none';
+        });
+
+        async function updateUserProfile(uid, displayName, bio) {
+            const userDocRef = doc(db, 'users', uid);
+            await updateDoc(userDocRef, {
+                displayName: displayName,
+                bio: bio
+            });
+        }
+
+        // Bio word count limit
+        editBio.addEventListener('input', () => {
+            const words = editBio.value.trim().split(/\s+/).filter(word => word.length > 0);
+            const wordLimit = 10;
+            const remaining = wordLimit - words.length;
+
+            wordCount.textContent = remaining;
+
+            if (remaining < 0) {
+                wordCount.style.color = '#FF3B30';
+                editBio.value = words.slice(0, wordLimit).join(' ');
+                wordCount.textContent = 0;
+            } else {
+                wordCount.style.color = '#8E8E93';
+            }
+        });
+
+        // Group chat functionality
+        createGroupBtn.addEventListener('click', () => {
+            openCreateGroupModal();
+        });
+        
+        closeGroupModal.addEventListener('click', () => {
+            createGroupModal.style.display = 'none';
+        });
+        
+        createGroupConfirmBtn.addEventListener('click', () => {
+            createGroupChat();
+        });
+
+        function openCreateGroupModal() {
+            memberSelection.innerHTML = '';
+            selectedMembers = [];
+            groupName.value = '';
+            
+            follows.forEach(follow => {
+                const user = users.find(u => u.id === follow.followingId);
+                if (user) {
+                    const memberItem = document.createElement('div');
+                    memberItem.className = 'member-item';
+                    memberItem.innerHTML = `
+                        <div class="user-avatar">
+                            ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
+                        </div>
+                        <h4>${escapeHtml(user.displayName)}</h4>
+                    `;
+                    memberItem.addEventListener('click', () => {
+                        memberItem.classList.toggle('selected');
+                        if (memberItem.classList.contains('selected')) {
+                            selectedMembers.push(user.id);
+                        } else {
+                            selectedMembers = selectedMembers.filter(id => id !== user.id);
+                        }
+                    });
+                    memberSelection.appendChild(memberItem);
+                }
+            });
+            
+            createGroupModal.style.display = 'flex';
+        }
+
+        async function createGroupChat() {
+            if (!currentUser) return;
+            
+            const name = groupName.value.trim();
+            if (!name) {
+                alert('Please enter a group name');
+                return;
+            }
+            
+            if (selectedMembers.length === 0) {
+                alert('Please select at least one member');
+                return;
+            }
+            
+            const allMembers = [currentUser.uid, ...selectedMembers];
+            
+            try {
+                const groupChatDoc = await addDoc(collection(db, 'chats'), {
+                    isGroup: true,
+                    groupName: name,
+                    members: allMembers,
+                    createdBy: currentUser.uid,
+                    lastMessage: {
+                        text: 'Group created',
+                        timestamp: serverTimestamp(),
+                        type: 'system'
+                    },
+                    createdAt: serverTimestamp()
+                });
+                
+                await addDoc(collection(db, 'chats', groupChatDoc.id, 'messages'), {
+                    senderId: 'system',
+                    text: `${currentUser.displayName} created the group "${name}"`,
+                    timestamp: serverTimestamp(),
+                    type: 'system'
+                });
+                
+                createGroupModal.style.display = 'none';
+                
+                const groupData = {
+                    id: groupChatDoc.id,
+                    isGroup: true,
+                    groupName: name,
+                    members: allMembers
+                };
+                openGroupChat(groupData);
+                
+            } catch (error) {
+                console.error('Error creating group chat:', error);
+                alert('Error creating group chat. Please try again.');
+            }
+        }
+
+        function openGroupChat(groupData) {
+            if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
+
+            currentChatUser = groupData;
+            currentChatId = groupData.id;
+            
+            document.querySelectorAll('.chat-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.chatId === currentChatId);
+            });
+            
+            const headerAvatarDiv = chatHeader.querySelector('.chat-header-avatar');
+            const headerImg = headerAvatarDiv.querySelector('img');
+            const headerIcon = headerAvatarDiv.querySelector('i');
+            
+            headerImg.style.display = 'none';
+            headerIcon.style.display = 'block';
+            headerIcon.className = 'fas fa-users';
+            
+            chatHeader.querySelector('.status-indicator').classList.add('offline');
+            chatHeaderTitle.textContent = groupData.groupName;
+            chatHeaderSubtitle.textContent = 'Group Chat';
+            
+            groupMembers.style.display = 'flex';
+            groupMembers.innerHTML = '';
+            
+            groupData.members.forEach(memberId => {
+                const member = users.find(u => u.id === memberId);
+                if (member) {
+                    const memberTag = document.createElement('div');
+                    memberTag.className = 'group-member-tag';
+                    memberTag.textContent = member.displayName;
+                    groupMembers.appendChild(memberTag);
+                }
+            });
+            
+            chatFollowerCount.textContent = '0';
+            chatFollowingCount.textContent = '0';
+
+            chatMessages.innerHTML = `<div class="message received"><div class="message-meta">Loading messages...<span class="message-time">Just now</span></div></div>`;
+
+            const messagesQuery = query(
+                collection(db, 'chats', currentChatId, 'messages'),
+                orderBy('timestamp', 'asc')
+            );
+            
+            _convoUnsub = onSnapshot(messagesQuery, (snapshot) => {
+                renderConversation(snapshot);
+            }, err => console.error('Error listening to messages:', err));
+
+            bindSendHandlerForGroupConversation(groupData.id, groupData.members);
+        }
+
+        function bindSendHandlerForGroupConversation(chatId, members) {
+            sendBtn.onclick = () => handleSendGroupMessage(chatId, members);
+            messageInput.onkeypress = (e) => { 
+                if (e.key === 'Enter') { 
+                    e.preventDefault(); 
+                    handleSendGroupMessage(chatId, members); 
+                } 
+            };
+        }
+
+        async function handleSendGroupMessage(chatId, members) {
+            if (!chatId || !currentUser) return;
+
+            const messageText = messageInput.value.trim();
+            
+            if (messageText) {
+                messageInput.value = '';
+                
+                const messageData = {
+                    senderId: currentUser.uid,
+                    senderName: currentUser.displayName,
+                    timestamp: serverTimestamp(),
+                    isRead: false,
+                    type: 'text',
+                    text: messageText
+                };
+                await sendFirestoreGroupMessage(chatId, messageData, members);
+            }
+        }
+
+        async function sendFirestoreGroupMessage(chatId, messageData, members) {
+            try {
+                await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
+
+                let lastMessageText = '...';
+                if (messageData.type === 'text') {
+                    lastMessageText = messageData.text;
+                } else if (messageData.type === 'image') {
+                    lastMessageText = messageData.text ? `[Image] ${messageData.text}` : '[Image]';
+                } else if (messageData.type === 'audio') {
+                    lastMessageText = messageData.text ? `[Voice] ${messageData.text}` : '[Voice Note]';
+                }
+
+                await updateDoc(doc(db, 'chats', chatId), {
+                    lastMessage: {
+                        text: lastMessageText,
+                        timestamp: messageData.timestamp,
+                        type: messageData.type
+                    }
+                });
+                
+                members.forEach(memberId => {
+                    if (memberId !== currentUser.uid) {
+                        addNotification(
+                            memberId, 
+                            'message', 
+                            currentUser.uid,
+                            chatId
+                        );
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error sending group message to Firestore:', error);
+            }
+        }
+
+        // Logout functionality
+        logoutBtn.addEventListener('click', async () => {
+            if (currentUser) {
+                const userStatusRef = ref(rtdb, 'status/' + currentUser.uid);
+                await set(userStatusRef, { 
+                    state: 'offline', 
+                    last_changed: rtdbServerTimestamp() 
+                });
+                await updateUserOnlineStatus(currentUser.uid, false).catch(()=>{});
+            }
+
+            // Unsubscribe from all listeners
+            if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
+            if (_chatListUnsub) { _chatListUnsub(); _chatListUnsub = null; }
+            if (_usersUnsub) { _usersUnsub(); _usersUnsub = null; }
+            if (_followsUnsub) { _followsUnsub(); _followsUnsub = null; }
+            if (_followersUnsub) { _followersUnsub(); _followersUnsub = null; }
+            if (_notificationsUnsub) { _notificationsUnsub(); _notificationsUnsub = null; }
+
+            signOut(auth).then(() => {
+                currentUser = null;
+                currentChatId = null;
+                currentChatUser = null;
+                users = [];
+                follows = [];
+                followers = [];
+                loginScreen.style.display = 'flex';
+                appContainer.style.display = 'none';
+            }).catch((error) => {
+                console.error('Logout error:', error);
+            });
+        });
+
+        // Initialize with light theme
+        document.body.setAttribute('data-theme', 'light');
     </script>
 </body>
 </html>
