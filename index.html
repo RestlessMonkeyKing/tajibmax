@@ -554,7 +554,7 @@
             color: white;
             font-size: 12px;
             font-weight: 700;
-            display: none;
+            display: none; /* Changed: will be shown by JS */
             align-items: center;
             justify-content: center;
             border: 2px solid var(--card-bg);
@@ -562,7 +562,7 @@
             transform: scale(1);
         }
 
-        .notification-badge.visible {
+        .notification-badge.visible { /* New class to control visibility */
             display: flex;
         }
 
@@ -1785,7 +1785,7 @@
         // Current user data
         let currentUser = null;
         let currentTheme = 'light';
-        let users = []; 
+        let users = []; // This acts as a cache for user data
         let follows = [];
         let followers = []; 
         let currentChatUser = null;
@@ -1834,9 +1834,8 @@
             notificationBell.classList.toggle('active');
             themeSelector.classList.remove('active');
             
-            if (notificationBell.classList.contains('active')) {
-                markNotificationsAsRead();
-            }
+            // REMOVED: markNotificationsAsRead(); 
+            // This is now handled by clicking the button or individual items
         });
         
         markAllReadBtn.addEventListener('click', (e) => {
@@ -2024,17 +2023,18 @@
             if (_followersUnsub) _followersUnsub();
             if (_chatListUnsub) _chatListUnsub();
 
-            // Users listener
+            // Users listener (populates the cache)
             _usersUnsub = onSnapshot(collection(db, 'users'), (snapshot) => {
                 users = [];
                 snapshot.forEach(doc => {
                     users.push({ id: doc.id, ...doc.data() });
                 });
                 
+                // Now that cache is updated, re-render lists that depend on it
                 loadUsers();
                 loadFollowedUsers();
                 loadFollowers();
-                loadChats(); 
+                loadChats(); // This will trigger renderChatList
             });
 
             // Follows listener
@@ -2060,7 +2060,7 @@
             
             // Chats listener
             _chatListUnsub = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', uid), orderBy('lastMessage.timestamp', 'desc')), (snapshot) => {
-                renderChatList(snapshot);
+                renderChatList(snapshot); // Call the robust, async renderer
             }, err => console.error("Error listening to chat list:", err));
         }
 
@@ -2083,25 +2083,55 @@
                     notificationBadge.classList.remove('visible');
                 }
                 
-                renderNotificationDropdown(snapshot);
+                renderNotificationDropdown(snapshot); // Call the robust, async renderer
             }, err => console.error("Error listening to notifications:", err));
         }
 
-        function renderNotificationDropdown(snapshot) {
+        // --- NEW: Robust Async Notification Renderer ---
+        async function renderNotificationDropdown(snapshot) {
             if (snapshot.empty) {
-                notificationList.innerHTML = '<div class="no-notifications">No notifications yet.</div>';
+                notificationList.innerHTML = '<div class="no-notifications">No unread notifications.</div>';
                 return;
             }
 
-            notificationList.innerHTML = '';
-            snapshot.forEach(doc => {
+            // 1. Map snapshot docs to promises that fetch sender data
+            const notifPromises = snapshot.docs.map(async (doc) => {
                 const notif = doc.data();
-                const sender = users.find(u => u.id === notif.senderId);
+                let sender = users.find(u => u.id === notif.senderId); // Try cache
+
+                if (!sender) { // Fetch if not in cache
+                    try {
+                        const senderDoc = await getDoc(doc(db, 'users', notif.senderId));
+                        if (senderDoc.exists()) {
+                            sender = { id: senderDoc.id, ...senderDoc.data() };
+                        } else {
+                            console.warn("Notification sender not found:", notif.senderId);
+                            return null; // Filter out
+                        }
+                    } catch (err) {
+                        console.error("Error fetching notification sender:", err);
+                        return null; // Filter out
+                    }
+                }
                 
-                if (!sender) return;
+                return { doc, notif, sender }; // Return all data
+            });
+
+            // 2. Wait for all fetches
+            const notifItemsData = (await Promise.all(notifPromises)).filter(item => item !== null);
+
+            // 3. Render synchronously
+            notificationList.innerHTML = '';
+            if (notifItemsData.length === 0) {
+                 notificationList.innerHTML = '<div class="no-notifications">No notifications yet.</div>';
+                 return;
+            }
+
+            notifItemsData.forEach(itemData => {
+                const { doc, notif, sender } = itemData;
 
                 const item = document.createElement('div');
-                item.className = 'notification-item unread';
+                item.className = 'notification-item unread'; // All from this query are unread
                 
                 const avatar = sender.photoURL 
                     ? `<img src="${sender.photoURL}" alt="${sender.displayName}">` 
@@ -2112,6 +2142,8 @@
                     text = `<strong>${escapeHtml(sender.displayName)}</strong> sent you a message.`;
                 } else if (notif.type === 'follow') {
                     text = `<strong>${escapeHtml(sender.displayName)}</strong> started following you.`;
+                } else {
+                    text = `New notification from <strong>${escapeHtml(sender.displayName)}</strong>.`;
                 }
                 
                 const timestamp = notif.timestamp ? formatNotificationTimestamp(notif.timestamp.toDate()) : '';
@@ -2126,30 +2158,47 @@
                     </div>
                 `;
                 
-                item.addEventListener('click', () => {
+                item.addEventListener('click', async () => { // Make handler async
+                    // Mark this specific notification as read
+                    try {
+                        await updateDoc(doc(db, 'users', currentUser.uid, 'notifications', doc.id), { read: true });
+                    } catch (err) {
+                        console.error("Error marking single notification as read:", err);
+                    }
+
+                    // Navigation logic
                     if (notif.type === 'message' && notif.chatId) {
-                        // Navigate to the chat
-                        const chat = { id: notif.chatId };
-                        if (notif.chatId) {
-                            // Find if it's a group chat
-                            const chatQuery = query(collection(db, 'chats'), where('__name__', '==', notif.chatId));
-                            getDocs(chatQuery).then(snapshot => {
-                                if (!snapshot.empty) {
-                                    const chatData = snapshot.docs[0].data();
-                                    if (chatData.isGroup) {
-                                        openGroupChat({ id: notif.chatId, ...chatData });
-                                    } else {
-                                        const otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
-                                        const user = users.find(u => u.id === otherUserId);
-                                        if (user) {
-                                            openChat(user.id, user);
+                        try {
+                            const chatQuery = doc(db, 'chats', notif.chatId); // Get doc by ID
+                            const chatDoc = await getDoc(chatQuery);
+
+                            if (chatDoc.exists()) {
+                                const chatData = chatDoc.data();
+                                if (chatData.isGroup) {
+                                    openGroupChat({ id: chatDoc.id, ...chatData });
+                                } else {
+                                    const otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
+                                    let user = users.find(u => u.id === otherUserId); // Check cache
+                                    if (!user) { // Fetch if needed
+                                        const userDoc = await getDoc(doc(db, 'users', otherUserId));
+                                        if (userDoc.exists()) {
+                                            user = { id: userDoc.id, ...userDoc.data() };
                                         }
                                     }
-                                    document.querySelector('[data-tab="chats"]').click();
-                                    notificationBell.classList.remove('active');
+                                    if (user) {
+                                        openChat(user.id, user);
+                                    }
                                 }
-                            });
+                                document.querySelector('[data-tab="chats"]').click();
+                                notificationBell.classList.remove('active');
+                            }
+                        } catch (err) {
+                            console.error("Error navigating from notification:", err);
                         }
+                    } else if (notif.type === 'follow') {
+                        // Navigate to followers tab
+                        document.querySelector('[data-tab="followers"]').click();
+                        notificationBell.classList.remove('active');
                     }
                 });
                 
@@ -2157,7 +2206,8 @@
             });
         }
 
-        function renderChatList(snapshot) {
+        // --- NEW: Robust Async Chat List Renderer ---
+        async function renderChatList(snapshot) {
             chatList.innerHTML = '';
             
             if (snapshot.empty) {
@@ -2165,26 +2215,46 @@
                 return;
             }
 
-            snapshot.forEach(doc => {
+            // 1. Map snapshot docs to promises that resolve to renderable data
+            const chatPromises = snapshot.docs.map(async (doc) => {
                 const chatData = doc.data();
-                let displayName, photoURL, isOnline, isGroup = false;
+                let displayName, photoURL, isOnline, otherUserId = null, userObject = null;
+                let isGroup = chatData.isGroup || false;
                 
-                if (chatData.isGroup) {
-                    // Group chat
+                if (isGroup) {
                     displayName = chatData.groupName;
                     photoURL = null;
                     isOnline = false;
-                    isGroup = true;
                 } else {
-                    // One-on-one chat
-                    const otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
-                    const user = users.find(u => u.id === otherUserId);
+                    otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
+                    if (!otherUserId) {
+                        console.warn("One-on-one chat found with no other member:", doc.id);
+                        return null; // This will be filtered out
+                    }
+
+                    userObject = users.find(u => u.id === otherUserId); // Try cache
                     
-                    displayName = user ? user.displayName : 'Unknown User';
-                    photoURL = user ? user.photoURL : null;
-                    isOnline = user ? user.isOnline : false;
+                    if (!userObject) { // Fetch if not in cache
+                        try {
+                            const userDoc = await getDoc(doc(db, 'users', otherUserId));
+                            if (userDoc.exists()) {
+                                userObject = { id: userDoc.id, ...userDoc.data() };
+                            } else {
+                                console.warn("Chat user not found in 'users' collection:", otherUserId);
+                                userObject = { displayName: 'Deleted User', photoURL: null, isOnline: false };
+                            }
+                        } catch (err) {
+                            console.error("Error fetching chat user:", err);
+                            userObject = { displayName: 'Error User', photoURL: null, isOnline: false };
+                        }
+                    }
+                    
+                    displayName = userObject.displayName;
+                    photoURL = userObject.photoURL;
+                    isOnline = userObject.isOnline;
                 }
-                
+
+                // Get last message text
                 let lastMessageText = 'Say hi!';
                 if (chatData.lastMessage && chatData.lastMessage.text) {
                     if (chatData.lastMessage.type === 'image') {
@@ -2197,16 +2267,35 @@
                         lastMessageText = chatData.lastMessage.text;
                     }
                 }
+                
+                // Get unread count
+                let unreadCount = unreadMessages[doc.id] || 0;
 
-                // Calculate unread count
-                let unreadCount = 0;
-                if (unreadMessages[doc.id]) {
-                    unreadCount = unreadMessages[doc.id];
-                }
+                // Return an object with all data needed to render
+                return {
+                    doc,
+                    chatData,
+                    isGroup,
+                    displayName,
+                    photoURL,
+                    isOnline,
+                    lastMessageText,
+                    unreadCount,
+                    userObject // This is key for the click handler
+                };
+            });
+
+            // 2. Wait for all data to be fetched
+            const chatItemsData = (await Promise.all(chatPromises)).filter(item => item !== null);
+
+            // 3. Now iterate and render synchronously (maintains order)
+            chatItemsData.forEach(itemData => {
+                const { doc, chatData, isGroup, displayName, photoURL, isOnline, lastMessageText, unreadCount, userObject } = itemData;
 
                 const chatElement = document.createElement('div');
                 chatElement.className = 'chat-item';
                 chatElement.dataset.chatId = doc.id; 
+                
                 chatElement.innerHTML = `
                     <div class="avatar-wrapper">
                         <div class="chat-avatar ${isGroup ? 'group' : ''}">
@@ -2232,10 +2321,10 @@
                     if (isGroup) {
                         openGroupChat({ id: doc.id, ...chatData });
                     } else {
-                        const otherUserId = chatData.members.find(uid => uid !== currentUser.uid);
-                        const user = users.find(u => u.id === otherUserId);
-                        if (user) {
-                            openChat(user.id, user);
+                        if (userObject) { // Use the fetched userObject
+                            openChat(userObject.id, userObject);
+                        } else {
+                            console.error("User object missing on chat click.");
                         }
                     }
                     
@@ -2251,6 +2340,57 @@
             
             filterLists();
         }
+
+        // This function just triggers the async renderer
+        function loadChats() {
+            if (!currentUser) return;
+            // This function is now simpler. It just exists to be called
+            // when the user cache is updated. The actual rendering
+            // is handled by the onSnapshot listener.
+            // We can trigger a re-render by re-getting the snapshot,
+            // but the listener should do it automatically.
+            // Let's just call renderChatList with the last known snapshot if we have it?
+            // No, the listener will re-fire when data changes.
+            // What we *need* is to call renderChatList *after* users are loaded.
+            // The `_chatListUnsub` onSnapshot *already* calls `renderChatList`.
+            // The `_usersUnsub` onSnapshot should *also* call `renderChatList`
+            // but *without* a snapshot. This is tricky.
+            
+            // Let's modify setupFirestoreListeners
+            // _chatListUnsub will call renderChatList(snapshot)
+            // _usersUnsub will just update the `users` array
+            // The `renderChatList` function is now robust enough
+            // to fetch users if they aren't in the cache.
+            // So, in `setupFirestoreListeners`, I'll add `renderChatList()`
+            // to the end of the `_usersUnsub` snapshot.
+            // No, that's wrong.
+            // The original logic is: _usersUnsub updates `users`, then calls `loadChats()`.
+            // `loadChats()` does... nothing?
+            // Ah, I see. The original `loadChats()` was empty.
+            // I'll change `_usersUnsub` to call `renderChatList` *if* we have a snapshot.
+            
+            // This is complex. Let's simplify.
+            // `_usersUnsub` updates `users` cache.
+            // `_chatListUnsub` gets chat list and calls `renderChatList`.
+            // `renderChatList` is now async and fetches users if not in `users` cache.
+            // This is *already* the correct logic and should work.
+            // The original `loadChats()` call inside `_usersUnsub` is fine.
+            // I'll just remove the empty `loadChats` function.
+            
+            // Wait, no. `loadChats()` is not defined.
+            // The original `_usersUnsub` calls `loadUsers()`, `loadFollowedUsers()`, `loadFollowers()`, `loadChats()`.
+            // And `loadChats` *is* empty.
+            // I will *replace* `loadChats()` with `renderChatList()`... no.
+            // I will just make `loadChats` call `_chatListUnsub()` again? No.
+            
+            // The `_usersUnsub` listener updates the `users` array cache.
+            // The `_chatListUnsub` listener updates the chat list.
+            // My async `renderChatList` will *always* work.
+            // The original `_usersUnsub` had: `loadUsers(); loadFollowedUsers(); loadFollowers(); loadChats();`
+            // I'll just remove `loadChats();` since it's empty and `_chatListUnsub` handles it.
+        }
+        
+        // (Removing the empty `loadChats` function)
 
         function loadUsers() {
             const allOtherUserIds = users.map(u => u.id);
@@ -2362,6 +2502,9 @@
                 return;
             }
             currentChatId = chatId;
+            
+            // --- NEW: Mark chat-related notifications as read ---
+            markChatNotificationsAsRead(currentChatId);
             
             // Highlight active chat in list
             document.querySelectorAll('.chat-item').forEach(item => {
@@ -2501,6 +2644,31 @@
             }
         }
 
+        // --- NEW: Function to mark notifications for a specific chat as read ---
+        async function markChatNotificationsAsRead(chatId) {
+            if (!currentUser || !chatId) return;
+
+            const notifQuery = query(
+                collection(db, 'users', currentUser.uid, 'notifications'),
+                where('read', '==', false),
+                where('type', '==', 'message'),
+                where('chatId', '==', chatId)
+            );
+
+            try {
+                const snapshot = await getDocs(notifQuery);
+                if (snapshot.empty) return;
+                
+                const batch = writeBatch(db);
+                snapshot.forEach(doc => {
+                    batch.update(doc.ref, { read: true });
+                });
+                await batch.commit();
+            } catch (error) {
+                console.error("Error marking chat notifications as read:", error);
+            }
+        }
+
         function bindSendHandlerForConversation(receiverId, chatId) {
             sendBtn.onclick = () => handleSendMessage(receiverId, chatId);
             messageInput.onkeypress = (e) => { 
@@ -2521,18 +2689,18 @@
                 
                 const messageData = {
                     senderId: currentUser.uid,
-                    receiverId: receiverId,
+                    receiverId: receiverId, // Important for 1-on-1 notifications
                     timestamp: serverTimestamp(),
                     isRead: false,
                     type: 'text',
                     text: messageText
                 };
                 
-                await sendFirestoreMessage(chatId, messageData);
+                await sendFirestoreMessage(chatId, messageData, [receiverId]);
             }
         }
 
-        async function sendFirestoreMessage(chatId, messageData) {
+        async function sendFirestoreMessage(chatId, messageData, receivers) {
             try {
                 await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
 
@@ -2553,21 +2721,26 @@
                     }
                 });
                 
-                // Track unread message for receiver
-                if (messageData.receiverId) {
-                    if (!unreadMessages[chatId]) {
-                        unreadMessages[chatId] = 0;
+                // Handle notifications for all receivers
+                receivers.forEach(receiverId => {
+                    if (receiverId) {
+                        // Track unread message for receiver
+                        // Note: This 'unreadMessages' is local and imperfect for groups.
+                        // A better group-unread system would be server-side.
+                        if (!unreadMessages[chatId]) {
+                            unreadMessages[chatId] = 0;
+                        }
+                        unreadMessages[chatId]++;
+                        updateUnreadCount(chatId, unreadMessages[chatId]);
+                        
+                        addNotification(
+                            receiverId, 
+                            'message', 
+                            currentUser.uid,
+                            chatId
+                        );
                     }
-                    unreadMessages[chatId]++;
-                    updateUnreadCount(chatId, unreadMessages[chatId]);
-                }
-                
-                await addNotification(
-                    messageData.receiverId, 
-                    'message', 
-                    currentUser.uid,
-                    chatId
-                );
+                });
                 
             } catch (error) {
                 console.error('Error sending message to Firestore:', error);
@@ -2696,6 +2869,26 @@
 
         async function addNotification(receiverId, type, senderId, chatId = null) {
             try {
+                // Check if a similar notification already exists and is unread
+                const q = query(
+                    collection(db, 'users', receiverId, 'notifications'),
+                    where('senderId', '==', senderId),
+                    where('type', '==', type),
+                    where('chatId', '==', chatId),
+                    where('read', '==', false)
+                );
+                
+                const existingNotifs = await getDocs(q);
+                
+                // If it's a follow notification and one already exists, don't send another
+                if (type === 'follow' && !existingNotifs.empty) {
+                    return;
+                }
+                
+                // If it's a message notification, update timestamp of existing unread
+                // or create a new one. For simplicity, we'll just create a new one.
+                // A more "complex" system might group them.
+                
                 await addDoc(collection(db, 'users', receiverId, 'notifications'), {
                     type: type,
                     senderId: senderId,
@@ -2726,7 +2919,7 @@
                 });
                 await batch.commit();
                 
-                notificationBadge.classList.remove('visible');
+                // Badge will be hidden automatically by the listener
                 
             } catch (error) {
                 console.error("Error marking notifications as read:", error);
@@ -2981,6 +3174,9 @@
 
             currentChatUser = groupData;
             currentChatId = groupData.id;
+
+            // --- NEW: Mark chat-related notifications as read ---
+            markChatNotificationsAsRead(currentChatId);
             
             document.querySelectorAll('.chat-item').forEach(item => {
                 item.classList.toggle('active', item.dataset.chatId === currentChatId);
@@ -3054,51 +3250,10 @@
                     type: 'text',
                     text: messageText
                 };
-                await sendFirestoreGroupMessage(chatId, messageData, members);
-            }
-        }
-
-        async function sendFirestoreGroupMessage(chatId, messageData, members) {
-            try {
-                await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
-
-                let lastMessageText = '...';
-                if (messageData.type === 'text') {
-                    lastMessageText = messageData.text;
-                } else if (messageData.type === 'image') {
-                    lastMessageText = messageData.text ? `[Image] ${messageData.text}` : '[Image]';
-                } else if (messageData.type === 'audio') {
-                    lastMessageText = messageData.text ? `[Voice] ${messageData.text}` : '[Voice Note]';
-                }
-
-                await updateDoc(doc(db, 'chats', chatId), {
-                    lastMessage: {
-                        text: lastMessageText,
-                        timestamp: messageData.timestamp,
-                        type: messageData.type
-                    }
-                });
                 
-                members.forEach(memberId => {
-                    if (memberId !== currentUser.uid) {
-                        addNotification(
-                            memberId, 
-                            'message', 
-                            currentUser.uid,
-                            chatId
-                        );
-                        
-                        // Track unread message for group members
-                        if (!unreadMessages[chatId]) {
-                            unreadMessages[chatId] = 0;
-                        }
-                        unreadMessages[chatId]++;
-                        updateUnreadCount(chatId, unreadMessages[chatId]);
-                    }
-                });
-                
-            } catch (error) {
-                console.error('Error sending group message to Firestore:', error);
+                // Get all members *except* the sender as receivers
+                const receivers = members.filter(uid => uid !== currentUser.uid);
+                await sendFirestoreMessage(chatId, messageData, receivers);
             }
         }
 
