@@ -1801,6 +1801,7 @@
         let _followsUnsub = null; 
         let _followersUnsub = null; 
         let _notificationsUnsub = null;
+        let _allNotificationsUnsub = null; // <-- ADDED: New listener for all notifications
 
         // === FIXED COMPONENTS FUNCTIONALITY ===
         
@@ -1955,7 +1956,8 @@
                 checkAndCreateUserProfile(user);
                 loadUserTheme(user.uid);
                 setupFirestoreListeners(user.uid);
-                setupNotificationListener(user.uid);
+                setupNotificationListener(user.uid); // This now ONLY handles the badge
+                setupNotificationDropdownListener(user.uid); // <-- ADDED: This handles the list
                 updateProfileUI(user);
             } else {
                 loginScreen.style.display = 'flex';
@@ -2034,7 +2036,7 @@
                 loadUsers();
                 loadFollowedUsers();
                 loadFollowers();
-                loadChats(); // This will trigger renderChatList
+                // loadChats(); // <-- REMOVED: This function was empty and unnecessary
             });
 
             // Follows listener
@@ -2064,13 +2066,14 @@
             }, err => console.error("Error listening to chat list:", err));
         }
 
+        // --- MODIFIED: This function now ONLY handles the unread badge count ---
         function setupNotificationListener(uid) {
             if (_notificationsUnsub) _notificationsUnsub();
             
             const notifQuery = query(
                 collection(db, 'users', uid, 'notifications'),
-                where('read', '==', false),
-                orderBy('timestamp', 'desc')
+                where('read', '==', false)
+                // No orderBy needed, we just need the count
             );
             
             _notificationsUnsub = onSnapshot(notifQuery, (snapshot) => {
@@ -2083,14 +2086,30 @@
                     notificationBadge.classList.remove('visible');
                 }
                 
-                renderNotificationDropdown(snapshot); // Call the robust, async renderer
-            }, err => console.error("Error listening to notifications:", err));
+                // REMOVED: renderNotificationDropdown(snapshot);
+            }, err => console.error("Error listening to notification count:", err));
         }
+
+        // --- NEW: This function listens for ALL notifications to display in the dropdown ---
+        function setupNotificationDropdownListener(uid) {
+            if (_allNotificationsUnsub) _allNotificationsUnsub();
+
+            const allNotifsQuery = query(
+                collection(db, 'users', uid, 'notifications'),
+                orderBy('timestamp', 'desc'),
+                limit(20) // Get the 20 most recent notifications
+            );
+
+            _allNotificationsUnsub = onSnapshot(allNotifsQuery, (snapshot) => {
+                renderNotificationDropdown(snapshot); // Call the robust, async renderer
+            }, err => console.error("Error listening to all notifications:", err));
+        }
+
 
         // --- NEW: Robust Async Notification Renderer ---
         async function renderNotificationDropdown(snapshot) {
             if (snapshot.empty) {
-                notificationList.innerHTML = '<div class="no-notifications">No unread notifications.</div>';
+                notificationList.innerHTML = '<div class="no-notifications">No notifications yet.</div>'; // <-- MODIFIED: Changed message
                 return;
             }
 
@@ -2131,7 +2150,10 @@
                 const { doc, notif, sender } = itemData;
 
                 const item = document.createElement('div');
-                item.className = 'notification-item unread'; // All from this query are unread
+                item.className = 'notification-item'; // <-- MODIFIED: Base class
+                if (!notif.read) {
+                    item.classList.add('unread'); // <-- ADDED: Conditionally add 'unread'
+                }
                 
                 const avatar = sender.photoURL 
                     ? `<img src="${sender.photoURL}" alt="${sender.displayName}">` 
@@ -3275,6 +3297,7 @@
             if (_followsUnsub) { _followsUnsub(); _followsUnsub = null; }
             if (_followersUnsub) { _followersUnsub(); _followersUnsub = null; }
             if (_notificationsUnsub) { _notificationsUnsub(); _notificationsUnsub = null; }
+            if (_allNotificationsUnsub) { _allNotificationsUnsub(); _allNotificationsUnsub = null; } // <-- ADDED: Unsubscribe from new listener
 
             signOut(auth).then(() => {
                 currentUser = null;
