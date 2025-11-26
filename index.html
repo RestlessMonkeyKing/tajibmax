@@ -2634,6 +2634,9 @@
         // Show context menu on right-click for messages
         document.addEventListener('contextmenu', (e) => {
             const messageElement = e.target.closest('.message');
+            const clickedChatItem = e.target.closest('.chat-item');
+            
+            // Handle message context menu
             if (messageElement && !messageElement.classList.contains('system')) {
                 e.preventDefault();
                 selectedMessage = messageElement;
@@ -2900,11 +2903,78 @@
         });
 
         // NEW: Function to open expanded profile modal
-        function openExpandedProfile(user) {
+        async function openExpandedProfile(user) {
             expandedProfileUser = user;
             
             // Set profile data
             const img = expandedProfilePic.querySelector('img');
+            
+            // Reset follow sections
+            document.querySelectorAll('.follow-section').forEach(section => {
+                section.innerHTML = '<h4>Loading...</h4>';
+            });
+            
+            // Load follow relationships
+            if (currentUser) {
+                // Get all follow relationships involving this user
+                const followsQuery = query(
+                    collection(db, 'follows'),
+                    where('followerId', '==', user.uid)
+                );
+                
+                const followersQuery = query(
+                    collection(db, 'follows'),
+                    where('followingId', '==', user.uid)
+                );
+                
+                const [followsSnapshot, followersSnapshot] = await Promise.all([
+                    getDocs(followsQuery),
+                    getDocs(followersQuery)
+                ]);
+                
+                // Process follows and followers
+                const following = [];
+                const followers = [];
+                const mutuals = [];
+                const pending = [];
+                
+                followsSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.status === 'accepted') {
+                        following.push(data.followingId);
+                    }
+                });
+                
+                followersSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.status === 'accepted') {
+                        followers.push(data.followerId);
+                    } else if (data.status === 'pending') {
+                        pending.push({
+                            id: doc.id,
+                            userId: data.followerId,
+                            type: 'incoming'
+                        });
+                    }
+                });
+                
+                // Find mutual follows
+                mutuals = following.filter(id => followers.includes(id));
+                
+                // Get user data for all IDs
+                const allUserIds = [...new Set([...following, ...followers, ...pending.map(p => p.userId)])];
+                const usersSnapshot = await getDocs(query(collection(db, 'users'), where('__name__', 'in', allUserIds)));
+                const usersMap = {};
+                usersSnapshot.forEach(doc => {
+                    usersMap[doc.id] = doc.data();
+                });
+                
+                // Render each section
+                renderFollowSection('mutual-follows', 'Mutual Follows', mutuals, usersMap);
+                renderFollowSection('following-you', 'You Follow', following.filter(id => !mutuals.includes(id)), usersMap);
+                renderFollowSection('followers', 'Following You', followers.filter(id => !mutuals.includes(id)), usersMap);
+                renderFollowSection('pending', 'Pending Requests', pending, usersMap, true);
+            }
             const icon = expandedProfilePic.querySelector('i');
             
             if (user.photoURL) {
