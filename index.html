@@ -67,6 +67,92 @@
             overflow-x: hidden;
         }
 
+        /* === NEW: Context Menu Styles === */
+        .context-menu {
+            position: fixed;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            z-index: 10000;
+            display: none;
+            min-width: 150px;
+            overflow: hidden;
+        }
+
+        .context-menu-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .context-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .context-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .context-menu-item.delete {
+            color: #FF3B30;
+        }
+
+        /* === NEW: Emoji Picker Styles === */
+        .emoji-picker {
+            position: absolute;
+            bottom: 70px;
+            left: 15px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            display: none;
+            width: 300px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .emoji-picker.active {
+            display: block;
+        }
+
+        .emoji-category {
+            margin-bottom: 10px;
+        }
+
+        .emoji-category h4 {
+            font-size: 12px;
+            color: #8E8E93;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+        }
+
+        .emoji {
+            font-size: 20px;
+            cursor: pointer;
+            text-align: center;
+            padding: 5px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .emoji:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
         /* Login Screen */
         .login-screen {
             display: flex;
@@ -1008,17 +1094,21 @@
             transition: var(--transition);
         }
 
+        /* === UPDATED: Chat Header with more spacing === */
         .chat-header {
             padding: 20px;
             border-bottom: 1px solid var(--glass-border);
             transition: var(--transition);
             overflow: hidden;
             cursor: pointer;
-            height: 81px; 
+            height: 100px; /* Increased height for more spacing */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         
         .chat-header.expanded {
-            height: 147px; 
+            height: 180px; /* Increased height when expanded */
         }
         
         .chat-header .profile-header {
@@ -1061,13 +1151,15 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
+            gap: 8px; /* Added gap between messages */
         }
 
+        /* === UPDATED: Message styles with sender name for groups === */
         .message {
             max-width: 70%;
             padding: 12px 16px;
             border-radius: 18px;
-            margin-bottom: 10px;
+            margin-bottom: 5px; /* Reduced margin since we have gap now */
             position: relative;
             word-wrap: break-word;
             animation: messageAppear 0.3s ease-out;
@@ -1104,6 +1196,18 @@
             color: var(--text-color);
             font-style: italic;
             text-align: center;
+        }
+
+        /* === NEW: Message sender name for group chats === */
+        .message-sender {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            opacity: 0.8;
+        }
+
+        .message.sent .message-sender {
+            text-align: right;
         }
 
         .message-meta {
@@ -1159,6 +1263,7 @@
             margin-bottom: 5px;
         }
 
+        /* === UPDATED: Message input area with emoji button === */
         .message-input-area {
             border-top: 1px solid var(--glass-border);
             display: flex;
@@ -1173,6 +1278,7 @@
             align-items: center; 
             gap: 10px;
             transition: var(--transition);
+            position: relative; /* For emoji picker positioning */
         }
 
         .message-input {
@@ -1210,6 +1316,29 @@
         .send-btn:hover {
             transform: scale(1.05);
             box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
+        }
+        
+        /* === NEW: Emoji button === */
+        .emoji-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: #FF9500;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0; 
+        }
+
+        .emoji-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255, 149, 0, 0.3);
         }
         
         .typing-indicator {
@@ -1443,6 +1572,11 @@
                 width: 280px;
                 right: -10px;
             }
+
+            .emoji-picker {
+                width: 280px;
+                left: 10px;
+            }
         }
     </style>
 </head>
@@ -1608,6 +1742,11 @@
             
             <div class="message-input-area">
                 <div class="message-input-container" id="messageInputContainer">
+                    <!-- NEW: Emoji Button -->
+                    <button class="emoji-btn" id="emojiBtn" title="Add Emoji">
+                        <i class="far fa-smile"></i>
+                    </button>
+                    
                     <button class="send-btn" id="uploadBtn" title="Send Image" style="background-color: #5856D6;">
                         <i class="fas fa-paperclip"></i>
                     </button>
@@ -1622,8 +1761,91 @@
                         <i class="fas fa-paper-plane"></i>
                     </button>
                 </div>
+                <!-- NEW: Emoji Picker -->
+                <div class="emoji-picker" id="emojiPicker">
+                    <div class="emoji-category">
+                        <h4>Smileys & People</h4>
+                        <div class="emoji-grid">
+                            <div class="emoji">😀</div>
+                            <div class="emoji">😃</div>
+                            <div class="emoji">😄</div>
+                            <div class="emoji">😁</div>
+                            <div class="emoji">😆</div>
+                            <div class="emoji">😅</div>
+                            <div class="emoji">😂</div>
+                            <div class="emoji">🤣</div>
+                            <div class="emoji">😊</div>
+                            <div class="emoji">😇</div>
+                            <div class="emoji">🙂</div>
+                            <div class="emoji">🙃</div>
+                            <div class="emoji">😉</div>
+                            <div class="emoji">😌</div>
+                            <div class="emoji">😍</div>
+                            <div class="emoji">🥰</div>
+                            <div class="emoji">😘</div>
+                            <div class="emoji">😗</div>
+                            <div class="emoji">😙</div>
+                            <div class="emoji">😚</div>
+                            <div class="emoji">😋</div>
+                            <div class="emoji">😛</div>
+                            <div class="emoji">😝</div>
+                            <div class="emoji">😜</div>
+                            <div class="emoji">🤪</div>
+                            <div class="emoji">🤨</div>
+                            <div class="emoji">🧐</div>
+                            <div class="emoji">🤓</div>
+                            <div class="emoji">😎</div>
+                            <div class="emoji">🤩</div>
+                            <div class="emoji">🥳</div>
+                            <div class="emoji">😏</div>
+                        </div>
+                    </div>
+                    <div class="emoji-category">
+                        <h4>Objects & Symbols</h4>
+                        <div class="emoji-grid">
+                            <div class="emoji">❤️</div>
+                            <div class="emoji">👍</div>
+                            <div class="emoji">👎</div>
+                            <div class="emoji">🔥</div>
+                            <div class="emoji">⭐</div>
+                            <div class="emoji">🎉</div>
+                            <div class="emoji">💯</div>
+                            <div class="emoji">✨</div>
+                            <div class="emoji">💕</div>
+                            <div class="emoji">💖</div>
+                            <div class="emoji">💙</div>
+                            <div class="emoji">💚</div>
+                            <div class="emoji">💛</div>
+                            <div class="emoji">💜</div>
+                            <div class="emoji">🖤</div>
+                            <div class="emoji">💔</div>
+                            <div class="emoji">💋</div>
+                            <div class="emoji">💐</div>
+                            <div class="emoji">🌹</div>
+                            <div class="emoji">🎂</div>
+                            <div class="emoji">🎁</div>
+                            <div class="emoji">🎈</div>
+                            <div class="emoji">✈️</div>
+                            <div class="emoji">🏠</div>
+                            <div class="emoji">⏰</div>
+                            <div class="emoji">📱</div>
+                            <div class="emoji">💻</div>
+                            <div class="emoji">📚</div>
+                            <div class="emoji">🎵</div>
+                            <div class="emoji">🎮</div>
+                            <div class="emoji">⚽</div>
+                            <div class="emoji">🏀</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
+
+    <!-- NEW: Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" id="replyMenuItem">Reply</div>
+        <div class="context-menu-item delete" id="deleteMenuItem">Delete</div>
     </div>
 
     <div class="modal" id="editProfileModal">
@@ -1667,6 +1889,73 @@
     </div>
 
     <script type="module">
+        // === NEW: Browser tab notification functionality ===
+        let originalTitle = document.title;
+        let notificationCount = 0;
+        
+        function updateTabNotification(count) {
+            notificationCount = count;
+            if (count > 0) {
+                document.title = `(${count}) ${originalTitle}`;
+            } else {
+                document.title = originalTitle;
+            }
+        }
+        
+        // === NEW: Context Menu Functionality ===
+        const contextMenu = document.getElementById('contextMenu');
+        const replyMenuItem = document.getElementById('replyMenuItem');
+        const deleteMenuItem = document.getElementById('deleteMenuItem');
+        let selectedMessage = null;
+        
+        // Show context menu on right-click
+        document.addEventListener('contextmenu', (e) => {
+            const messageElement = e.target.closest('.message');
+            if (messageElement && !messageElement.classList.contains('system')) {
+                e.preventDefault();
+                selectedMessage = messageElement;
+                
+                // Position the context menu
+                contextMenu.style.display = 'block';
+                contextMenu.style.left = `${e.pageX}px`;
+                contextMenu.style.top = `${e.pageY}px`;
+                
+                // Check if user can delete this message
+                const isOwnMessage = messageElement.classList.contains('sent');
+                deleteMenuItem.style.display = isOwnMessage ? 'block' : 'none';
+            }
+        });
+        
+        // Hide context menu when clicking elsewhere
+        document.addEventListener('click', () => {
+            contextMenu.style.display = 'none';
+        });
+        
+        // Context menu actions
+        replyMenuItem.addEventListener('click', () => {
+            if (selectedMessage) {
+                const messageText = selectedMessage.querySelector('div:not(.message-meta)')?.textContent || '';
+                messageInput.value = `Replying to: ${messageText} `;
+                messageInput.focus();
+                contextMenu.style.display = 'none';
+            }
+        });
+        
+        deleteMenuItem.addEventListener('click', async () => {
+            if (selectedMessage && currentChatId) {
+                const messageId = selectedMessage.dataset.messageId;
+                if (messageId) {
+                    try {
+                        await deleteDoc(doc(db, 'chats', currentChatId, 'messages', messageId));
+                        selectedMessage.remove();
+                    } catch (error) {
+                        console.error('Error deleting message:', error);
+                    }
+                }
+                contextMenu.style.display = 'none';
+            }
+        });
+
         // Import Firebase modules
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
         import { 
@@ -1779,6 +2068,10 @@
         const sendBtn = document.getElementById('sendBtn');
         const typingIndicator = document.getElementById('typingIndicator');
         
+        // NEW: Emoji Elements
+        const emojiBtn = document.getElementById('emojiBtn');
+        const emojiPicker = document.getElementById('emojiPicker');
+        
         // Modal Elements
         const editProfileModal = document.getElementById('editProfileModal');
         const closeModal = document.getElementById('closeModal');
@@ -1813,6 +2106,25 @@
         let _notificationsUnsub = null;
         let _allNotificationsUnsub = null;
 
+        // === NEW: Emoji Picker Functionality ===
+        emojiBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            emojiPicker.classList.toggle('active');
+        });
+        
+        // Close emoji picker when clicking outside
+        document.addEventListener('click', () => {
+            emojiPicker.classList.remove('active');
+        });
+        
+        // Add emoji to message input when clicked
+        emojiPicker.querySelectorAll('.emoji').forEach(emojiElement => {
+            emojiElement.addEventListener('click', () => {
+                messageInput.value += emojiElement.textContent;
+                messageInput.focus();
+            });
+        });
+
         // === FIXED COMPONENTS FUNCTIONALITY ===
         
         // Theme selector
@@ -1820,6 +2132,7 @@
             e.stopPropagation();
             themeSelector.classList.toggle('active');
             notificationBell.classList.remove('active');
+            emojiPicker.classList.remove('active');
         });
         
         themeOptions.forEach(option => {
@@ -1844,6 +2157,7 @@
             e.stopPropagation();
             notificationBell.classList.toggle('active');
             themeSelector.classList.remove('active');
+            emojiPicker.classList.remove('active');
         });
         
         markAllReadBtn.addEventListener('click', (e) => {
@@ -2120,8 +2434,10 @@
                 if (newCount > 0) {
                     notificationBadge.textContent = newCount > 9 ? '9+' : newCount;
                     notificationBadge.classList.add('visible');
+                    updateTabNotification(newCount); // NEW: Update browser tab
                 } else {
                     notificationBadge.classList.remove('visible');
+                    updateTabNotification(0); // NEW: Update browser tab
                 }
             }, err => console.error("Error listening to notification count:", err));
         }
@@ -2635,6 +2951,7 @@
             bindSendHandlerForConversation(userId, currentChatId);
         }
 
+        // === UPDATED: Render conversation with sender names for groups ===
         function renderConversation(snapshot) {
             chatMessages.innerHTML = '';
             
@@ -2686,8 +3003,21 @@
                     }
                     
                     div.className = messageClass;
+                    div.dataset.messageId = doc.id; // NEW: Store message ID for context menu
+
+                    // NEW: Add sender name for group chats
+                    let senderNameHtml = '';
+                    if (currentChatUser && currentChatUser.isGroup && m.senderId !== 'system' && m.senderId !== currentUser.uid) {
+                        const sender = users.find(u => u.id === m.senderId);
+                        if (sender) {
+                            senderNameHtml = `<div class="message-sender">${escapeHtml(sender.displayName)}</div>`;
+                        } else if (m.senderName) {
+                            senderNameHtml = `<div class="message-sender">${escapeHtml(m.senderName)}</div>`;
+                        }
+                    }
 
                     div.innerHTML = `
+                        ${senderNameHtml}
                         ${messageContent}
                         <div class="message-meta">
                             <span class="message-time">${ts.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
@@ -3369,6 +3699,7 @@
                 unreadMessages = {};
                 loginScreen.style.display = 'flex';
                 appContainer.style.display = 'none';
+                updateTabNotification(0); // NEW: Reset tab notification on logout
             }).catch((error) => {
                 console.error('Logout error:', error);
             });
