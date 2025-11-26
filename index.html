@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connex - Professional Chat App</title>
-    <!-- Use a specific, stable version of Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
@@ -182,12 +181,6 @@
             border: 1px solid var(--primary-color);
             color: var(--primary-color);
         }
-        
-        .expanded-follow-btn.pending {
-            background: #FF9500;
-            color: white;
-            cursor: not-allowed;
-        }
 
         .expanded-lists {
             margin-top: 20px;
@@ -254,7 +247,6 @@
             flex-wrap: wrap;
             gap: 5px;
             margin-top: 5px;
-            /* Reactions were hidden, removing display: none !important; */
         }
 
         .message-reaction {
@@ -1016,14 +1008,6 @@
             border: 1px solid var(--primary-color);
             color: var(--primary-color);
         }
-        
-        .btn-danger {
-            background: #FF3B30;
-        }
-        
-        .btn-danger:hover {
-             box-shadow: 0 5px 15px rgba(255, 59, 48, 0.3);
-        }
 
         /* === FIXED THEME SELECTOR === */
         .theme-selector {
@@ -1381,7 +1365,6 @@
             font-size: 12px;
         }
         
-        /* Hide the old followers tab */
         .tab[data-tab="followers"] {
             display: none;
         }
@@ -1433,14 +1416,9 @@
         }
 
         /* === FIXED CHATS SIDEBAR === */
-        .chat-list, .user-list, .connections-list { 
+        .chat-list, .user-list, .followed-list, .follower-list { 
             flex: 1;
             overflow-y: auto;
-        }
-        
-        /* Hide old follow lists */
-        .followed-list, .follower-list {
-            display: none !important;
         }
 
         .chat-item, .user-item {
@@ -1501,8 +1479,8 @@
         .chat-avatar.group {
             background: linear-gradient(135deg, #FF2D55, #FF9500);
         }
-        
-        .chat-avatar.group img, .user-avatar img {
+
+        .chat-avatar img, .user-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -1645,24 +1623,6 @@
             background: transparent;
             border: 1px solid var(--primary-color);
             color: var(--primary-color);
-        }
-        
-        .follow-btn.pending {
-            background: #FF9500;
-            color: white;
-            cursor: not-allowed;
-        }
-        
-        .follow-btn.accept {
-            background: #34C759;
-            color: white;
-            flex: 1;
-        }
-        
-        .follow-btn.decline {
-            background: #FF3B30;
-            color: white;
-            flex: 1;
         }
 
         .message-btn {
@@ -2039,77 +1999,6 @@
             margin-top: 10px;
         }
 
-        /* New styles for follow system */
-        .follow-section {
-            margin: 15px 0;
-            padding: 15px;
-            background: rgba(0,0,0,0.05);
-            border-radius: var(--border-radius);
-            border: 1px solid var(--glass-border);
-        }
-        
-        .follow-section h4 {
-            margin: 0 0 10px 0;
-            color: var(--primary-color);
-            font-size: 16px;
-        }
-        
-        .follow-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .follow-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            font-size: 14px;
-        }
-        
-        .follow-actions {
-            margin-left: 8px;
-            display: flex;
-            gap: 5px;
-        }
-        
-        /* Group image preview */
-        .group-image-preview {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            overflow: hidden;
-            margin: 15px auto;
-            background: var(--glass-bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border: 2px dashed var(--glass-border);
-        }
-        
-        .group-image-preview i {
-            font-size: 24px;
-            color: var(--text-color);
-            opacity: 0.7;
-        }
-        
-        .group-image-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none; /* Initially hidden */
-        }
-        
-        .group-image-upload {
-            display: none;
-        }
-        
-        /* Removed the CSS that was hiding reactions */
-        
         .group-member-edit {
             display: flex;
             align-items: center;
@@ -2351,9 +2240,7 @@
             <div class="tabs">
                 <div class="tab active" data-tab="chats"><i class="fas fa-comments"></i> Chats</div>
                 <div class="tab" data-tab="suggested"><i class="fas fa-users"></i> Suggested</div>
-                <!-- Renamed "Followed" to "Connections" -->
-                <div class="tab" data-tab="connections"><i class="fas fa-user-check"></i> Connections</div>
-                <!-- This "followers" tab is now hidden via CSS -->
+                <div class="tab" data-tab="followed"><i class="fas fa-user-check"></i> Followed</div>
                 <div class="tab" data-tab="followers">Followers</div>
             </div>
             
@@ -2371,35 +2258,6 @@
                 <!-- User items will be populated by Firebase -->
             </div>
             
-            <!-- This is the new container for the "Connections" tab -->
-            <div class="connections-list" id="connectionsList" style="display: none; flex: 1; overflow-y: auto;">
-                <div class="follow-section">
-                    <h4>Pending Requests</h4>
-                    <div id="pendingList" class="user-list-section">
-                        <div class="empty-state" style="padding: 10px 0; font-size: 14px;">No pending requests.</div>
-                    </div>
-                </div>
-                <div class="follow-section">
-                    <h4>Mutuals</h4>
-                    <div id="mutualList" class="user-list-section">
-                         <div class="empty-state" style="padding: 10px 0; font-size: 14px;">No mutual follows yet.</div>
-                    </div>
-                </div>
-                <div class="follow-section">
-                    <h4>Following</h4>
-                    <div id="followingList" class="user-list-section">
-                         <div class="empty-state" style="padding: 10px 0; font-size: 14px;">You aren't following anyone.</div>
-                    </div>
-                </div>
-                <div class="follow-section">
-                    <h4>Followers</h4>
-                    <div id="followersList" class="user-list-section">
-                         <div class="empty-state" style="padding: 10px 0; font-size: 14px;">You have no followers yet.</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- These old lists are now hidden and replaced by connectionsList -->
             <div class="followed-list" id="followedList" style="display: none;">
                 <!-- Followed items will be populated by Firebase -->
             </div>
@@ -2413,9 +2271,7 @@
             <div class="chat-header" id="chatHeader">
                 <div class="profile-header">
                     <div class="avatar-wrapper">
-                        <!-- Added chat-header-avatar class for consistency -->
-                        <div class="chat-header-avatar profile-pic"> 
-                            <img src="" alt="Avatar" style="display:none;" />
+                        <div class="chat-header-avatar profile-pic"> <img src="" alt="Avatar" style="display:none;" />
                             <i class="fas fa-user-friends"></i>
                         </div>
                         <div class="status-indicator offline"></div>
@@ -2567,8 +2423,6 @@
 
     <!-- NEW: Context Menu for Chat List -->
     <div class="context-menu" id="chatListContextMenu">
-        <!-- Added Edit Group menu item -->
-        <div class="context-menu-item" id="editGroupMenuItem" style="display: none;"><i class="fas fa-edit"></i> Edit Group</div>
         <div class="context-menu-item delete" id="deleteChatMenuItem"><i class="fas fa-trash"></i> Delete Conversation</div>
         <div class="context-menu-item delete" id="leaveGroupMenuItem" style="display: none;"><i class="fas fa-sign-out-alt"></i> Leave Group</div>
     </div>
@@ -2678,7 +2532,7 @@
                 <input type="text" id="groupName" class="form-control" placeholder="Enter group name" maxlength="30">
             </div>
             <div class="form-group">
-                <label>Select Members (People you follow)</label>
+                <label>Select Members</label>
                 <div class="member-selection" id="memberSelection">
                     <!-- Member items will be populated by Firebase -->
                 </div>
@@ -2687,24 +2541,13 @@
         </div>
     </div>
 
-    <!-- NEW: Edit Group Chat Modal (This is the one we are keeping) -->
+    <!-- NEW: Edit Group Chat Modal -->
     <div class="modal" id="editGroupModal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title">Edit Group Chat</h3>
                 <button class="close-btn" id="closeEditGroupModal">&times;</button>
             </div>
-            
-            <!-- Group Image Upload -->
-            <div class="form-group">
-                <label>Group Picture</label>
-                <div class="group-image-preview" id="groupImagePreview">
-                    <i class="fas fa-camera"></i>
-                    <img id="groupImagePreviewImg" style="display: none;">
-                </div>
-                <input type="file" id="groupImageUpload" class="group-image-upload" accept="image/*">
-            </div>
-
             <div class="form-group">
                 <label for="editGroupName">Group Name</label>
                 <input type="text" id="editGroupName" class="form-control" placeholder="Enter group name" maxlength="30">
@@ -2716,38 +2559,14 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Add Members (People you follow)</label>
+                <label>Add Members</label>
                 <div class="member-selection" id="addMemberSelection">
                     <!-- Available users will be populated by Firebase -->
                 </div>
             </div>
             <button class="btn" id="saveGroupChangesBtn">Save Changes</button>
-            <button class="btn btn-danger" id="deleteGroupBtn" style="margin-top: 10px;">Delete Group</button>
         </div>
     </div>
-    
-    <!-- This modal is for the Connections tab, but we are building it into the sidebar -->
-    <div class="modal" id="followersFollowingModal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="followModalTitle">Connections</h3>
-                <button class="close-btn" id="closeFollowModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="tabs">
-                    <div class="tab active" data-tab="mutual">Mutual</div>
-                    <div class="tab" data-tab="following">Following</div>
-                    <div class="tab" data-tab="followers">Followers</div>
-                    <div class="tab" data-tab="pending">Pending</div>
-                </div>
-                
-                <div id="followContent" style="margin-top: 15px;">
-                    <!-- Content will be loaded dynamically -->
-                </div>
-            </div>
-        </div>
-    </div>
-
 
     <script type="module">
         // === NEW: Browser tab notification functionality ===
@@ -2774,7 +2593,6 @@
         const chatListContextMenu = document.getElementById('chatListContextMenu');
         const deleteChatMenuItem = document.getElementById('deleteChatMenuItem');
         const leaveGroupMenuItem = document.getElementById('leaveGroupMenuItem');
-        const editGroupMenuItem = document.getElementById('editGroupMenuItem'); // Added
         let selectedChatItem = null;
         
         // === NEW: Chat Header Context Menu ===
@@ -2850,17 +2668,15 @@
                 if (chat && chat.isGroup) {
                     deleteChatMenuItem.style.display = 'none';
                     leaveGroupMenuItem.style.display = 'block';
-                    editGroupMenuItem.style.display = 'block'; // Show Edit Group
                 } else {
                     deleteChatMenuItem.style.display = 'block';
                     leaveGroupMenuItem.style.display = 'none';
-                    editGroupMenuItem.style.display = 'none'; // Hide Edit Group
                 }
             }
             
             // Show context menu for chat header
-            const chatHeaderEl = e.target.closest('#chatHeader');
-            if (chatHeaderEl && currentChatUser && currentChatUser.isGroup) {
+            const chatHeader = document.getElementById('chatHeader');
+            if (e.target.closest('#chatHeader') && currentChatUser && currentChatUser.isGroup) {
                 e.preventDefault();
                 chatHeaderContextMenu.style.display = 'block';
                 chatHeaderContextMenu.style.left = `${e.pageX}px`;
@@ -2909,13 +2725,7 @@
                 const rect = selectedMessage.getBoundingClientRect();
                 reactionPicker.style.display = 'block';
                 reactionPicker.style.left = `${rect.left}px`;
-                
-                // Position picker above or below based on space
-                if (rect.top - 160 > 0) { // 150px height + 10px buffer
-                     reactionPicker.style.top = `${window.scrollY + rect.top - 160}px`;
-                } else {
-                     reactionPicker.style.top = `${window.scrollY + rect.bottom + 10}px`;
-                }
+                reactionPicker.style.top = `${rect.top - 120}px`;
                 
                 contextMenu.style.display = 'none';
             }
@@ -2944,7 +2754,6 @@
                 const messageId = selectedMessage.dataset.messageId;
                 if (messageId) {
                     try {
-                        // Also delete reactions subcollection if any (or handle in backend function)
                         await deleteDoc(doc(db, 'chats', currentChatId, 'messages', messageId));
                         selectedMessage.remove();
                     } catch (error) {
@@ -2956,19 +2765,6 @@
         });
         
         // NEW: Chat list context menu actions
-        
-        // Edit Group menu item click
-        editGroupMenuItem.addEventListener('click', () => {
-            if (selectedChatItem) {
-                const chatId = selectedChatItem.dataset.chatId;
-                const chat = chats.find(c => c.id === chatId);
-                if (chat && chat.isGroup) {
-                    openEditGroupModal(chat); // Pass the chat data
-                }
-            }
-            chatListContextMenu.style.display = 'none';
-        });
-
         deleteChatMenuItem.addEventListener('click', async () => {
             if (selectedChatItem && currentUser) {
                 const chatId = selectedChatItem.dataset.chatId;
@@ -2977,7 +2773,7 @@
                         // Delete the chat document
                         await deleteDoc(doc(db, 'chats', chatId));
                         
-                        // Also delete all messages in the chat (this is good practice)
+                        // Also delete all messages in the chat
                         const messagesQuery = query(collection(db, 'chats', chatId, 'messages'));
                         const messagesSnapshot = await getDocs(messagesQuery);
                         const batch = writeBatch(db);
@@ -3063,7 +2859,7 @@
         // Chat header context menu action
         editChatHeaderMenuItem.addEventListener('click', () => {
             if (currentChatUser && currentChatUser.isGroup) {
-                openEditGroupModal(currentChatUser); // Pass current chat data
+                openEditGroupModal();
                 chatHeaderContextMenu.style.display = 'none';
             }
         });
@@ -3093,16 +2889,15 @@
         
         expandedFollowBtn.addEventListener('click', () => {
             if (expandedProfileUser) {
-                const isFollowing = expandedFollowBtn.classList.contains('following');
-                const isPending = expandedFollowBtn.classList.contains('pending');
-                
+                const isFollowing = follows.some(f => f.followingId === expandedProfileUser.id);
                 if (isFollowing) {
                     unfollowUser(expandedProfileUser.id);
-                } else if (isPending) {
-                    // Optional: Implement "cancel request"
-                    // For now, do nothing as it's pending
+                    expandedFollowBtn.textContent = 'Follow';
+                    expandedFollowBtn.classList.remove('following');
                 } else {
                     followUser(expandedProfileUser.id);
+                    expandedFollowBtn.textContent = 'Unfollow';
+                    expandedFollowBtn.classList.add('following');
                 }
             }
         });
@@ -3113,6 +2908,73 @@
             
             // Set profile data
             const img = expandedProfilePic.querySelector('img');
+            
+            // Reset follow sections
+            document.querySelectorAll('.follow-section').forEach(section => {
+                section.innerHTML = '<h4>Loading...</h4>';
+            });
+            
+            // Load follow relationships
+            if (currentUser) {
+                // Get all follow relationships involving this user
+                const followsQuery = query(
+                    collection(db, 'follows'),
+                    where('followerId', '==', user.uid)
+                );
+                
+                const followersQuery = query(
+                    collection(db, 'follows'),
+                    where('followingId', '==', user.uid)
+                );
+                
+                const [followsSnapshot, followersSnapshot] = await Promise.all([
+                    getDocs(followsQuery),
+                    getDocs(followersQuery)
+                ]);
+                
+                // Process follows and followers
+                const following = [];
+                const followers = [];
+                const mutuals = [];
+                const pending = [];
+                
+                followsSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.status === 'accepted') {
+                        following.push(data.followingId);
+                    }
+                });
+                
+                followersSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.status === 'accepted') {
+                        followers.push(data.followerId);
+                    } else if (data.status === 'pending') {
+                        pending.push({
+                            id: doc.id,
+                            userId: data.followerId,
+                            type: 'incoming'
+                        });
+                    }
+                });
+                
+                // Find mutual follows
+                mutuals = following.filter(id => followers.includes(id));
+                
+                // Get user data for all IDs
+                const allUserIds = [...new Set([...following, ...followers, ...pending.map(p => p.userId)])];
+                const usersSnapshot = await getDocs(query(collection(db, 'users'), where('__name__', 'in', allUserIds)));
+                const usersMap = {};
+                usersSnapshot.forEach(doc => {
+                    usersMap[doc.id] = doc.data();
+                });
+                
+                // Render each section
+                renderFollowSection('mutual-follows', 'Mutual Follows', mutuals, usersMap);
+                renderFollowSection('following-you', 'You Follow', following.filter(id => !mutuals.includes(id)), usersMap);
+                renderFollowSection('followers', 'Following You', followers.filter(id => !mutuals.includes(id)), usersMap);
+                renderFollowSection('pending', 'Pending Requests', pending, usersMap, true);
+            }
             const icon = expandedProfilePic.querySelector('i');
             
             if (user.photoURL) {
@@ -3126,41 +2988,17 @@
             
             expandedProfileName.textContent = user.displayName;
             expandedProfileBio.textContent = user.bio || 'No bio yet';
+            expandedFollowerCount.textContent = user.followers || 0;
+            expandedFollowingCount.textContent = user.following || 0;
             
-            // Fetch live follower/following counts for this user
-            try {
-                const followingQuery = query(collection(db, 'follows'), where('followerId', '==', user.id), where('status', '==', 'accepted'));
-                const followersQuery = query(collection(db, 'follows'), where('followingId', '==', user.id), where('status', '==', 'accepted'));
-                
-                const [followingSnapshot, followersSnapshot] = await Promise.all([
-                    getDocs(followingQuery),
-                    getDocs(followersQuery)
-                ]);
-                
-                expandedFollowerCount.textContent = followersSnapshot.size;
-                expandedFollowingCount.textContent = followingSnapshot.size;
-
-            } catch (error) {
-                console.error("Error fetching profile stats: ", error);
-                expandedFollowerCount.textContent = '0';
-                expandedFollowingCount.textContent = '0';
-            }
-
-            
-            // Set follow button state (based on currentUser's relationship to this user)
-            const isFollowing = follows.some(f => f.followingId === user.id && f.status === 'accepted');
-            const isPending = follows.some(f => f.followingId === user.id && f.status === 'pending');
-            
-            expandedFollowBtn.classList.remove('following', 'pending');
-            
+            // Set follow button state
+            const isFollowing = follows.some(f => f.followingId === user.id);
             if (isFollowing) {
                 expandedFollowBtn.textContent = 'Unfollow';
                 expandedFollowBtn.classList.add('following');
-            } else if (isPending) {
-                expandedFollowBtn.textContent = 'Requested';
-                expandedFollowBtn.classList.add('pending');
             } else {
                 expandedFollowBtn.textContent = 'Follow';
+                expandedFollowBtn.classList.remove('following');
             }
             
             // Hide follow button if it's the current user
@@ -3175,41 +3013,23 @@
             expandedFollowersList.classList.remove('active');
             expandedFollowingList.classList.remove('active');
             
-            // Clear old lists
-            expandedFollowersItems.innerHTML = '<div style="text-align: center; color: #8E8E93; padding: 20px;">Loading...</div>';
-            expandedFollowingItems.innerHTML = '<div style="text-align: center; color: #8E8E93; padding: 20px;">Loading...</div>';
-
             expandedProfileModal.style.display = 'flex';
         }
         
-        // NEW: Function to load followers list in expanded profile (fetches from Firestore)
-        async function loadExpandedFollowersList(userId) {
-            expandedFollowersItems.innerHTML = '<div style="text-align: center; color: #8E8E93; padding: 20px;">Loading...</div>';
+        // NEW: Function to load followers list in expanded profile
+        function loadExpandedFollowersList(userId) {
+            expandedFollowersItems.innerHTML = '';
             
-            try {
-                const followersQuery = query(
-                    collection(db, 'follows'), 
-                    where('followingId', '==', userId),
-                    where('status', '==', 'accepted')
-                );
-                const snapshot = await getDocs(followersQuery);
-                
-                if (snapshot.empty) {
-                    expandedFollowersItems.innerHTML = '<div style="text-align: center; color: #8E8E93; padding: 20px;">No followers yet</div>';
-                    return;
-                }
-                
-                const followerIds = snapshot.docs.map(doc => doc.data().followerId);
-                
-                // Fetch user data for all followers
-                // Note: Firestore 'in' query is limited to 10 items. For a real app, use pagination.
-                const usersToFetch = followerIds.slice(0, 10);
-                const usersSnapshot = await getDocs(query(collection(db, 'users'), where(documentId(), 'in', usersToFetch)));
-                
-                expandedFollowersItems.innerHTML = ''; // Clear loading
-                
-                usersSnapshot.forEach(userDoc => {
-                    const follower = { id: userDoc.id, ...userDoc.data() };
+            const userFollowers = followers.filter(f => f.followingId === userId);
+            
+            if (userFollowers.length === 0) {
+                expandedFollowersItems.innerHTML = '<div style="text-align: center; color: #8E8E93; padding: 20px;">No followers yet</div>';
+                return;
+            }
+            
+            userFollowers.forEach(follow => {
+                const follower = users.find(u => u.id === follow.followerId);
+                if (follower) {
                     const listItem = document.createElement('div');
                     listItem.className = 'expanded-list-item';
                     listItem.innerHTML = `
@@ -3220,48 +3040,28 @@
                     `;
                     
                     listItem.addEventListener('click', () => {
-                        // Close current modal and open the new one
-                        expandedProfileModal.style.display = 'none';
                         openExpandedProfile(follower);
                     });
                     
                     expandedFollowersItems.appendChild(listItem);
-                });
-
-            } catch (error) {
-                console.error("Error loading expanded followers list:", error);
-                expandedFollowersItems.innerHTML = '<div style="text-align: center; color: #FF3B30; padding: 20px;">Error loading followers.</div>';
-            }
+                }
+            });
         }
         
-        // NEW: Function to load following list in expanded profile (fetches from Firestore)
-        async function loadExpandedFollowingList(userId) {
-            expandedFollowingItems.innerHTML = '<div style="text-align: center; color: #8E8E93; padding: 20px;">Loading...</div>';
+        // NEW: Function to load following list in expanded profile
+        function loadExpandedFollowingList(userId) {
+            expandedFollowingItems.innerHTML = '';
             
-             try {
-                const followingQuery = query(
-                    collection(db, 'follows'), 
-                    where('followerId', '==', userId),
-                    where('status', '==', 'accepted')
-                );
-                const snapshot = await getDocs(followingQuery);
-                
-                if (snapshot.empty) {
-                    expandedFollowingItems.innerHTML = '<div style="text-align: center; color: #8E8E93; padding: 20px;">Not following anyone yet</div>';
-                    return;
-                }
-                
-                const followingIds = snapshot.docs.map(doc => doc.data().followingId);
-                
-                // Fetch user data for all following
-                // Note: Firestore 'in' query is limited to 10 items. For a real app, use pagination.
-                const usersToFetch = followingIds.slice(0, 10);
-                const usersSnapshot = await getDocs(query(collection(db, 'users'), where(documentId(), 'in', usersToFetch)));
-                
-                expandedFollowingItems.innerHTML = ''; // Clear loading
-                
-                usersSnapshot.forEach(userDoc => {
-                    const followingUser = { id: userDoc.id, ...userDoc.data() };
+            const userFollowing = follows.filter(f => f.followerId === userId);
+            
+            if (userFollowing.length === 0) {
+                expandedFollowingItems.innerHTML = '<div style="text-align: center; color: #8E8E93; padding: 20px;">Not following anyone yet</div>';
+                return;
+            }
+            
+            userFollowing.forEach(follow => {
+                const followingUser = users.find(u => u.id === follow.followingId);
+                if (followingUser) {
                     const listItem = document.createElement('div');
                     listItem.className = 'expanded-list-item';
                     listItem.innerHTML = `
@@ -3272,101 +3072,110 @@
                     `;
                     
                     listItem.addEventListener('click', () => {
-                        // Close current modal and open the new one
-                        expandedProfileModal.style.display = 'none';
                         openExpandedProfile(followingUser);
                     });
                     
                     expandedFollowingItems.appendChild(listItem);
-                });
-
-            } catch (error) {
-                console.error("Error loading expanded following list:", error);
-                expandedFollowingItems.innerHTML = '<div style="text-align: center; color: #FF3B30; padding: 20px;">Error loading following list.</div>';
-            }
+                }
+            });
         }
 
         // NEW: Add event listeners to profile pictures throughout the app
         document.addEventListener('click', (e) => {
-            const profilePicEl = e.target.closest('.profile-pic, .chat-avatar, .user-avatar, .chat-header-avatar, .member-avatar, .notification-avatar, .message-avatar');
-            
-            if (!profilePicEl) return; // Not a profile picture click
-
             // Profile picture in top-right profile card
-            if (profilePicEl.id === 'profilePic' && currentUser) {
-                const userData = users.find(u => u.id === currentUser.uid);
-                if (userData) openExpandedProfile(userData);
-                return;
+            if (e.target.closest('#profilePic')) {
+                if (currentUser) {
+                    const userData = users.find(u => u.id === currentUser.uid);
+                    if (userData) {
+                        openExpandedProfile(userData);
+                    }
+                }
             }
             
             // Profile pictures in chat list
-            const chatItem = e.target.closest('.chat-item');
-            if (chatItem && profilePicEl.classList.contains('chat-avatar')) {
-                const chatId = chatItem.dataset.chatId;
-                const chat = chats.find(c => c.id === chatId);
-                if (chat && !chat.isGroup) {
-                    const otherUserId = chat.members.find(uid => uid !== currentUser.uid);
-                    const user = users.find(u => u.id === otherUserId);
-                    if (user) openExpandedProfile(user);
+            if (e.target.closest('.chat-avatar')) {
+                const chatItem = e.target.closest('.chat-item');
+                if (chatItem) {
+                    const chatId = chatItem.dataset.chatId;
+                    const chat = chats.find(c => c.id === chatId);
+                    if (chat && !chat.isGroup) {
+                        const otherUserId = chat.members.find(uid => uid !== currentUser.uid);
+                        const user = users.find(u => u.id === otherUserId);
+                        if (user) {
+                            openExpandedProfile(user);
+                        }
+                    }
                 }
-                return;
             }
             
-            // Profile pictures in user list / connections list
-            const userItem = e.target.closest('.user-item');
-            if (userItem && profilePicEl.classList.contains('user-avatar')) {
-                const userId = userItem.dataset.userId;
-                const user = users.find(u => u.id === userId);
-                if (user) openExpandedProfile(user);
-                return;
+            // Profile pictures in user list
+            if (e.target.closest('.user-avatar')) {
+                const userItem = e.target.closest('.user-item');
+                if (userItem) {
+                    const userId = userItem.dataset.userId;
+                    const user = users.find(u => u.id === userId);
+                    if (user) {
+                        openExpandedProfile(user);
+                    }
+                }
             }
             
             // Profile picture in chat header
-            if (e.target.closest('#chatHeader') && profilePicEl.classList.contains('chat-header-avatar')) {
+            if (e.target.closest('.chat-header-avatar')) {
                 if (currentChatUser && !currentChatUser.isGroup) {
                     openExpandedProfile(currentChatUser);
                 }
-                // If it's a group, do nothing (header right-click opens edit modal)
-                return;
             }
             
             // Profile pictures in group members compact view
-            const memberAvatar = e.target.closest('.member-avatar');
-            if (memberAvatar) {
+            if (e.target.closest('.member-avatar')) {
                 if (currentChatUser && currentChatUser.isGroup) {
-                    // Find index of clicked avatar
-                    const memberIndex = Array.from(memberAvatar.parentNode.children).indexOf(memberAvatar);
+                    const memberAvatar = e.target.closest('.member-avatar');
+                    const memberIndex = Array.from(groupMembersCompact.children).indexOf(memberAvatar);
                     if (memberIndex >= 0 && memberIndex < currentChatUser.members.length) {
                         const memberId = currentChatUser.members[memberIndex];
                         const user = users.find(u => u.id === memberId);
-                        if (user) openExpandedProfile(user);
+                        if (user) {
+                            openExpandedProfile(user);
+                        }
                     }
                 }
-                return;
             }
             
             // Profile pictures in notifications
-            const notificationItem = e.target.closest('.notification-item');
-            if (notificationItem && profilePicEl.classList.contains('notification-avatar')) {
-                // We need to store senderId on the notification item
-                const senderId = notificationItem.dataset.senderId;
-                if (senderId) {
-                    const user = users.find(u => u.id === senderId);
-                    if (user) openExpandedProfile(user);
+            if (e.target.closest('.notification-avatar')) {
+                const notificationItem = e.target.closest('.notification-item');
+                if (notificationItem) {
+                    // This would require storing the sender ID in the notification item
+                    // For simplicity, we'll just open the current user's profile
+                    if (currentUser) {
+                        const userData = users.find(u => u.id === currentUser.uid);
+                        if (userData) {
+                            openExpandedProfile(userData);
+                        }
+                    }
                 }
-                return;
             }
             
             // Profile pictures in messages (for group chats)
-            const messageElement = e.target.closest('.message-with-avatar');
-            if (messageElement && profilePicEl.classList.contains('message-avatar')) {
-                // We need to store senderId on the message
-                const senderId = messageElement.dataset.senderId;
-                if (senderId) {
-                    const user = users.find(u => u.id === senderId);
-                    if (user) openExpandedProfile(user);
+            if (e.target.closest('.message-avatar')) {
+                const messageElement = e.target.closest('.message');
+                if (messageElement) {
+                    const messageId = messageElement.dataset.messageId;
+                    // We would need to store the sender ID in the message element
+                    // For now, we'll just open the current user's profile if it's their message
+                    // or the other user's profile if it's not
+                    if (messageElement.classList.contains('sent')) {
+                        if (currentUser) {
+                            const userData = users.find(u => u.id === currentUser.uid);
+                            if (userData) {
+                                openExpandedProfile(userData);
+                            }
+                        }
+                    } else if (currentChatUser && !currentChatUser.isGroup) {
+                        openExpandedProfile(currentChatUser);
+                    }
                 }
-                return;
             }
         });
 
@@ -3397,9 +3206,7 @@
             limit,
             writeBatch,
             arrayUnion,
-            arrayRemove,
-            documentId,
-            getCountFromServer // Needed for counts
+            arrayRemove
         } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
         
         import { 
@@ -3420,7 +3227,6 @@
 
         // Firebase configuration
         const firebaseConfig = {
-            // Your config object
             apiKey: "AIzaSyCvaWRvpDY-BOOg_oitS4oVGDoQkiWMR6A",
             authDomain: "windowsassistant-36760.firebaseapp.com",
             projectId: "windowsassistant-36760",
@@ -3469,9 +3275,8 @@
         const searchBox = document.getElementById('searchBox');
         const chatList = document.getElementById('chatList');
         const userList = document.getElementById('userList');
-        const connectionsList = document.getElementById('connectionsList'); // New connections list
-        const followedList = document.getElementById('followedList'); // Old list
-        const followerList = document.getElementById('followerList'); // Old list
+        const followedList = document.getElementById('followedList');
+        const followerList = document.getElementById('followerList');
         const createGroupBtn = document.getElementById('createGroupBtn');
         
         // Chat Area Elements
@@ -3501,11 +3306,6 @@
         const groupMembersEdit = document.getElementById('groupMembersEdit');
         const addMemberSelection = document.getElementById('addMemberSelection');
         const saveGroupChangesBtn = document.getElementById('saveGroupChangesBtn');
-        const groupImagePreview = document.getElementById('groupImagePreview');
-        const groupImagePreviewImg = document.getElementById('groupImagePreviewImg');
-        const groupImageUpload = document.getElementById('groupImageUpload');
-        const deleteGroupBtn = document.getElementById('deleteGroupBtn');
-        let groupImageFile = null; // To store selected group image
         
         // Modal Elements
         const editProfileModal = document.getElementById('editProfileModal');
@@ -3524,8 +3324,8 @@
         let currentUser = null;
         let currentTheme = 'light';
         let users = []; // This acts as a cache for user data
-        let follows = []; // currentUser is follower
-        let followers = []; // currentUser is following
+        let follows = [];
+        let followers = []; 
         let currentChatUser = null;
         let currentChatId = null;
         let currentActiveTab = 'chats';
@@ -3554,7 +3354,6 @@
             _typingUnsub = onSnapshot(typingRef, (snapshot) => {
                 const typingUsers = [];
                 snapshot.forEach(doc => {
-                    // Check timestamp? For now, just check existence
                     if (doc.id !== currentUser.uid) {
                         typingUsers.push(doc.id);
                     }
@@ -3584,31 +3383,27 @@
             });
         }
         
-        async function startTyping(chatId) {
+        function startTyping(chatId) {
             if (!chatId || !currentUser) return;
             
-            try {
-                // Set typing status
-                await setDoc(doc(db, 'chats', chatId, 'typing', currentUser.uid), {
-                    userId: currentUser.uid,
-                    timestamp: serverTimestamp() // Use server timestamp
-                });
-                
-                // Clear previous timer
-                if (typingTimer) {
-                    clearTimeout(typingTimer);
-                }
-                
-                // Set timer to stop typing after 2 seconds of inactivity
-                typingTimer = setTimeout(() => {
-                    stopTyping(chatId);
-                }, 2000);
-            } catch (error) {
-                console.error("Error starting typing:", error);
+            // Set typing status
+            setDoc(doc(db, 'chats', chatId, 'typing', currentUser.uid), {
+                userId: currentUser.uid,
+                timestamp: serverTimestamp()
+            });
+            
+            // Clear previous timer
+            if (typingTimer) {
+                clearTimeout(typingTimer);
             }
+            
+            // Set timer to stop typing after 2 seconds of inactivity
+            typingTimer = setTimeout(() => {
+                stopTyping(chatId);
+            }, 2000);
         }
         
-        async function stopTyping(chatId) {
+        function stopTyping(chatId) {
             if (!chatId || !currentUser) return;
             
             // Clear timer
@@ -3617,12 +3412,8 @@
                 typingTimer = null;
             }
             
-            try {
-                // Remove typing status
-                await deleteDoc(doc(db, 'chats', chatId, 'typing', currentUser.uid));
-            } catch (error) {
-                console.error("Error stopping typing:", error);
-            }
+            // Remove typing status
+            deleteDoc(doc(db, 'chats', chatId, 'typing', currentUser.uid));
         }
         
         // Listen for typing in message input
@@ -3721,7 +3512,7 @@
                 
                 if (messageDoc.exists()) {
                     const messageData = messageDoc.data();
-                    let reactions = messageData.reactions || []; // Use let
+                    const reactions = messageData.reactions || [];
                     
                     // Check if user already reacted with this emoji
                     const existingReactionIndex = reactions.findIndex(
@@ -3732,9 +3523,7 @@
                         // Remove the reaction if it already exists
                         reactions.splice(existingReactionIndex, 1);
                     } else {
-                        // Remove any other reaction from this user first
-                        reactions = reactions.filter(r => r.userId !== currentUser.uid);
-                        // Add the new reaction
+                        // Add the reaction
                         reactions.push({
                             userId: currentUser.uid,
                             emoji: emoji,
@@ -3777,13 +3566,7 @@
             if (!reactionsContainer) {
                 reactionsContainer = document.createElement('div');
                 reactionsContainer.className = 'message-reactions';
-                // Insert after message content, before meta
-                const meta = messageElement.querySelector('.message-meta');
-                if (meta) {
-                    messageElement.insertBefore(reactionsContainer, meta);
-                } else {
-                    messageElement.appendChild(reactionsContainer);
-                }
+                messageElement.appendChild(reactionsContainer);
             }
             
             // Clear existing reactions
@@ -3793,13 +3576,6 @@
             Object.entries(reactionCounts).forEach(([emoji, count]) => {
                 const reactionElement = document.createElement('div');
                 reactionElement.className = 'message-reaction';
-                
-                // Check if current user reacted with this emoji
-                if (reactions.some(r => r.userId === currentUser.uid && r.emoji === emoji)) {
-                    reactionElement.style.borderColor = 'var(--primary-color)';
-                    reactionElement.style.background = 'rgba(0, 122, 255, 0.1)';
-                }
-
                 reactionElement.innerHTML = `
                     <span class="reaction-emoji">${emoji}</span>
                     <span class="reaction-count">${count}</span>
@@ -3886,19 +3662,20 @@
                 
                 chatList.style.display = 'none';
                 userList.style.display = 'none';
-                connectionsList.style.display = 'none'; // Hide new list
-                // followedList.style.display = 'none'; // Already hidden
-                // followerList.style.display = 'none'; // Already hidden
+                followedList.style.display = 'none';
+                followerList.style.display = 'none'; 
 
                 if (currentActiveTab === 'chats') {
                     chatList.style.display = 'block';
                 } else if (currentActiveTab === 'suggested') {
                     userList.style.display = 'block';
                     loadUsers();
-                } else if (currentActiveTab === 'connections') { // New tab
-                    connectionsList.style.display = 'flex';
-                    connectionsList.style.flexDirection = 'column';
-                    loadConnections(); // Load data for all 4 sections
+                } else if (currentActiveTab === 'followed') {
+                    followedList.style.display = 'block';
+                    loadFollowedUsers();
+                } else if (currentActiveTab === 'followers') { 
+                    followerList.style.display = 'block';
+                    loadFollowers();
                 }
                 
                 filterLists();
@@ -3915,9 +3692,10 @@
                 filterList(chatList, '.chat-item', 'h4', searchText);
             } else if (currentActiveTab === 'suggested') {
                 filterList(userList, '.user-item', 'h4', searchText);
-            } else if (currentActiveTab === 'connections') {
-                // Filter all 4 sections within connections list
-                filterList(connectionsList, '.user-item', 'h4', searchText);
+            } else if (currentActiveTab === 'followed') {
+                filterList(followedList, '.user-item', 'h4', searchText);
+            } else if (currentActiveTab === 'followers') {
+                filterList(followerList, '.user-item', 'h4', searchText);
             }
         }
 
@@ -3936,17 +3714,13 @@
             });
         }
         
-        // Followers/Following buttons (on profile card)
+        // Followers/Following buttons
         followersBtn.addEventListener('click', () => {
-            document.querySelector('[data-tab="connections"]').click();
-            // Optional: scroll to followers section
-            document.getElementById('followersList')?.scrollIntoView();
+            document.querySelector('[data-tab="followers"]').click();
         });
         
         followingBtn.addEventListener('click', () => {
-            document.querySelector('[data-tab="connections"]').click();
-             // Optional: scroll to following section
-            document.getElementById('followingList')?.scrollIntoView();
+            document.querySelector('[data-tab="followed"]').click();
         });
 
         // === FIREBASE AUTHENTICATION ===
@@ -3975,7 +3749,6 @@
                 setupNotificationDropdownListener(user.uid);
                 updateProfileUI(user);
             } else {
-                currentUser = null;
                 loginScreen.style.display = 'flex';
                 appContainer.style.display = 'none';
             }
@@ -4017,17 +3790,19 @@
                     displayName: user.displayName || `User${Math.floor(1000 + Math.random() * 9000)}`,
                     bio: 'Hello! I am using Connex.',
                     photoURL: user.photoURL || '',
-                    // followers/following counts are dynamic, no need to store here
+                    followers: 0,
+                    following: 0,
                     isOnline: true,
                     lastSeen: serverTimestamp(),
                     createdAt: serverTimestamp(),
                     theme: 'light'
                 });
-                updateProfileUI(user);
             } else {
                 const userData = userDoc.data();
                 profileName.textContent = userData.displayName;
                 profileBio.textContent = userData.bio;
+                followerCount.textContent = userData.followers || 0;
+                followingCount.textContent = userData.following || 0;
                 
                 updateProfileUI(user, userData);
             }
@@ -4050,44 +3825,37 @@
                 console.log("Users cache updated, count:", users.length);
                 
                 // Now load dependent lists
-                if (currentActiveTab === 'suggested') loadUsers();
-                if (currentActiveTab === 'connections') loadConnections();
+                loadUsers();
+                loadFollowedUsers();
+                loadFollowers();
             }, (error) => {
                 console.error("Error in users listener:", error);
             });
 
-            // Follows listener (People currentUser follows)
+            // Follows listener
             _followsUnsub = onSnapshot(
                 query(collection(db, 'follows'), where('followerId', '==', uid)), 
                 (snapshot) => {
                     follows = [];
-                    let acceptedCount = 0;
                     snapshot.forEach(doc => {
-                        const data = doc.data();
-                        follows.push({ id: doc.id, ...data });
-                        if(data.status === 'accepted') acceptedCount++;
+                        follows.push({ id: doc.id, ...doc.data() });
                     });
-                    followingCount.textContent = acceptedCount; // Only count accepted
-                    if (currentActiveTab === 'connections') loadConnections(); // Refresh connections
-                    console.log("Follows updated, total:", follows.length, "accepted:", acceptedCount);
+                    followingCount.textContent = follows.length;
+                    console.log("Follows updated, count:", follows.length);
                 },
                 (error) => console.error("Error in follows listener:", error)
             );
             
-            // Followers listener (People following currentUser)
+            // Followers listener
             _followersUnsub = onSnapshot(
                 query(collection(db, 'follows'), where('followingId', '==', uid)),
                 (snapshot) => {
                     followers = [];
-                    let acceptedCount = 0;
                     snapshot.forEach(doc => {
-                        const data = doc.data();
-                        followers.push({ id: doc.id, ...data });
-                         if(data.status === 'accepted') acceptedCount++;
+                        followers.push({ id: doc.id, ...doc.data() });
                     });
-                    followerCount.textContent = acceptedCount; // Only count accepted
-                    if (currentActiveTab === 'connections') loadConnections(); // Refresh connections
-                    console.log("Followers updated, total:", followers.length, "accepted:", acceptedCount);
+                    followerCount.textContent = followers.length;
+                    console.log("Followers updated, count:", followers.length);
                 },
                 (error) => console.error("Error in followers listener:", error)
             );
@@ -4101,7 +3869,7 @@
                 ), 
                 (snapshot) => {
                     console.log("Chats snapshot received, count:", snapshot.size);
-                    chats = []; // Update global chats array
+                    chats = [];
                     snapshot.forEach(doc => {
                         chats.push({ id: doc.id, ...doc.data() });
                     });
@@ -4109,6 +3877,19 @@
                 }, 
                 (error) => {
                     console.error("Error in chat list listener:", error);
+                    // Fallback: try without orderBy if it fails
+                    const fallbackQuery = query(
+                        collection(db, 'chats'),
+                        where('members', 'array-contains', uid)
+                    );
+                    onSnapshot(fallbackQuery, (fallbackSnapshot) => {
+                        console.log("Fallback chats snapshot, count:", fallbackSnapshot.size);
+                        chats = [];
+                        fallbackSnapshot.forEach(doc => {
+                            chats.push({ id: doc.id, ...doc.data() });
+                        });
+                        renderChatList(fallbackSnapshot);
+                    });
                 }
             );
         }
@@ -4207,7 +3988,6 @@
                     
                     const notificationItem = document.createElement('div');
                     notificationItem.className = `notification-item ${notif.read ? '' : 'unread'}`;
-                    notificationItem.dataset.senderId = sender.id; // Store senderId
                     
                     const avatarContent = sender.photoURL 
                         ? `<img src="${sender.photoURL}" alt="${sender.displayName}" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\\'fas fa-user\\'></i>'">`
@@ -4216,10 +3996,8 @@
                     let notificationText = '';
                     if (notif.type === 'message') {
                         notificationText = `<strong>${escapeHtml(sender.displayName)}</strong> sent you a message`;
-                    } else if (notif.type === 'follow_request') { // Updated type
-                        notificationText = `<strong>${escapeHtml(sender.displayName)}</strong> sent you a follow request`;
-                    } else if (notif.type === 'follow_accept') { // New type
-                        notificationText = `<strong>${escapeHtml(sender.displayName)}</strong> accepted your follow request`;
+                    } else if (notif.type === 'follow') {
+                        notificationText = `<strong>${escapeHtml(sender.displayName)}</strong> started following you`;
                     } else {
                         notificationText = `New notification from <strong>${escapeHtml(sender.displayName)}</strong>`;
                     }
@@ -4266,8 +4044,8 @@
                             } catch (error) {
                                 console.error("Error navigating to chat from notification:", error);
                             }
-                        } else if (notif.type === 'follow_request' || notif.type === 'follow_accept') {
-                            document.querySelector('[data-tab="connections"]').click();
+                        } else if (notif.type === 'follow') {
+                            document.querySelector('[data-tab="followers"]').click();
                         }
                         
                         notificationBell.classList.remove('active');
@@ -4312,7 +4090,7 @@
                     if (isGroup) {
                         // Group chat
                         displayName = chatData.groupName || 'Group Chat';
-                        photoURL = chatData.photoURL || null; // Use group photo
+                        photoURL = null;
                         isOnline = false;
                     } else {
                         // One-on-one chat - find the other user
@@ -4415,16 +4193,11 @@
                     chatElement.dataset.chatId = chat.id;
                     chatElement.dataset.userId = chat.userObject ? chat.userObject.id : '';
                     
-                    let avatarContent = '';
-                    if (chat.isGroup) {
-                        avatarContent = chat.photoURL
-                            ? `<img src="${chat.photoURL}" alt="${chat.displayName}">`
-                            : '<i class="fas fa-users"></i>';
-                    } else {
-                        avatarContent = chat.photoURL 
+                    const avatarContent = chat.isGroup 
+                        ? '<i class="fas fa-users"></i>'
+                        : (chat.photoURL 
                             ? `<img src="${chat.photoURL}" alt="${chat.displayName}" onerror="this.style.display='none'; this.parentNode.innerHTML='<i class=\\'fas fa-user\\'></i>'">`
-                            : '<i class="fas fa-user"></i>';
-                    }
+                            : '<i class="fas fa-user"></i>');
                     
                     // NEW: Add notification indicator for unread messages
                     const notificationIndicator = chat.unreadCount > 0 ? 
@@ -4435,8 +4208,7 @@
                             <div class="chat-avatar ${chat.isGroup ? 'group' : ''}">
                                 ${avatarContent}
                             </div>
-                            <!-- Only show status for 1-on-1 chats -->
-                            ${!chat.isGroup ? `<div class="status-indicator ${chat.isOnline ? '' : 'offline'}"></div>` : ''}
+                            <div class="status-indicator ${chat.isOnline ? '' : 'offline'}"></div>
                             ${notificationIndicator}
                         </div>
                         <div class="chat-info">
@@ -4494,176 +4266,35 @@
             if (!currentUser) return 0;
             
             try {
-                // We need to query for messages not sent by us, and not read
-                // This requires a composite index in Firestore, or we do it client-side
-                // Let's assume a simpler "readBy" array on the message
-                
-                // Simple implementation (like before):
                 const unreadQuery = query(
                     collection(db, 'chats', chatId, 'messages'),
                     where('senderId', '!=', currentUser.uid),
-                    where('isRead', '==', false) // This simple flag is problematic for groups
-                    // A better model: where('readBy', 'array-contains-none', [currentUser.uid])
+                    where('isRead', '==', false)
                 );
                 
                 const snapshot = await getDocs(unreadQuery);
                 return snapshot.size;
-            } catch (error)
-            {
-                // This query will fail without an index.
-                // console.warn("Error getting unread count (index likely required):", error.message);
-                // Fallback: just return 0
+            } catch (error) {
+                console.error("Error getting unread count:", error);
                 return 0;
             }
         }
         
-        // --- NEW/UPDATED FOLLOW & CONNECTIONS FUNCTIONS ---
-        
-        // Loads "Suggested" users tab
         function loadUsers() {
-            // Suggest users who are not the current user and not already followed
+            const allOtherUserIds = users.map(u => u.id);
+            renderUserList(userList, allOtherUserIds, 'No other users found.');
+        }
+
+        function loadFollowedUsers() {
             const followedUserIds = follows.map(f => f.followingId);
-            const allOtherUserIds = users
-                .map(u => u.id)
-                .filter(id => id !== currentUser.uid && !followedUserIds.includes(id));
-                
-            renderUserList(userList, allOtherUserIds, 'No new users found.');
+            renderUserList(followedList, followedUserIds, 'You are not following anyone yet.');
         }
 
-        // Loads all 4 sections in the "Connections" tab
-        async function loadConnections() {
-            if (!currentUser) return;
-            
-            // 1. Get all user data
-            const allUserIds = users.map(u => u.id);
-            
-            // 2. Categorize
-            const mutualIds = [];
-            const followingIds = []; // Only following
-            const followersIds = []; // Only followers
-            const pendingSentIds = []; // You requested
-            const pendingReceived = []; // They requested (object with followId)
-            
-            const acceptedFollows = follows.filter(f => f.status === 'accepted').map(f => f.followingId);
-            const acceptedFollowers = followers.filter(f => f.status === 'accepted').map(f => f.followerId);
-
-            allUserIds.forEach(id => {
-                if (id === currentUser.uid) return;
-                
-                const isFollowing = acceptedFollows.includes(id);
-                const isFollower = acceptedFollowers.includes(id);
-                
-                if (isFollowing && isFollower) {
-                    mutualIds.push(id);
-                } else if (isFollowing) {
-                    followingIds.push(id);
-                } else if (isFollower) {
-                    followersIds.push(id);
-                }
-            });
-            
-            // 3. Handle Pending
-            follows.forEach(f => {
-                if (f.status === 'pending') {
-                    pendingSentIds.push(f.followingId);
-                }
-            });
-            
-            followers.forEach(f => {
-                if (f.status === 'pending') {
-                    pendingReceived.push({ userId: f.followerId, followId: f.id });
-                }
-            });
-
-            // 4. Render sections
-            renderConnectionsSection('mutualList', mutualIds, 'mutual');
-            renderConnectionsSection('followingList', followingIds, 'following');
-            renderConnectionsSection('followersList', followersIds, 'follower');
-            renderConnectionsSection('pendingList', pendingReceived, 'pending');
-            
-            // Also render sent requests in pending list
-            renderConnectionsSection('pendingList', pendingSentIds, 'pending_sent', true);
-        }
-        
-        // Renders a list of users into a specific container
-        function renderConnectionsSection(containerId, userList, type, append = false) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            
-            if (!append) {
-                container.innerHTML = ''; // Clear container
-            }
-
-            let userIds = [];
-            if (type === 'pending') {
-                userIds = userList.map(item => item.userId);
-            } else {
-                userIds = userList;
-            }
-            
-            const usersToDisplay = users.filter(user => userIds.includes(user.id));
-            
-            if (usersToDisplay.length === 0 && !append) {
-                 // Keep the default empty state message from the HTML
-                 container.innerHTML = `<div class="empty-state" style="padding: 10px 0; font-size: 14px;">Nothing to show here.</div>`;
-                return;
-            }
-
-            usersToDisplay.forEach(user => {
-                const userElement = document.createElement('div');
-                userElement.className = 'user-item';
-                userElement.dataset.userId = user.id;
-                
-                let actionsHtml = '';
-                
-                if (type === 'mutual') {
-                    actionsHtml = `
-                        <button class="message-btn" data-userid="${user.id}">Message</button>
-                        <button class="follow-btn following" data-userid="${user.id}">Unfollow</button>
-                    `;
-                } else if (type === 'following') {
-                    actionsHtml = `
-                        <button class="message-btn" data-userid="${user.id}">Message</button>
-                        <button class="follow-btn following" data-userid="${user.id}">Unfollow</button>
-                    `;
-                } else if (type === 'follower') {
-                    actionsHtml = `
-                        <button class="follow-btn" data-userid="${user.id}">Follow Back</button>
-                    `;
-                } else if (type === 'pending') {
-                    const followData = userList.find(item => item.userId === user.id);
-                    actionsHtml = `
-                        <button class="follow-btn accept" data-followid="${followData.followId}">Accept</button>
-                        <button class="follow-btn decline" data-followid="${followData.followId}">Decline</button>
-                    `;
-                } else if (type === 'pending_sent') {
-                    actionsHtml = `
-                        <button class="follow-btn pending" disabled>Requested</button>
-                    `;
-                }
-
-                userElement.innerHTML = `
-                    <div class="avatar-wrapper">
-                        <div class="user-avatar">
-                            ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
-                        </div>
-                        <div class="status-indicator ${user.isOnline ? '' : 'offline'}"></div>
-                    </div>
-                    <div class="user-info">
-                        <h4>${escapeHtml(user.displayName)}</h4>
-                    </div>
-                    <div class="user-actions" style="display: flex;"> <!-- Show actions by default in this view -->
-                        ${actionsHtml}
-                    </div>
-                `;
-                container.appendChild(userElement);
-            });
-            
-            addListButtonListeners(container);
-            filterLists(); // Apply search filter
+        function loadFollowers() {
+            const followerUserIds = followers.map(f => f.followerId);
+            renderUserList(followerList, followerUserIds, 'You have no followers yet.');
         }
 
-        // Renders the "Suggested" users list
         function renderUserList(container, userIds, emptyMessage) {
             container.innerHTML = '';
             
@@ -4675,22 +4306,11 @@
             }
 
             usersToDisplay.forEach(user => {
-                // Check follow status
-                const isFollowing = follows.some(follow => follow.followingId === user.id && follow.status === 'accepted');
-                const isPending = follows.some(follow => follow.followingId === user.id && follow.status === 'pending');
+                const isFollowing = follows.some(follow => follow.followingId === user.id);
                 
                 const userElement = document.createElement('div');
                 userElement.className = 'user-item';
                 userElement.dataset.userId = user.id;
-                
-                let followBtnHtml = '';
-                if (isFollowing) {
-                    followBtnHtml = `<button class="follow-btn following" data-userid="${user.id}">Unfollow</button>`;
-                } else if (isPending) {
-                    followBtnHtml = `<button class="follow-btn pending" data-userid="${user.id}" disabled>Requested</button>`;
-                } else {
-                    followBtnHtml = `<button class="follow-btn" data-userid="${user.id}">Follow</button>`;
-                }
 
                 userElement.innerHTML = `
                     <div class="avatar-wrapper">
@@ -4704,8 +4324,11 @@
                         <p>${escapeHtml(user.bio) || 'No bio yet'}</p>
                     </div>
                     <div class="user-actions">
-                        ${isFollowing ? `<button class="message-btn" data-userid="${user.id}">Message</button>` : ''}
-                        ${followBtnHtml}
+                        ${isFollowing ?
+                            `<button class="message-btn" data-userid="${user.id}">Message</button>
+                             <button class="follow-btn following" data-userid="${user.id}">Unfollow</button>` :
+                            `<button class="follow-btn" data-userid="${user.id}">Follow</button>`
+                        }
                     </div>
                 `;
                 container.appendChild(userElement);
@@ -4735,15 +4358,10 @@
                 button.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const userId = button.dataset.userid;
-                    const followId = button.dataset.followid;
-                    
-                    if (button.classList.contains('following')) {
+                    const isFollowing = button.classList.contains('following');
+                    if (isFollowing) {
                         unfollowUser(userId);
-                    } else if (button.classList.contains('accept')) {
-                        acceptFollowRequest(followId);
-                    } else if (button.classList.contains('decline')) {
-                        declineFollowRequest(followId);
-                    } else if (!button.classList.contains('pending')) {
+                    } else {
                         followUser(userId);
                     }
                 });
@@ -4755,15 +4373,8 @@
                     const userId = button.dataset.userid;
                     const user = users.find(u => u.id === userId);
                     if (user) {
-                        // Check if messaging is allowed (i.e., follow is accepted)
-                        const isAccepted = follows.some(f => f.followingId === userId && f.status === 'accepted');
-                        if (isAccepted) {
-                            openChat(userId, user);
-                            document.querySelector('[data-tab="chats"]').click();
-                        } else {
-                            // This button shouldn't even be visible, but as a fallback:
-                            console.log("Cannot message user: Follow request not accepted.");
-                        }
+                        openChat(userId, user);
+                        document.querySelector('[data-tab="chats"]').click();
                     }
                 });
             });
@@ -4772,16 +4383,6 @@
         async function openChat(userId, user) {
             if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
             if (_typingUnsub) { _typingUnsub(); _typingUnsub = null; }
-
-            // NEW: Check if messaging is allowed
-            const canMessage = await canMessageUser(userId);
-            if (!canMessage) {
-                console.warn("Messaging not allowed: Not mutual followers.");
-                // Optionally show a UI message
-                // For now, just don't open the chat.
-                // But the button shouldn't have been visible anyway.
-                // Let's allow opening, but sending will be the real test.
-            }
 
             currentChatUser = { id: userId, ...user };
             
@@ -4820,26 +4421,8 @@
             chatHeader.querySelector('.status-indicator').classList.toggle('offline', !user.isOnline);
             chatHeaderTitle.textContent = user.displayName;
             chatHeaderSubtitle.textContent = user.isOnline ? 'Online' : 'Offline';
-
-            // Fetch and display follower/following counts for this user
-            try {
-                const followingQuery = query(collection(db, 'follows'), where('followerId', '==', user.id), where('status', '==', 'accepted'));
-                const followersQuery = query(collection(db, 'follows'), where('followingId', '==', user.id), where('status', '==', 'accepted'));
-                
-                const [followingSnapshot, followersSnapshot] = await Promise.all([
-                    getDocs(followingQuery),
-                    getDocs(followersQuery)
-                ]);
-                
-                chatFollowerCount.textContent = followersSnapshot.size;
-                chatFollowingCount.textContent = followingSnapshot.size;
-
-            } catch (error) {
-                console.error("Error fetching header stats: ", error);
-                chatFollowerCount.textContent = '0';
-                chatFollowingCount.textContent = '0';
-            }
-
+            chatFollowerCount.textContent = user.followers || 0;
+            chatFollowingCount.textContent = user.following || 0;
 
             // Hide group members display for one-on-one chat
             groupMembersCompact.style.display = 'none';
@@ -4882,16 +4465,11 @@
                     let ticksHtml = '';
                     
                     if (m.senderId === currentUser.uid && m.type !== 'system') {
-                        // Read status for 1-on-1 chats
-                        if (!currentChatUser.isGroup) {
-                            if (m.isRead) {
-                                ticksHtml = `<span class="message-ticks read"><i class="fas fa-check-double"></i></span>`;
-                            } else {
-                                // We can assume "delivered" if it's in Firestore
-                                ticksHtml = `<span class="message-ticks delivered"><i class="fas fa-check-double"></i></span>`;
-                            }
+                        if (m.isRead) {
+                            ticksHtml = `<span class="message-ticks read"><i class="fas fa-check-double"></i></span>`;
+                        } else {
+                            ticksHtml = `<span class="message-ticks delivered"><i class="fas fa-check-double"></i></span>`;
                         }
-                        // For group chats, 'readBy' logic would be needed. Omitting ticks for groups for simplicity.
                     }
 
                     let messageContent = '';
@@ -4929,7 +4507,6 @@
                     
                     messageDiv.className = messageClass;
                     messageDiv.dataset.messageId = doc.id;
-                    if(m.senderId) messageDiv.dataset.senderId = m.senderId; // Store senderId
 
                     // NEW: Add avatar and sender name for group chats
                     let senderNameHtml = '';
@@ -4947,13 +4524,8 @@
                                     }
                                 </div>
                             `;
-                        } else if (m.senderName) { // Fallback to stored name
+                        } else if (m.senderName) {
                             senderNameHtml = `<div class="message-sender">${escapeHtml(m.senderName)}</div>`;
-                            avatarHtml = `
-                                <div class="message-avatar">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                            `;
                         }
                     }
 
@@ -5009,22 +4581,18 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        async function markMessagesAsRead(chatId, otherUserId) {
-            // This logic is for 1-on-1 chats
-            if (!currentUser || !chatId || !otherUserId) return;
-
+        async function markMessagesAsRead(chatId, userId) {
             try {
                 // Get all unread messages in this chat sent by the other user
                 const unreadMessagesQuery = query(
                     collection(db, 'chats', chatId, 'messages'),
-                    where('senderId', '==', otherUserId),
+                    where('senderId', '==', userId),
                     where('isRead', '==', false)
                 );
                 
                 const snapshot = await getDocs(unreadMessagesQuery);
-                if (snapshot.empty) return;
-
                 const batch = writeBatch(db);
+                
                 snapshot.forEach(doc => {
                     batch.update(doc.ref, { isRead: true });
                 });
@@ -5079,15 +4647,6 @@
         async function handleSendMessage(receiverId, chatId) {
             if (!chatId || !currentUser) return;
 
-            // Check if user is allowed to message
-            const canMessage = await canMessageUser(receiverId);
-            if (!canMessage) {
-                // Show a custom modal/alert here
-                console.warn("Cannot send message: Follow request not accepted by user.");
-                // For demo, we'll just log it. In a real app, show a modal.
-                return;
-            }
-
             const messageText = messageInput.value.trim();
             
             if (messageText) {
@@ -5095,12 +4654,11 @@
                 
                 const messageData = {
                     senderId: currentUser.uid,
-                    receiverId: receiverId, // Specific to 1-on-1
+                    receiverId: receiverId,
                     timestamp: serverTimestamp(),
                     isRead: false,
                     type: 'text',
-                    text: messageText,
-                    readBy: [currentUser.uid] // For group logic
+                    text: messageText
                 };
                 
                 // NEW: Add reply data if replying to a message
@@ -5116,10 +4674,8 @@
 
         async function sendFirestoreMessage(chatId, messageData, receivers) {
             try {
-                // Add message
-                const messageDocRef = await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
+                await addDoc(collection(db, 'chats', chatId, 'messages'), messageData);
 
-                // Update lastMessage on chat
                 let lastMessageText = '...';
                 if (messageData.type === 'text') {
                     lastMessageText = messageData.text;
@@ -5133,8 +4689,7 @@
                     lastMessage: {
                         text: lastMessageText,
                         timestamp: messageData.timestamp,
-                        type: messageData.type,
-                        senderId: messageData.senderId
+                        type: messageData.type
                     }
                 });
                 
@@ -5142,8 +4697,11 @@
                 receivers.forEach(receiverId => {
                     if (receiverId) {
                         // Track unread message for receiver
-                        // This logic is client-side and only affects the sender's view of unread
-                        // The receiver's unread count is handled by their own listener
+                        if (!unreadMessages[chatId]) {
+                            unreadMessages[chatId] = 0;
+                        }
+                        unreadMessages[chatId]++;
+                        updateUnreadCount(chatId, unreadMessages[chatId]);
                         
                         // NEW: Highlight chat in sidebar when new message arrives
                         if (chatId !== currentChatId) {
@@ -5193,135 +4751,69 @@
             if (!currentUser) return null;
             
             const chatsRef = collection(db, 'chats');
-            const q = query(chatsRef, 
-                where('isGroup', '==', false),
-                where('members', 'array-contains', currentUser.uid)
-            );
+            const q = query(chatsRef, where('members', 'array-contains', currentUser.uid));
             
             const querySnapshot = await getDocs(q);
-            let existingChatId = null;
+            let existingChat = null;
             
             querySnapshot.forEach(doc => {
                 const data = doc.data();
-                if (data.members && data.members.includes(otherUserId)) {
-                    existingChatId = doc.id;
+                if (!data.isGroup && data.members && data.members.includes(otherUserId)) {
+                    existingChat = { id: doc.id, ...data };
                 }
             });
 
-            if (existingChatId) {
-                return existingChatId;
+            if (existingChat) {
+                return existingChat.id;
             }
             
             const newChatDoc = await addDoc(chatsRef, {
                 members: [currentUser.uid, otherUserId],
-                isGroup: false,
                 lastMessage: {
                     text: 'Chat created',
                     timestamp: serverTimestamp(),
-                    type: 'system'
-                },
-                createdAt: serverTimestamp()
+                    type: 'text'
+                }
             });
             
             return newChatDoc.id;
         }
-        
-        // NEW: Check if messaging is allowed (must be accepted follow)
-        async function canMessageUser(otherUserId) {
-            if (!currentUser) return false;
-            if (otherUserId === currentUser.uid) return true; // Can't message self, but check
-            
-            // Check if currentUser's follow request to otherUser is 'accepted'
-            const followQuery = query(
-                collection(db, 'follows'),
-                where('followerId', '==', currentUser.uid),
-                where('followingId', '==', otherUserId),
-                where('status', '==', 'accepted')
-            );
-            
-            const snapshot = await getDocs(followQuery);
-            return !snapshot.empty;
-        }
 
-        // UPDATED: followUser sends a 'pending' request
         async function followUser(userId) {
             if (!currentUser) return;
             try {
-                // Check if follow doc already exists (pending or otherwise)
-                const followQuery = query(
-                    collection(db, 'follows'),
-                    where('followerId', '==', currentUser.uid),
-                    where('followingId', '==', userId)
-                );
+                await addDoc(collection(db, 'follows'), {
+                    followerId: currentUser.uid,
+                    followingId: userId,
+                    timestamp: serverTimestamp()
+                });
                 
-                const snapshot = await getDocs(followQuery);
+                const batch = writeBatch(db);
                 
-                if (snapshot.empty) {
-                    await addDoc(collection(db, 'follows'), {
-                        followerId: currentUser.uid,
-                        followingId: userId,
-                        status: 'pending',
-                        timestamp: serverTimestamp()
+                const userDocRef = doc(db, 'users', userId);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    batch.update(userDocRef, {
+                        followers: (userDoc.data().followers || 0) + 1
                     });
-                    
-                    // Send notification
-                    await addNotification(userId, 'follow_request', currentUser.uid);
-
-                } else {
-                    // Doc exists. Maybe it's a declined one?
-                    // For now, if it exists, do nothing.
-                    console.log("Follow document already exists.");
                 }
+
+                const currentUserDocRef = doc(db, 'users', currentUser.uid);
+                const currentUserDoc = await getDoc(currentUserDocRef);
+                if (currentUserDoc.exists()) {
+                     batch.update(currentUserDocRef, {
+                        following: (currentUserDoc.data().following || 0) + 1
+                    });
+                }
+                
+                await batch.commit();
+                
+                await addNotification(userId, 'follow', currentUser.uid);
 
             } catch (error) {
                 console.error('Error following user:', error);
             }
         }
-        
-        async function acceptFollowRequest(followId) {
-            if (!currentUser || !followId) return;
-            try {
-                const followDocRef = doc(db, 'follows', followId);
-                const followDoc = await getDoc(followDocRef);
-                
-                if (!followDoc.exists() || followDoc.data().followingId !== currentUser.uid) {
-                    console.error("Cannot accept request: Not owner or does not exist.");
-                    return;
-                }
-                
-                await updateDoc(followDocRef, {
-                    status: 'accepted',
-                    acceptedAt: serverTimestamp()
-                });
-                
-                // Send "accepted" notification back to the follower
-                const followerId = followDoc.data().followerId;
-                await addNotification(followerId, 'follow_accept', currentUser.uid);
-
-            } catch (error) {
-                console.error('Error accepting follow request:', error);
-            }
-        }
-        
-        async function declineFollowRequest(followId) {
-             if (!currentUser || !followId) return;
-            try {
-                const followDocRef = doc(db, 'follows', followId);
-                const followDoc = await getDoc(followDocRef);
-                
-                if (!followDoc.exists() || followDoc.data().followingId !== currentUser.uid) {
-                    console.error("Cannot decline request: Not owner or does not exist.");
-                    return;
-                }
-
-                // Instead of deleting, we could set status: 'declined'
-                // But deleting is simpler for this logic.
-                await deleteDoc(followDocRef);
-            } catch (error) {
-                console.error('Error declining follow request:', error);
-            }
-        }
-
 
         async function unfollowUser(userId) {
             if (!currentUser) return;
@@ -5338,6 +4830,22 @@
                 querySnapshot.forEach((followDoc) => {
                     batch.delete(doc(db, 'follows', followDoc.id));
                 });
+
+                const userDocRef = doc(db, 'users', userId);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    batch.update(userDocRef, {
+                        followers: Math.max(0, (userDoc.data().followers || 0) - 1)
+                    });
+                }
+
+                const currentUserDocRef = doc(db, 'users', currentUser.uid);
+                const currentUserDoc = await getDoc(currentUserDocRef);
+                if (currentUserDoc.exists()) {
+                    batch.update(currentUserDocRef, {
+                        following: Math.max(0, (currentUserDoc.data().following || 0) - 1)
+                    });
+                }
                 
                 await batch.commit();
                 
@@ -5347,35 +4855,26 @@
         }
 
         async function addNotification(receiverId, type, senderId, chatId = null) {
-            if (receiverId === currentUser.uid) return; // Don't notify self
-            
             try {
-                // Prevent duplicate unread notifications
+                // Check if a similar notification already exists and is unread
                 const q = query(
                     collection(db, 'users', receiverId, 'notifications'),
                     where('senderId', '==', senderId),
                     where('type', '==', type),
+                    where('chatId', '==', chatId),
                     where('read', '==', false)
                 );
                 
                 const existingNotifs = await getDocs(q);
                 
-                // If it's a follow request and one already exists, don't send another
-                if (type === 'follow_request' && !existingNotifs.empty) {
-                    console.log("Follow request notification already exists.");
+                // If it's a follow notification and one already exists, don't send another
+                if (type === 'follow' && !existingNotifs.empty) {
                     return;
                 }
                 
-                // If it's a message, only add if no unread message notif from this chat
-                if (type === 'message') {
-                    const chatNotifQuery = query(q, where('chatId', '==', chatId));
-                    const existingChatNotifs = await getDocs(chatNotifQuery);
-                    if (!existingChatNotifs.empty) {
-                         console.log("Unread message notification for this chat already exists.");
-                         // We could update the timestamp, but for simplicity, we'll skip
-                         return;
-                    }
-                }
+                // If it's a message notification, update timestamp of existing unread
+                // or create a new one. For simplicity, we'll just create a new one.
+                // A more "complex" system might group them.
                 
                 await addDoc(collection(db, 'users', receiverId, 'notifications'), {
                     type: type,
@@ -5406,6 +4905,8 @@
                     batch.update(doc.ref, { read: true });
                 });
                 await batch.commit();
+                
+                // Badge will be hidden automatically by the listener
                 
             } catch (error) {
                 console.error("Error marking notifications as read:", error);
@@ -5589,14 +5090,7 @@
             selectedMembers = [];
             groupName.value = '';
             
-            // Only show users who (currentUser) follows and are accepted
-            const acceptedFollows = follows.filter(f => f.status === 'accepted');
-            
-            if (acceptedFollows.length === 0) {
-                memberSelection.innerHTML = `<div class="empty-state" style="padding: 10px 0;">You must follow people to add them to a group.</div>`;
-            }
-            
-            acceptedFollows.forEach(follow => {
+            follows.forEach(follow => {
                 const user = users.find(u => u.id === follow.followingId);
                 if (user) {
                     const memberItem = document.createElement('div');
@@ -5627,13 +5121,12 @@
             
             const name = groupName.value.trim();
             if (!name) {
-                // Use custom alert
-                console.error('Please enter a group name');
+                alert('Please enter a group name');
                 return;
             }
             
             if (selectedMembers.length === 0) {
-                console.error('Please select at least one member');
+                alert('Please select at least one member');
                 return;
             }
             
@@ -5645,7 +5138,6 @@
                     groupName: name,
                     members: allMembers,
                     createdBy: currentUser.uid,
-                    photoURL: null, // Default no photo
                     lastMessage: {
                         text: 'Group created',
                         timestamp: serverTimestamp(),
@@ -5667,211 +5159,15 @@
                     id: groupChatDoc.id,
                     isGroup: true,
                     groupName: name,
-                    members: allMembers,
-                    photoURL: null
+                    members: allMembers
                 };
                 openGroupChat(groupData);
                 
             } catch (error) {
                 console.error('Error creating group chat:', error);
+                alert('Error creating group chat. Please try again.');
             }
         }
-        
-        // --- NEW EDIT GROUP MODAL FUNCTIONS ---
-        
-        // Wire up file input
-        groupImagePreview.addEventListener('click', () => {
-            groupImageUpload.click();
-        });
-        
-        groupImageUpload.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                groupImageFile = file; // Store file for upload on save
-                // Show preview
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    groupImagePreviewImg.src = event.target.result;
-                    groupImagePreviewImg.style.display = 'block';
-                    groupImagePreview.querySelector('i').style.display = 'none';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-        
-        closeEditGroupModal.addEventListener('click', () => {
-            editGroupModal.style.display = 'none';
-        });
-
-        async function openEditGroupModal(chatData) {
-            if (!chatData || !chatData.isGroup) return;
-            
-            // Store chat data in the modal element for save function
-            editGroupModal.dataset.chatId = chatData.id;
-            
-            // Reset form
-            editGroupName.value = chatData.groupName || '';
-            groupImageFile = null;
-            groupImageUpload.value = null; // Clear file input
-            
-            // Set group image preview
-            if (chatData.photoURL) {
-                groupImagePreviewImg.src = chatData.photoURL;
-                groupImagePreviewImg.style.display = 'block';
-                groupImagePreview.querySelector('i').style.display = 'none';
-            } else {
-                groupImagePreviewImg.style.display = 'none';
-                groupImagePreview.querySelector('i').style.display = 'block';
-            }
-
-            // Populate current members
-            groupMembersEdit.innerHTML = '';
-            chatData.members.forEach(memberId => {
-                const user = users.find(u => u.id === memberId);
-                if (user) {
-                    const memberEl = document.createElement('div');
-                    memberEl.className = 'group-member-edit';
-                    memberEl.innerHTML = `
-                        <div class="member-edit-info">
-                            <div class="user-avatar" style="width: 30px; height: 30px; font-size: 14px; margin-right: 10px;">
-                                ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
-                            </div>
-                            <span>${escapeHtml(user.displayName)}</span>
-                        </div>
-                        ${memberId !== chatData.createdBy ? 
-                            `<button class="remove-member-btn" data-userid="${user.id}">&times; Remove</button>` :
-                            '<span style="font-size: 12px; color: #8E8E93;">Admin</span>'
-                        }
-                    `;
-                    groupMembersEdit.appendChild(memberEl);
-                }
-            });
-
-            // Populate "Add Members" list
-            addMemberSelection.innerHTML = '';
-            const acceptedFollows = follows.filter(f => f.status === 'accepted');
-            const usersToAdd = acceptedFollows.filter(f => 
-                !chatData.members.includes(f.followingId)
-            );
-            
-            if (usersToAdd.length === 0) {
-                 addMemberSelection.innerHTML = `<div class="empty-state" style="padding: 10px 0; font-size: 14px;">No one left to add.</div>`;
-            }
-
-            usersToAdd.forEach(follow => {
-                const user = users.find(u => u.id === follow.followingId);
-                if (user) {
-                    const memberItem = document.createElement('div');
-                    memberItem.className = 'member-item';
-                    memberItem.dataset.userid = user.id;
-                    memberItem.innerHTML = `
-                        <div class="user-avatar">
-                            ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
-                        </div>
-                        <h4>${escapeHtml(user.displayName)}</h4>
-                    `;
-                    memberItem.addEventListener('click', () => {
-                        memberItem.classList.toggle('selected');
-                    });
-                    addMemberSelection.appendChild(memberItem);
-                }
-            });
-            
-            // Show delete button only if current user is creator
-            deleteGroupBtn.style.display = (chatData.createdBy === currentUser.uid) ? 'block' : 'none';
-
-            editGroupModal.style.display = 'flex';
-        }
-
-        // Save Group Changes
-        saveGroupChangesBtn.addEventListener('click', async () => {
-            const chatId = editGroupModal.dataset.chatId;
-            if (!chatId) return;
-            
-            const chatDocRef = doc(db, 'chats', chatId);
-            const chatDoc = await getDoc(chatDocRef);
-            if (!chatDoc.exists()) return;
-            
-            let chatData = chatDoc.data();
-            let changes = {};
-            let systemMessages = [];
-            
-            // 1. Check for name change
-            const newName = editGroupName.value.trim();
-            if (newName && newName !== chatData.groupName) {
-                changes.groupName = newName;
-                systemMessages.push(`${currentUser.displayName} changed the group name to "${newName}"`);
-            }
-            
-            // 2. Check for new image
-            if (groupImageFile) {
-                try {
-                    const storageReference = storageRef(storage, `group-pictures/${chatId}`);
-                    const snapshot = await uploadBytes(storageReference, groupImageFile);
-                    const downloadURL = await getDownloadURL(snapshot.ref);
-                    changes.photoURL = downloadURL;
-                    systemMessages.push(`${currentUser.displayName} changed the group picture.`);
-                } catch (error) {
-                    console.error("Error uploading group picture:", error);
-                }
-            }
-            
-            // 3. Check for members to add/remove
-            const membersToAdd = Array.from(addMemberSelection.querySelectorAll('.member-item.selected'))
-                                    .map(el => el.dataset.userid);
-                                    
-            const membersToRemove = Array.from(groupMembersEdit.querySelectorAll('.remove-member-btn.to-remove')) // We need to add this class on click
-                                    .map(el => el.dataset.userid); // This needs logic
-
-            // TODO: Add click listener for remove-member-btn to toggle a 'to-remove' class
-            
-            let finalMembers = [...chatData.members];
-            if (membersToAdd.length > 0) {
-                finalMembers = [...finalMembers, ...membersToAdd];
-                changes.members = arrayUnion(...membersToAdd); // Use arrayUnion
-                membersToAdd.forEach(id => {
-                    const user = users.find(u => u.id === id);
-                    systemMessages.push(`${currentUser.displayName} added ${user?.displayName || 'a new member'}.`);
-                });
-            }
-            // Add removal logic here if implemented
-
-            // 4. Update Firestore
-            if (Object.keys(changes).length > 0) {
-                await updateDoc(chatDocRef, changes);
-            }
-            
-            // 5. Send system messages
-            for (const msg of systemMessages) {
-                await addDoc(collection(db, 'chats', chatId, 'messages'), {
-                    senderId: 'system',
-                    text: msg,
-                    timestamp: serverTimestamp(),
-                    type: 'system'
-                });
-            }
-            
-            // 6. Close modal and refresh
-            editGroupModal.style.display = 'none';
-            // If the edited chat is the current one, refresh the header
-            if (currentChatId === chatId) {
-                openGroupChat({ id: chatId, ...chatData, ...changes, members: finalMembers });
-            }
-        });
-        
-        // TODO: Add click listener for remove buttons
-        groupMembersEdit.addEventListener('click', (e) => {
-            if (e.target.classList.contains('remove-member-btn')) {
-                // This is complex: need to decide if removal is instant or pending save
-                // For now, let's just log it
-                const userId = e.target.dataset.userid;
-                console.log("Would remove user:", userId);
-                // e.target.classList.toggle('to-remove');
-                // e.target.textContent = e.target.classList.contains('to-remove') ? 'Undo' : '× Remove';
-            }
-        });
-
-        // --- END EDIT GROUP MODAL ---
 
         function openGroupChat(groupData) {
             if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
@@ -5894,20 +5190,13 @@
             const headerImg = headerAvatarDiv.querySelector('img');
             const headerIcon = headerAvatarDiv.querySelector('i');
             
-            // Use group photoURL if it exists
-            if (groupData.photoURL) {
-                headerImg.src = groupData.photoURL;
-                headerImg.style.display = 'block';
-                headerIcon.style.display = 'none';
-            } else {
-                headerImg.style.display = 'none';
-                headerIcon.style.display = 'block';
-                headerIcon.className = 'fas fa-users';
-            }
+            headerImg.style.display = 'none';
+            headerIcon.style.display = 'block';
+            headerIcon.className = 'fas fa-users';
             
             chatHeader.querySelector('.status-indicator').classList.add('offline');
             chatHeaderTitle.textContent = groupData.groupName;
-            chatHeaderSubtitle.textContent = `${groupData.members.length} Members`;
+            chatHeaderSubtitle.textContent = 'Group Chat';
             
             // NEW: Show compact member avatars in header
             groupMembersCompact.style.display = 'flex';
@@ -5942,9 +5231,8 @@
                 groupMembersCompact.appendChild(moreCount);
             }
             
-            // Hide follower stats for groups
-            chatFollowerCount.textContent = '...';
-            chatFollowingCount.textContent = '...';
+            chatFollowerCount.textContent = '0';
+            chatFollowingCount.textContent = '0';
 
             chatMessages.innerHTML = `<div class="message received">Loading messages...<div class="message-meta"><span class="message-time">Just now</span></div></div>`;
 
@@ -5955,7 +5243,6 @@
             
             _convoUnsub = onSnapshot(messagesQuery, (snapshot) => {
                 renderConversation(snapshot);
-                // TODO: Mark group messages as read
             }, err => console.error('Error listening to messages:', err));
 
             bindSendHandlerForGroupConversation(groupData.id, groupData.members);
@@ -5983,8 +5270,7 @@
                     senderId: currentUser.uid,
                     senderName: currentUser.displayName,
                     timestamp: serverTimestamp(),
-                    isRead: false, // Legacy
-                    readBy: [currentUser.uid], // New
+                    isRead: false,
                     type: 'text',
                     text: messageText
                 };
@@ -6033,12 +5319,6 @@
                 unreadMessages = {};
                 highlightedChats.clear();
                 chats = [];
-                
-                // Clear UI
-                chatList.innerHTML = '';
-                userList.innerHTML = '';
-                connectionsList.innerHTML = '';
-
                 loginScreen.style.display = 'flex';
                 appContainer.style.display = 'none';
                 updateTabNotification(0); // NEW: Reset tab notification on logout
@@ -6049,7 +5329,6 @@
 
         // Initialize with light theme
         document.body.setAttribute('data-theme', 'light');
-        
     </script>
 </body>
 </html>
