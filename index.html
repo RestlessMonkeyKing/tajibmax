@@ -1999,6 +1999,105 @@
             margin-top: 10px;
         }
 
+        /* New styles for follow system */
+        .follow-section {
+            margin: 15px 0;
+            padding: 15px;
+            background: var(--glass-bg);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .follow-section h4 {
+            margin: 0 0 10px 0;
+            color: var(--primary-color);
+            font-size: 16px;
+        }
+        
+        .follow-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .follow-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .follow-actions {
+            margin-left: 8px;
+            display: flex;
+            gap: 5px;
+        }
+        
+        .follow-btn {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .follow-btn.accept {
+            background: #34C759;
+            color: white;
+        }
+        
+        .follow-btn.decline {
+            background: #FF3B30;
+            color: white;
+        }
+        
+        .follow-btn.pending {
+            background: #FF9500;
+            color: white;
+        }
+        
+        /* Group image preview */
+        .group-image-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: 15px auto;
+            background: var(--glass-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px dashed var(--glass-border);
+        }
+        
+        .group-image-preview i {
+            font-size: 24px;
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+        
+        .group-image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        
+        .group-image-upload {
+            display: none;
+        }
+        
+        /* Hide reactions */
+        .message-reactions {
+            display: none !important;
+        }
+        
         .group-member-edit {
             display: flex;
             align-items: center;
@@ -5329,6 +5428,291 @@
 
         // Initialize with light theme
         document.body.setAttribute('data-theme', 'light');
+        
+        // Follow System Functions
+        async function followUser(userId) {
+            if (!currentUser) return;
+            
+            try {
+                // Check if follow request already exists
+                const followQuery = query(
+                    collection(db, 'follows'),
+                    where('followerId', '==', currentUser.uid),
+                    where('followingId', '==', userId)
+                );
+                
+                const snapshot = await getDocs(followQuery);
+                
+                if (snapshot.empty) {
+                    await addDoc(collection(db, 'follows'), {
+                        followerId: currentUser.uid,
+                        followingId: userId,
+                        status: 'pending',
+                        timestamp: serverTimestamp()
+                    });
+                    
+                    // Send notification
+                    await addDoc(collection(db, 'users', userId, 'notifications'), {
+                        type: 'follow_request',
+                        fromUserId: currentUser.uid,
+                        timestamp: serverTimestamp(),
+                        read: false
+                    });
+                    
+                    updateUI();
+                }
+            } catch (error) {
+                console.error('Error following user:', error);
+            }
+        }
+        
+        async function acceptFollowRequest(followId) {
+            try {
+                await updateDoc(doc(db, 'follows', followId), {
+                    status: 'accepted',
+                    acceptedAt: serverTimestamp()
+                });
+                updateUI();
+            } catch (error) {
+                console.error('Error accepting follow request:', error);
+            }
+        }
+        
+        async function declineFollowRequest(followId) {
+            try {
+                await deleteDoc(doc(db, 'follows', followId));
+                updateUI();
+            } catch (error) {
+                console.error('Error declining follow request:', error);
+            }
+        }
+        
+        // Check if user can message another user
+        async function canMessageUser(userId) {
+            if (!currentUser) return false;
+            
+            // Check if there's an accepted follow in either direction
+            const followQuery = query(
+                collection(db, 'follows'),
+                where('status', '==', 'accepted'),
+                where(or(
+                    and(
+                        where('followerId', '==', currentUser.uid),
+                        where('followingId', '==', userId)
+                    ),
+                    and(
+                        where('followerId', '==', userId),
+                        where('followingId', '==', currentUser.uid)
+                    )
+                ))
+            );
+            
+            const snapshot = await getCountFromServer(followQuery);
+            return snapshot.data().count > 0;
+        }
+        
+        // Load followers/following lists
+        async function loadFollowLists(userId) {
+            const [followingSnapshot, followersSnapshot, pendingSnapshot] = await Promise.all([
+                getDocs(query(
+                    collection(db, 'follows'),
+                    where('followerId', '==', userId),
+                    where('status', '==', 'accepted')
+                )),
+                getDocs(query(
+                    collection(db, 'follows'),
+                    where('followingId', '==', userId),
+                    where('status', '==', 'accepted')
+                )),
+                getDocs(query(
+                    collection(db, 'follows'),
+                    where('followingId', '==', userId),
+                    where('status', '==', 'pending')
+                ))
+            ]);
+            
+            // Process data and update UI
+            const following = followingSnapshot.docs.map(doc => ({
+                id: doc.id,
+                userId: doc.data().followingId,
+                status: 'following'
+            }));
+            
+            const followers = followersSnapshot.docs.map(doc => ({
+                id: doc.id,
+                userId: doc.data().followerId,
+                status: 'follower'
+            }));
+            
+            const pending = pendingSnapshot.docs.map(doc => ({
+                id: doc.id,
+                userId: doc.data().followerId,
+                status: 'pending'
+            }));
+            
+            // Find mutual follows
+            const mutual = following.filter(follow => 
+                followers.some(follower => follower.userId === follow.userId)
+            ).map(m => ({
+                ...m,
+                status: 'mutual'
+            }));
+            
+            // Filter out mutuals from following and followers
+            const followingOnly = following.filter(f => 
+                !mutual.some(m => m.userId === f.userId)
+            );
+            
+            const followersOnly = followers.filter(f => 
+                !mutual.some(m => m.userId === f.userId)
+            );
+            
+            // Render the lists
+            renderFollowList('mutual', mutual);
+            renderFollowList('following', followingOnly);
+            renderFollowList('followers', followersOnly);
+            renderFollowList('pending', pending);
+        }
+        
+        // Render follow list
+        async function renderFollowList(type, items) {
+            const container = document.createElement('div');
+            container.id = `${type}List`;
+            container.className = 'follow-list';
+            
+            // Get user data for all items
+            const userIds = items.map(item => item.userId);
+            if (userIds.length === 0) {
+                container.innerHTML = '<p>No items to display</p>';
+                return;
+            }
+            
+            const usersSnapshot = await getDocs(query(
+                collection(db, 'users'),
+                where('__name__', 'in', userIds)
+            ));
+            
+            const usersMap = {};
+            usersSnapshot.forEach(doc => {
+                usersMap[doc.id] = doc.data();
+            });
+            
+            // Create list items
+            items.forEach(item => {
+                const user = usersMap[item.userId];
+                if (!user) return;
+                
+                const itemElement = document.createElement('div');
+                itemElement.className = 'follow-item';
+                
+                itemElement.innerHTML = `
+                    <img src="${user.photoURL || ''}" alt="${user.displayName}" style="width: 40px; height: 40px; border-radius: 50%;">
+                    <span>${user.displayName}</span>
+                    <div class="follow-actions">
+                        ${item.status === 'pending' ? `
+                            <button class="follow-btn accept" onclick="acceptFollowRequest('${item.id}')">Accept</button>
+                            <button class="follow-btn decline" onclick="declineFollowRequest('${item.id}')">Decline</button>
+                        ` : ''}
+                        ${item.status === 'follower' ? `
+                            <button class="follow-btn" onclick="followUser('${user.uid}')">Follow Back</button>
+                        ` : ''}
+                        ${item.status === 'following' ? `
+                            <button class="follow-btn pending">Following</button>
+                        ` : ''}
+                        ${item.status === 'mutual' ? `
+                            <button class="follow-btn" onclick="startChat('${user.uid}')">Message</button>
+                        ` : ''}
+                    </div>
+                `;
+                
+                container.appendChild(itemElement);
+            });
+            
+            // Update or create the tab content
+            let tabContent = document.getElementById(`${type}TabContent`);
+            if (!tabContent) {
+                tabContent = document.createElement('div');
+                tabContent.id = `${type}TabContent`;
+                tabContent.className = 'tab-content';
+                document.getElementById('followContent').appendChild(tabContent);
+            }
+            
+            tabContent.innerHTML = '';
+            tabContent.appendChild(container);
+        }
+        
+        // Initialize tabs for followers/following modal
+        document.querySelectorAll('#followersFollowingModal .tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Update active tab
+                document.querySelectorAll('#followersFollowingModal .tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Show corresponding content
+                document.querySelectorAll('#followContent .tab-content').forEach(content => {
+                    content.style.display = 'none';
+                });
+                
+                const tabName = tab.dataset.tab;
+                const content = document.getElementById(`${tabName}TabContent`);
+                if (content) {
+                    content.style.display = 'block';
+                }
+            });
+        });
     </script>
+    
+    <!-- Followers/Following Modal -->
+    <div class="modal" id="followersFollowingModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="followModalTitle">Connections</h3>
+                <button class="close-btn" id="closeFollowModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="tabs">
+                    <div class="tab active" data-tab="mutual">Mutual</div>
+                    <div class="tab" data-tab="following">Following</div>
+                    <div class="tab" data-tab="followers">Followers</div>
+                    <div class="tab" data-tab="pending">Pending</div>
+                </div>
+                
+                <div id="followContent" style="margin-top: 15px;">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Group Modal -->
+    <div class="modal" id="editGroupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Group</h3>
+                <button class="close-btn" id="closeEditGroupModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Group Image Upload -->
+                <div class="group-image-preview" id="groupImagePreview">
+                    <i class="fas fa-camera"></i>
+                    <img id="groupImage" style="display: none;">
+                </div>
+                <input type="file" id="groupImageUpload" class="group-image-upload" accept="image/*">
+                
+                <div class="form-group">
+                    <label for="editGroupName">Group Name</label>
+                    <input type="text" id="editGroupName" placeholder="Enter group name">
+                </div>
+                
+                <div class="form-group">
+                    <label>Members</label>
+                    <div id="editGroupMembersList"></div>
+                </div>
+                
+                <button id="saveGroupChanges" class="btn">Save Changes</button>
+                <button id="deleteGroup" class="btn btn-danger">Delete Group</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
