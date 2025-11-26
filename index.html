@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tajib Max - Professional Chat App</title>
+    <title>Connex - Professional Chat App</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
@@ -67,7 +67,287 @@
             overflow-x: hidden;
         }
 
-        /* === NEW: Context Menu Styles === */
+        /* === NEW: Expanded Profile Modal Styles === */
+        .expanded-profile-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .expanded-profile-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+            transform: scale(0.9);
+            animation: modalAppear 0.3s ease-out forwards;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .expanded-profile-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .expanded-profile-pic {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .expanded-profile-pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .expanded-profile-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .expanded-profile-bio {
+            color: #8E8E93;
+            margin-bottom: 15px;
+        }
+
+        .expanded-profile-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .expanded-stat {
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .expanded-stat-number {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .expanded-stat-label {
+            font-size: 14px;
+            color: #8E8E93;
+        }
+
+        .expanded-follow-btn {
+            padding: 10px 20px;
+            border-radius: 15px;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 20px;
+        }
+
+        .expanded-follow-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
+        }
+
+        .expanded-follow-btn.following {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .expanded-lists {
+            margin-top: 20px;
+        }
+
+        .expanded-list {
+            display: none;
+        }
+
+        .expanded-list.active {
+            display: block;
+        }
+
+        .expanded-list-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .expanded-list-items {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .expanded-list-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .expanded-list-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .expanded-list-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #5856D6, #007AFF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            margin-right: 10px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .expanded-list-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* === NEW: Message Reactions Styles === */
+        .message-reactions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .message-reaction {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 2px 6px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .message-reaction:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .message-reaction-count {
+            font-size: 11px;
+            color: #8E8E93;
+        }
+
+        .reaction-picker {
+            position: absolute;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 10px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            display: none;
+            width: 200px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .reaction-picker.active {
+            display: block;
+        }
+
+        .reaction-options {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+        }
+
+        .reaction-option {
+            font-size: 18px;
+            cursor: pointer;
+            text-align: center;
+            padding: 5px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .reaction-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.2);
+        }
+
+        /* === NEW: Typing Indicator Animation === */
+        .typing-dots {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 5px;
+        }
+
+        .typing-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--text-color);
+            opacity: 0.6;
+            margin: 0 1px;
+            animation: typingPulse 1.5s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingPulse {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.6;
+            }
+            30% {
+                transform: translateY(-5px);
+                opacity: 1;
+            }
+        }
+
+        /* === UPDATED: Context Menu Styles === */
         .context-menu {
             position: fixed;
             background: var(--card-bg);
@@ -86,6 +366,9 @@
             cursor: pointer;
             transition: var(--transition);
             border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .context-menu-item:last-child {
@@ -100,7 +383,7 @@
             color: #FF3B30;
         }
 
-        /* === NEW: Emoji Picker Styles === */
+        /* === UPDATED: Emoji Picker Styles === */
         .emoji-picker {
             position: absolute;
             bottom: 70px;
@@ -153,7 +436,7 @@
             transform: scale(1.1);
         }
 
-        /* === NEW: Reply Preview Styles === */
+        /* === UPDATED: Reply Preview Styles === */
         .reply-preview {
             display: none;
             padding: 10px 15px;
@@ -200,7 +483,7 @@
             opacity: 1;
         }
 
-        /* === NEW: Message Reply Styles === */
+        /* === UPDATED: Message Reply Styles === */
         .message-reply {
             background: rgba(0, 0, 0, 0.1);
             border-left: 3px solid var(--primary-color);
@@ -225,7 +508,7 @@
             text-overflow: ellipsis;
         }
 
-        /* === NEW: User Avatar Circles in Messages === */
+        /* === UPDATED: User Avatar Circles in Messages === */
         .message-with-avatar {
             display: flex;
             align-items: flex-start;
@@ -246,6 +529,7 @@
             overflow: hidden;
             flex-shrink: 0;
             margin-top: 5px;
+            cursor: pointer;
         }
 
         .message-avatar img {
@@ -258,7 +542,7 @@
             flex: 1;
         }
 
-        /* === NEW: Notification Indicator in Chat List === */
+        /* === UPDATED: Notification Indicator in Chat List === */
         .notification-indicator {
             position: absolute;
             top: 15px;
@@ -318,6 +602,7 @@
             margin-right: 15px;
             overflow: hidden;
             flex-shrink: 0;
+            cursor: pointer;
         }
         
         .chat-header-avatar img {
@@ -370,6 +655,7 @@
             font-size: 12px;
             overflow: hidden;
             position: relative;
+            cursor: pointer;
         }
 
         .member-avatar img {
@@ -999,6 +1285,7 @@
             overflow: hidden;
             flex-shrink: 0;
             position: relative;
+            cursor: pointer;
         }
 
         .notification-avatar .notification-indicator {
@@ -1186,6 +1473,7 @@
             overflow: hidden;
             flex-shrink: 0;
             position: relative; 
+            cursor: pointer;
         }
 
         .chat-avatar.group {
@@ -1847,6 +2135,11 @@
                 height: 40px;
                 font-size: 16px;
             }
+            
+            .expanded-profile-content {
+                width: 95%;
+                padding: 20px;
+            }
         }
     </style>
 </head>
@@ -1856,7 +2149,7 @@
             <div class="app-logo">
                 <i class="fas fa-comments"></i>
             </div>
-            <h1 class="app-title">Tajib Max</h1>
+            <h1 class="app-title">Connex</h1>
             <p class="app-subtitle">Connect with friends in real-time</p>
             <button class="login-btn" id="googleSignInBtn">
                 <i class="fab fa-google"></i>
@@ -1942,7 +2235,7 @@
         </div>
 
         <div class="sidebar">
-            <div class="app-title-bar">Tajib Max</div>
+            <div class="app-title-bar">Connex</div>
             
             <div class="tabs">
                 <div class="tab active" data-tab="chats"><i class="fas fa-comments"></i> Chats</div>
@@ -2121,15 +2414,83 @@
         </div>
     </div>
 
-    <!-- NEW: Context Menu -->
+    <!-- NEW: Context Menu for Messages -->
     <div class="context-menu" id="contextMenu">
-        <div class="context-menu-item" id="replyMenuItem">Reply</div>
-        <div class="context-menu-item delete" id="deleteMenuItem">Delete</div>
+        <div class="context-menu-item" id="replyMenuItem"><i class="fas fa-reply"></i> Reply</div>
+        <div class="context-menu-item" id="reactMenuItem"><i class="fas fa-smile"></i> React</div>
+        <div class="context-menu-item delete" id="deleteMenuItem"><i class="fas fa-trash"></i> Delete</div>
+    </div>
+
+    <!-- NEW: Context Menu for Chat List -->
+    <div class="context-menu" id="chatListContextMenu">
+        <div class="context-menu-item delete" id="deleteChatMenuItem"><i class="fas fa-trash"></i> Delete Conversation</div>
+        <div class="context-menu-item delete" id="leaveGroupMenuItem" style="display: none;"><i class="fas fa-sign-out-alt"></i> Leave Group</div>
     </div>
 
     <!-- NEW: Chat Header Context Menu -->
     <div class="context-menu" id="chatHeaderContextMenu">
-        <div class="context-menu-item" id="editChatHeaderMenuItem">Edit Chat</div>
+        <div class="context-menu-item" id="editChatHeaderMenuItem"><i class="fas fa-edit"></i> Edit Chat</div>
+    </div>
+
+    <!-- NEW: Reaction Picker -->
+    <div class="reaction-picker" id="reactionPicker">
+        <div class="reaction-options">
+            <div class="reaction-option">👍</div>
+            <div class="reaction-option">👎</div>
+            <div class="reaction-option">❤️</div>
+            <div class="reaction-option">😂</div>
+            <div class="reaction-option">😮</div>
+            <div class="reaction-option">😢</div>
+            <div class="reaction-option">😡</div>
+            <div class="reaction-option">🎉</div>
+            <div class="reaction-option">🔥</div>
+            <div class="reaction-option">⭐</div>
+            <div class="reaction-option">👏</div>
+            <div class="reaction-option">🙏</div>
+        </div>
+    </div>
+
+    <!-- NEW: Expanded Profile Modal -->
+    <div class="expanded-profile-modal" id="expandedProfileModal">
+        <div class="expanded-profile-content">
+            <div class="expanded-profile-header">
+                <div class="expanded-profile-pic" id="expandedProfilePic">
+                    <img src="" alt="Profile" style="display:none;" />
+                    <i class="fas fa-user"></i>
+                </div>
+                <h2 class="expanded-profile-name" id="expandedProfileName">Loading...</h2>
+                <p class="expanded-profile-bio" id="expandedProfileBio">Bio will appear here</p>
+                <div class="expanded-profile-stats">
+                    <div class="expanded-stat" id="expandedFollowersBtn">
+                        <div class="expanded-stat-number" id="expandedFollowerCount">0</div>
+                        <div class="expanded-stat-label">Followers</div>
+                    </div>
+                    <div class="expanded-stat" id="expandedFollowingBtn">
+                        <div class="expanded-stat-number" id="expandedFollowingCount">0</div>
+                        <div class="expanded-stat-label">Following</div>
+                    </div>
+                </div>
+                <button class="expanded-follow-btn" id="expandedFollowBtn">Follow</button>
+            </div>
+            <div class="expanded-lists">
+                <div class="expanded-list active" id="expandedProfileInfo">
+                    <!-- Default view shows profile info -->
+                </div>
+                <div class="expanded-list" id="expandedFollowersList">
+                    <h3 class="expanded-list-title">Followers</h3>
+                    <div class="expanded-list-items" id="expandedFollowersItems">
+                        <!-- Followers will be populated here -->
+                    </div>
+                </div>
+                <div class="expanded-list" id="expandedFollowingList">
+                    <h3 class="expanded-list-title">Following</h3>
+                    <div class="expanded-list-items" id="expandedFollowingItems">
+                        <!-- Following will be populated here -->
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-outline" id="closeExpandedProfileBtn" style="margin-top: 20px; width: 100%;">Close</button>
+        </div>
     </div>
 
     <div class="modal" id="editProfileModal">
@@ -2224,19 +2585,51 @@
         // === NEW: Context Menu Functionality ===
         const contextMenu = document.getElementById('contextMenu');
         const replyMenuItem = document.getElementById('replyMenuItem');
+        const reactMenuItem = document.getElementById('reactMenuItem');
         const deleteMenuItem = document.getElementById('deleteMenuItem');
         let selectedMessage = null;
+        
+        // === NEW: Chat List Context Menu ===
+        const chatListContextMenu = document.getElementById('chatListContextMenu');
+        const deleteChatMenuItem = document.getElementById('deleteChatMenuItem');
+        const leaveGroupMenuItem = document.getElementById('leaveGroupMenuItem');
+        let selectedChatItem = null;
         
         // === NEW: Chat Header Context Menu ===
         const chatHeaderContextMenu = document.getElementById('chatHeaderContextMenu');
         const editChatHeaderMenuItem = document.getElementById('editChatHeaderMenuItem');
         
+        // === NEW: Reaction Picker ===
+        const reactionPicker = document.getElementById('reactionPicker');
+        
+        // === NEW: Expanded Profile Modal ===
+        const expandedProfileModal = document.getElementById('expandedProfileModal');
+        const expandedProfilePic = document.getElementById('expandedProfilePic');
+        const expandedProfileName = document.getElementById('expandedProfileName');
+        const expandedProfileBio = document.getElementById('expandedProfileBio');
+        const expandedFollowerCount = document.getElementById('expandedFollowerCount');
+        const expandedFollowingCount = document.getElementById('expandedFollowingCount');
+        const expandedFollowersBtn = document.getElementById('expandedFollowersBtn');
+        const expandedFollowingBtn = document.getElementById('expandedFollowingBtn');
+        const expandedFollowBtn = document.getElementById('expandedFollowBtn');
+        const expandedFollowersItems = document.getElementById('expandedFollowersItems');
+        const expandedFollowingItems = document.getElementById('expandedFollowingItems');
+        const expandedProfileInfo = document.getElementById('expandedProfileInfo');
+        const expandedFollowersList = document.getElementById('expandedFollowersList');
+        const expandedFollowingList = document.getElementById('expandedFollowingList');
+        const closeExpandedProfileBtn = document.getElementById('closeExpandedProfileBtn');
+        let expandedProfileUser = null;
+
         // === NEW: Reply Functionality ===
         const replyPreview = document.getElementById('replyPreview');
         const replyPreviewHeader = document.getElementById('replyPreviewHeader');
         const replyPreviewText = document.getElementById('replyPreviewText');
         const cancelReplyBtn = document.getElementById('cancelReplyBtn');
         let replyingToMessage = null;
+
+        // === NEW: Typing Indicator Functionality ===
+        let typingTimer = null;
+        let isTyping = false;
 
         // Show context menu on right-click for messages
         document.addEventListener('contextmenu', (e) => {
@@ -2255,6 +2648,29 @@
                 deleteMenuItem.style.display = isOwnMessage ? 'block' : 'none';
             }
             
+            // Show context menu for chat list items
+            const chatItem = e.target.closest('.chat-item');
+            if (chatItem) {
+                e.preventDefault();
+                selectedChatItem = chatItem;
+                
+                // Position the context menu
+                chatListContextMenu.style.display = 'block';
+                chatListContextMenu.style.left = `${e.pageX}px`;
+                chatListContextMenu.style.top = `${e.pageY}px`;
+                
+                // Check if it's a group chat
+                const chatId = chatItem.dataset.chatId;
+                const chat = chats.find(c => c.id === chatId);
+                if (chat && chat.isGroup) {
+                    deleteChatMenuItem.style.display = 'none';
+                    leaveGroupMenuItem.style.display = 'block';
+                } else {
+                    deleteChatMenuItem.style.display = 'block';
+                    leaveGroupMenuItem.style.display = 'none';
+                }
+            }
+            
             // Show context menu for chat header
             const chatHeader = document.getElementById('chatHeader');
             if (e.target.closest('#chatHeader') && currentChatUser && currentChatUser.isGroup) {
@@ -2268,7 +2684,9 @@
         // Hide context menu when clicking elsewhere
         document.addEventListener('click', () => {
             contextMenu.style.display = 'none';
+            chatListContextMenu.style.display = 'none';
             chatHeaderContextMenu.style.display = 'none';
+            reactionPicker.style.display = 'none';
         });
         
         // Context menu actions for messages
@@ -2297,6 +2715,37 @@
             }
         });
         
+        // NEW: React to message
+        reactMenuItem.addEventListener('click', () => {
+            if (selectedMessage) {
+                // Position the reaction picker near the message
+                const rect = selectedMessage.getBoundingClientRect();
+                reactionPicker.style.display = 'block';
+                reactionPicker.style.left = `${rect.left}px`;
+                reactionPicker.style.top = `${rect.top - 120}px`;
+                
+                contextMenu.style.display = 'none';
+            }
+        });
+        
+        // NEW: Handle reaction selection
+        reactionPicker.querySelectorAll('.reaction-option').forEach(option => {
+            option.addEventListener('click', async () => {
+                if (selectedMessage && currentChatId) {
+                    const messageId = selectedMessage.dataset.messageId;
+                    const emoji = option.textContent;
+                    
+                    try {
+                        // Add reaction to the message
+                        await addReactionToMessage(currentChatId, messageId, emoji);
+                        reactionPicker.style.display = 'none';
+                    } catch (error) {
+                        console.error('Error adding reaction:', error);
+                    }
+                }
+            });
+        });
+        
         deleteMenuItem.addEventListener('click', async () => {
             if (selectedMessage && currentChatId) {
                 const messageId = selectedMessage.dataset.messageId;
@@ -2312,6 +2761,92 @@
             }
         });
         
+        // NEW: Chat list context menu actions
+        deleteChatMenuItem.addEventListener('click', async () => {
+            if (selectedChatItem && currentUser) {
+                const chatId = selectedChatItem.dataset.chatId;
+                if (chatId) {
+                    try {
+                        // Delete the chat document
+                        await deleteDoc(doc(db, 'chats', chatId));
+                        
+                        // Also delete all messages in the chat
+                        const messagesQuery = query(collection(db, 'chats', chatId, 'messages'));
+                        const messagesSnapshot = await getDocs(messagesQuery);
+                        const batch = writeBatch(db);
+                        
+                        messagesSnapshot.forEach(doc => {
+                            batch.delete(doc.ref);
+                        });
+                        
+                        await batch.commit();
+                        
+                        // Remove the chat item from the UI
+                        selectedChatItem.remove();
+                        
+                        // If this was the current chat, clear the chat area
+                        if (currentChatId === chatId) {
+                            currentChatId = null;
+                            currentChatUser = null;
+                            chatMessages.innerHTML = `
+                                <div class="empty-state">
+                                    <i class="fas fa-comments" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                                    <p>Select a conversation to start messaging</p>
+                                </div>
+                            `;
+                            chatHeaderTitle.textContent = 'Select a conversation';
+                            chatHeaderSubtitle.textContent = 'Start chatting with friends';
+                        }
+                    } catch (error) {
+                        console.error('Error deleting chat:', error);
+                    }
+                }
+                chatListContextMenu.style.display = 'none';
+            }
+        });
+        
+        leaveGroupMenuItem.addEventListener('click', async () => {
+            if (selectedChatItem && currentUser) {
+                const chatId = selectedChatItem.dataset.chatId;
+                if (chatId) {
+                    try {
+                        // Remove the current user from the group members
+                        await updateDoc(doc(db, 'chats', chatId), {
+                            members: arrayRemove(currentUser.uid)
+                        });
+                        
+                        // Add a system message about leaving the group
+                        await addDoc(collection(db, 'chats', chatId, 'messages'), {
+                            senderId: 'system',
+                            text: `${currentUser.displayName} left the group`,
+                            timestamp: serverTimestamp(),
+                            type: 'system'
+                        });
+                        
+                        // Remove the chat item from the UI
+                        selectedChatItem.remove();
+                        
+                        // If this was the current chat, clear the chat area
+                        if (currentChatId === chatId) {
+                            currentChatId = null;
+                            currentChatUser = null;
+                            chatMessages.innerHTML = `
+                                <div class="empty-state">
+                                    <i class="fas fa-comments" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                                    <p>Select a conversation to start messaging</p>
+                                </div>
+                            `;
+                            chatHeaderTitle.textContent = 'Select a conversation';
+                            chatHeaderSubtitle.textContent = 'Start chatting with friends';
+                        }
+                    } catch (error) {
+                        console.error('Error leaving group:', error);
+                    }
+                }
+                chatListContextMenu.style.display = 'none';
+            }
+        });
+        
         // Cancel reply
         cancelReplyBtn.addEventListener('click', () => {
             replyPreview.classList.remove('active');
@@ -2323,6 +2858,254 @@
             if (currentChatUser && currentChatUser.isGroup) {
                 openEditGroupModal();
                 chatHeaderContextMenu.style.display = 'none';
+            }
+        });
+
+        // NEW: Expanded Profile Modal functionality
+        closeExpandedProfileBtn.addEventListener('click', () => {
+            expandedProfileModal.style.display = 'none';
+        });
+        
+        expandedFollowersBtn.addEventListener('click', () => {
+            expandedProfileInfo.classList.remove('active');
+            expandedFollowersList.classList.add('active');
+            expandedFollowingList.classList.remove('active');
+            
+            // Load followers list
+            loadExpandedFollowersList(expandedProfileUser.id);
+        });
+        
+        expandedFollowingBtn.addEventListener('click', () => {
+            expandedProfileInfo.classList.remove('active');
+            expandedFollowersList.classList.remove('active');
+            expandedFollowingList.classList.add('active');
+            
+            // Load following list
+            loadExpandedFollowingList(expandedProfileUser.id);
+        });
+        
+        expandedFollowBtn.addEventListener('click', () => {
+            if (expandedProfileUser) {
+                const isFollowing = follows.some(f => f.followingId === expandedProfileUser.id);
+                if (isFollowing) {
+                    unfollowUser(expandedProfileUser.id);
+                    expandedFollowBtn.textContent = 'Follow';
+                    expandedFollowBtn.classList.remove('following');
+                } else {
+                    followUser(expandedProfileUser.id);
+                    expandedFollowBtn.textContent = 'Unfollow';
+                    expandedFollowBtn.classList.add('following');
+                }
+            }
+        });
+
+        // NEW: Function to open expanded profile modal
+        function openExpandedProfile(user) {
+            expandedProfileUser = user;
+            
+            // Set profile data
+            const img = expandedProfilePic.querySelector('img');
+            const icon = expandedProfilePic.querySelector('i');
+            
+            if (user.photoURL) {
+                img.src = user.photoURL;
+                img.style.display = 'block';
+                icon.style.display = 'none';
+            } else {
+                img.style.display = 'none';
+                icon.style.display = 'block';
+            }
+            
+            expandedProfileName.textContent = user.displayName;
+            expandedProfileBio.textContent = user.bio || 'No bio yet';
+            expandedFollowerCount.textContent = user.followers || 0;
+            expandedFollowingCount.textContent = user.following || 0;
+            
+            // Set follow button state
+            const isFollowing = follows.some(f => f.followingId === user.id);
+            if (isFollowing) {
+                expandedFollowBtn.textContent = 'Unfollow';
+                expandedFollowBtn.classList.add('following');
+            } else {
+                expandedFollowBtn.textContent = 'Follow';
+                expandedFollowBtn.classList.remove('following');
+            }
+            
+            // Hide follow button if it's the current user
+            if (user.id === currentUser.uid) {
+                expandedFollowBtn.style.display = 'none';
+            } else {
+                expandedFollowBtn.style.display = 'block';
+            }
+            
+            // Reset to profile info view
+            expandedProfileInfo.classList.add('active');
+            expandedFollowersList.classList.remove('active');
+            expandedFollowingList.classList.remove('active');
+            
+            expandedProfileModal.style.display = 'flex';
+        }
+        
+        // NEW: Function to load followers list in expanded profile
+        function loadExpandedFollowersList(userId) {
+            expandedFollowersItems.innerHTML = '';
+            
+            const userFollowers = followers.filter(f => f.followingId === userId);
+            
+            if (userFollowers.length === 0) {
+                expandedFollowersItems.innerHTML = '<div style="text-align: center; color: #8E8E93; padding: 20px;">No followers yet</div>';
+                return;
+            }
+            
+            userFollowers.forEach(follow => {
+                const follower = users.find(u => u.id === follow.followerId);
+                if (follower) {
+                    const listItem = document.createElement('div');
+                    listItem.className = 'expanded-list-item';
+                    listItem.innerHTML = `
+                        <div class="expanded-list-avatar">
+                            ${follower.photoURL ? `<img src="${follower.photoURL}" alt="${follower.displayName}">` : '<i class="fas fa-user"></i>'}
+                        </div>
+                        <h4>${escapeHtml(follower.displayName)}</h4>
+                    `;
+                    
+                    listItem.addEventListener('click', () => {
+                        openExpandedProfile(follower);
+                    });
+                    
+                    expandedFollowersItems.appendChild(listItem);
+                }
+            });
+        }
+        
+        // NEW: Function to load following list in expanded profile
+        function loadExpandedFollowingList(userId) {
+            expandedFollowingItems.innerHTML = '';
+            
+            const userFollowing = follows.filter(f => f.followerId === userId);
+            
+            if (userFollowing.length === 0) {
+                expandedFollowingItems.innerHTML = '<div style="text-align: center; color: #8E8E93; padding: 20px;">Not following anyone yet</div>';
+                return;
+            }
+            
+            userFollowing.forEach(follow => {
+                const followingUser = users.find(u => u.id === follow.followingId);
+                if (followingUser) {
+                    const listItem = document.createElement('div');
+                    listItem.className = 'expanded-list-item';
+                    listItem.innerHTML = `
+                        <div class="expanded-list-avatar">
+                            ${followingUser.photoURL ? `<img src="${followingUser.photoURL}" alt="${followingUser.displayName}">` : '<i class="fas fa-user"></i>'}
+                        </div>
+                        <h4>${escapeHtml(followingUser.displayName)}</h4>
+                    `;
+                    
+                    listItem.addEventListener('click', () => {
+                        openExpandedProfile(followingUser);
+                    });
+                    
+                    expandedFollowingItems.appendChild(listItem);
+                }
+            });
+        }
+
+        // NEW: Add event listeners to profile pictures throughout the app
+        document.addEventListener('click', (e) => {
+            // Profile picture in top-right profile card
+            if (e.target.closest('#profilePic')) {
+                if (currentUser) {
+                    const userData = users.find(u => u.id === currentUser.uid);
+                    if (userData) {
+                        openExpandedProfile(userData);
+                    }
+                }
+            }
+            
+            // Profile pictures in chat list
+            if (e.target.closest('.chat-avatar')) {
+                const chatItem = e.target.closest('.chat-item');
+                if (chatItem) {
+                    const chatId = chatItem.dataset.chatId;
+                    const chat = chats.find(c => c.id === chatId);
+                    if (chat && !chat.isGroup) {
+                        const otherUserId = chat.members.find(uid => uid !== currentUser.uid);
+                        const user = users.find(u => u.id === otherUserId);
+                        if (user) {
+                            openExpandedProfile(user);
+                        }
+                    }
+                }
+            }
+            
+            // Profile pictures in user list
+            if (e.target.closest('.user-avatar')) {
+                const userItem = e.target.closest('.user-item');
+                if (userItem) {
+                    const userId = userItem.dataset.userId;
+                    const user = users.find(u => u.id === userId);
+                    if (user) {
+                        openExpandedProfile(user);
+                    }
+                }
+            }
+            
+            // Profile picture in chat header
+            if (e.target.closest('.chat-header-avatar')) {
+                if (currentChatUser && !currentChatUser.isGroup) {
+                    openExpandedProfile(currentChatUser);
+                }
+            }
+            
+            // Profile pictures in group members compact view
+            if (e.target.closest('.member-avatar')) {
+                if (currentChatUser && currentChatUser.isGroup) {
+                    const memberAvatar = e.target.closest('.member-avatar');
+                    const memberIndex = Array.from(groupMembersCompact.children).indexOf(memberAvatar);
+                    if (memberIndex >= 0 && memberIndex < currentChatUser.members.length) {
+                        const memberId = currentChatUser.members[memberIndex];
+                        const user = users.find(u => u.id === memberId);
+                        if (user) {
+                            openExpandedProfile(user);
+                        }
+                    }
+                }
+            }
+            
+            // Profile pictures in notifications
+            if (e.target.closest('.notification-avatar')) {
+                const notificationItem = e.target.closest('.notification-item');
+                if (notificationItem) {
+                    // This would require storing the sender ID in the notification item
+                    // For simplicity, we'll just open the current user's profile
+                    if (currentUser) {
+                        const userData = users.find(u => u.id === currentUser.uid);
+                        if (userData) {
+                            openExpandedProfile(userData);
+                        }
+                    }
+                }
+            }
+            
+            // Profile pictures in messages (for group chats)
+            if (e.target.closest('.message-avatar')) {
+                const messageElement = e.target.closest('.message');
+                if (messageElement) {
+                    const messageId = messageElement.dataset.messageId;
+                    // We would need to store the sender ID in the message element
+                    // For now, we'll just open the current user's profile if it's their message
+                    // or the other user's profile if it's not
+                    if (messageElement.classList.contains('sent')) {
+                        if (currentUser) {
+                            const userData = users.find(u => u.id === currentUser.uid);
+                            if (userData) {
+                                openExpandedProfile(userData);
+                            }
+                        }
+                    } else if (currentChatUser && !currentChatUser.isGroup) {
+                        openExpandedProfile(currentChatUser);
+                    }
+                }
             }
         });
 
@@ -2479,6 +3262,7 @@
         let selectedMembers = [];
         let unreadMessages = {};
         let highlightedChats = new Set(); // NEW: Track highlighted chats
+        let chats = []; // NEW: Store chats for context menu
 
         // Firebase listeners
         let _convoUnsub = null;
@@ -2488,6 +3272,104 @@
         let _followersUnsub = null; 
         let _notificationsUnsub = null;
         let _allNotificationsUnsub = null;
+        let _typingUnsub = null; // NEW: Typing indicator listener
+
+        // === NEW: Typing Indicator Functionality ===
+        function setupTypingListener(chatId) {
+            if (_typingUnsub) _typingUnsub();
+            
+            if (!chatId) return;
+            
+            const typingRef = collection(db, 'chats', chatId, 'typing');
+            _typingUnsub = onSnapshot(typingRef, (snapshot) => {
+                const typingUsers = [];
+                snapshot.forEach(doc => {
+                    if (doc.id !== currentUser.uid) {
+                        typingUsers.push(doc.id);
+                    }
+                });
+                
+                if (typingUsers.length > 0) {
+                    // Get display names of typing users
+                    const typingNames = typingUsers.map(userId => {
+                        const user = users.find(u => u.id === userId);
+                        return user ? user.displayName : 'Someone';
+                    });
+                    
+                    if (typingNames.length === 1) {
+                        typingIndicator.textContent = `${typingNames[0]} is typing`;
+                    } else if (typingNames.length === 2) {
+                        typingIndicator.textContent = `${typingNames[0]} and ${typingNames[1]} are typing`;
+                    } else {
+                        typingIndicator.textContent = `${typingNames[0]} and ${typingNames.length - 1} others are typing`;
+                    }
+                    
+                    // Add typing dots animation
+                    typingIndicator.innerHTML += '<span class="typing-dots"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></span>';
+                    typingIndicator.classList.add('active');
+                } else {
+                    typingIndicator.classList.remove('active');
+                }
+            });
+        }
+        
+        function startTyping(chatId) {
+            if (!chatId || !currentUser) return;
+            
+            // Set typing status
+            setDoc(doc(db, 'chats', chatId, 'typing', currentUser.uid), {
+                userId: currentUser.uid,
+                timestamp: serverTimestamp()
+            });
+            
+            // Clear previous timer
+            if (typingTimer) {
+                clearTimeout(typingTimer);
+            }
+            
+            // Set timer to stop typing after 2 seconds of inactivity
+            typingTimer = setTimeout(() => {
+                stopTyping(chatId);
+            }, 2000);
+        }
+        
+        function stopTyping(chatId) {
+            if (!chatId || !currentUser) return;
+            
+            // Clear timer
+            if (typingTimer) {
+                clearTimeout(typingTimer);
+                typingTimer = null;
+            }
+            
+            // Remove typing status
+            deleteDoc(doc(db, 'chats', chatId, 'typing', currentUser.uid));
+        }
+        
+        // Listen for typing in message input
+        messageInput.addEventListener('input', () => {
+            if (currentChatId && !isTyping) {
+                isTyping = true;
+                startTyping(currentChatId);
+            }
+            
+            // Reset the typing timer on each input
+            if (currentChatId && typingTimer) {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => {
+                    isTyping = false;
+                    stopTyping(currentChatId);
+                }, 2000);
+            }
+        });
+        
+        // Stop typing when message is sent
+        sendBtn.addEventListener('click', () => {
+            if (currentChatId) {
+                isTyping = false;
+                stopTyping(currentChatId);
+            }
+        });
 
         // === NEW: Emoji Picker Functionality ===
         emojiBtn.addEventListener('click', (e) => {
@@ -2505,6 +3387,12 @@
             emojiElement.addEventListener('click', () => {
                 messageInput.value += emojiElement.textContent;
                 messageInput.focus();
+                
+                // Start typing indicator when adding emoji
+                if (currentChatId && !isTyping) {
+                    isTyping = true;
+                    startTyping(currentChatId);
+                }
             });
         });
 
@@ -2544,156 +3432,95 @@
             }
         });
 
-        // === NEW: Edit Group Modal Functionality ===
-        function openEditGroupModal() {
-            if (!currentChatUser || !currentChatUser.isGroup) return;
+        // === NEW: Message Reactions Functionality ===
+        async function addReactionToMessage(chatId, messageId, emoji) {
+            if (!currentUser) return;
             
-            editGroupName.value = currentChatUser.groupName || '';
-            groupMembersEdit.innerHTML = '';
-            addMemberSelection.innerHTML = '';
-            
-            // Populate current members
-            currentChatUser.members.forEach(memberId => {
-                const member = users.find(u => u.id === memberId);
-                if (member) {
-                    const memberElement = document.createElement('div');
-                    memberElement.className = 'group-member-edit';
-                    memberElement.innerHTML = `
-                        <div class="member-edit-info">
-                            <div class="member-avatar" style="width: 30px; height: 30px; margin-right: 10px;">
-                                ${member.photoURL ? `<img src="${member.photoURL}" alt="${member.displayName}">` : '<i class="fas fa-user"></i>'}
-                            </div>
-                            <h4>${escapeHtml(member.displayName)}</h4>
-                        </div>
-                        ${memberId !== currentUser.uid ? 
-                            `<button class="remove-member-btn" data-userid="${memberId}">Remove</button>` : 
-                            '<span style="font-size: 12px; color: #8E8E93;">You</span>'
-                        }
-                    `;
-                    groupMembersEdit.appendChild(memberElement);
+            try {
+                const messageRef = doc(db, 'chats', chatId, 'messages', messageId);
+                const messageDoc = await getDoc(messageRef);
+                
+                if (messageDoc.exists()) {
+                    const messageData = messageDoc.data();
+                    const reactions = messageData.reactions || [];
+                    
+                    // Check if user already reacted with this emoji
+                    const existingReactionIndex = reactions.findIndex(
+                        r => r.userId === currentUser.uid && r.emoji === emoji
+                    );
+                    
+                    if (existingReactionIndex !== -1) {
+                        // Remove the reaction if it already exists
+                        reactions.splice(existingReactionIndex, 1);
+                    } else {
+                        // Add the reaction
+                        reactions.push({
+                            userId: currentUser.uid,
+                            emoji: emoji,
+                            timestamp: serverTimestamp()
+                        });
+                    }
+                    
+                    // Update the message with new reactions
+                    await updateDoc(messageRef, {
+                        reactions: reactions
+                    });
                 }
-            });
-            
-            // Populate available users to add (followed users not in group)
-            const followedUserIds = follows.map(f => f.followingId);
-            const availableUsers = users.filter(user => 
-                followedUserIds.includes(user.id) && 
-                !currentChatUser.members.includes(user.id) &&
-                user.id !== currentUser.uid
-            );
-            
-            availableUsers.forEach(user => {
-                const memberItem = document.createElement('div');
-                memberItem.className = 'member-item';
-                memberItem.innerHTML = `
-                    <div class="user-avatar">
-                        ${user.photoURL ? `<img src="${user.photoURL}" alt="${user.displayName}">` : '<i class="fas fa-user"></i>'}
-                    </div>
-                    <h4>${escapeHtml(user.displayName)}</h4>
-                `;
-                memberItem.addEventListener('click', () => {
-                    memberItem.classList.toggle('selected');
-                });
-                addMemberSelection.appendChild(memberItem);
-            });
-            
-            // Add event listeners for remove buttons
-            groupMembersEdit.querySelectorAll('.remove-member-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const userId = button.dataset.userid;
-                    removeGroupMember(userId);
-                });
-            });
-            
-            editGroupModal.style.display = 'flex';
+            } catch (error) {
+                console.error('Error adding reaction to message:', error);
+            }
         }
         
-        closeEditGroupModal.addEventListener('click', () => {
-            editGroupModal.style.display = 'none';
-        });
-        
-        saveGroupChangesBtn.addEventListener('click', async () => {
-            if (!currentChatId || !currentChatUser) return;
-            
-            const newName = editGroupName.value.trim();
-            if (!newName) {
-                alert('Please enter a group name');
+        // === NEW: Function to render message reactions ===
+        function renderMessageReactions(messageElement, reactions) {
+            if (!reactions || reactions.length === 0) {
+                // Remove existing reactions if any
+                const existingReactions = messageElement.querySelector('.message-reactions');
+                if (existingReactions) {
+                    existingReactions.remove();
+                }
                 return;
             }
             
-            // Get selected users to add
-            const usersToAdd = [];
-            addMemberSelection.querySelectorAll('.member-item.selected').forEach(item => {
-                const userName = item.querySelector('h4').textContent;
-                const user = users.find(u => u.displayName === userName);
-                if (user) {
-                    usersToAdd.push(user.id);
+            // Group reactions by emoji
+            const reactionCounts = {};
+            reactions.forEach(reaction => {
+                if (!reactionCounts[reaction.emoji]) {
+                    reactionCounts[reaction.emoji] = 0;
                 }
+                reactionCounts[reaction.emoji]++;
             });
             
-            try {
-                // Update group name
-                await updateDoc(doc(db, 'chats', currentChatId), {
-                    groupName: newName
-                });
-                
-                // Add new members
-                if (usersToAdd.length > 0) {
-                    await updateDoc(doc(db, 'chats', currentChatId), {
-                        members: arrayUnion(...usersToAdd)
-                    });
-                    
-                    // Add system message for new members
-                    await addDoc(collection(db, 'chats', currentChatId, 'messages'), {
-                        senderId: 'system',
-                        text: `${currentUser.displayName} added ${usersToAdd.length} member(s) to the group`,
-                        timestamp: serverTimestamp(),
-                        type: 'system'
-                    });
-                }
-                
-                // Update current chat user data
-                currentChatUser.groupName = newName;
-                currentChatUser.members = [...currentChatUser.members, ...usersToAdd];
-                
-                // Update UI
-                chatHeaderTitle.textContent = newName;
-                
-                editGroupModal.style.display = 'none';
-                
-            } catch (error) {
-                console.error('Error updating group:', error);
-                alert('Error updating group. Please try again.');
+            // Create or update reactions container
+            let reactionsContainer = messageElement.querySelector('.message-reactions');
+            if (!reactionsContainer) {
+                reactionsContainer = document.createElement('div');
+                reactionsContainer.className = 'message-reactions';
+                messageElement.appendChild(reactionsContainer);
             }
-        });
-        
-        async function removeGroupMember(userId) {
-            if (!currentChatId) return;
             
-            try {
-                await updateDoc(doc(db, 'chats', currentChatId), {
-                    members: arrayRemove(userId)
+            // Clear existing reactions
+            reactionsContainer.innerHTML = '';
+            
+            // Add each reaction
+            Object.entries(reactionCounts).forEach(([emoji, count]) => {
+                const reactionElement = document.createElement('div');
+                reactionElement.className = 'message-reaction';
+                reactionElement.innerHTML = `
+                    <span class="reaction-emoji">${emoji}</span>
+                    <span class="reaction-count">${count}</span>
+                `;
+                
+                // Add click event to toggle reaction
+                reactionElement.addEventListener('click', async () => {
+                    if (currentChatId) {
+                        const messageId = messageElement.dataset.messageId;
+                        await addReactionToMessage(currentChatId, messageId, emoji);
+                    }
                 });
                 
-                // Add system message
-                const user = users.find(u => u.id === userId);
-                await addDoc(collection(db, 'chats', currentChatId, 'messages'), {
-                    senderId: 'system',
-                    text: `${currentUser.displayName} removed ${user?.displayName || 'a member'} from the group`,
-                    timestamp: serverTimestamp(),
-                    type: 'system'
-                });
-                
-                // Update current chat user data
-                currentChatUser.members = currentChatUser.members.filter(id => id !== userId);
-                
-                // Refresh the edit modal
-                openEditGroupModal();
-                
-            } catch (error) {
-                console.error('Error removing group member:', error);
-            }
+                reactionsContainer.appendChild(reactionElement);
+            });
         }
 
         // === FIXED COMPONENTS FUNCTIONALITY ===
@@ -2891,7 +3718,7 @@
             if (!userDoc.exists()) {
                 await setDoc(userDocRef, {
                     displayName: user.displayName || `User${Math.floor(1000 + Math.random() * 9000)}`,
-                    bio: 'Hello! I am using Tajib Max.',
+                    bio: 'Hello! I am using Connex.',
                     photoURL: user.photoURL || '',
                     followers: 0,
                     following: 0,
@@ -2972,6 +3799,10 @@
                 ), 
                 (snapshot) => {
                     console.log("Chats snapshot received, count:", snapshot.size);
+                    chats = [];
+                    snapshot.forEach(doc => {
+                        chats.push({ id: doc.id, ...doc.data() });
+                    });
                     renderChatList(snapshot);
                 }, 
                 (error) => {
@@ -2983,6 +3814,10 @@
                     );
                     onSnapshot(fallbackQuery, (fallbackSnapshot) => {
                         console.log("Fallback chats snapshot, count:", fallbackSnapshot.size);
+                        chats = [];
+                        fallbackSnapshot.forEach(doc => {
+                            chats.push({ id: doc.id, ...doc.data() });
+                        });
                         renderChatList(fallbackSnapshot);
                     });
                 }
@@ -3286,6 +4121,7 @@
                     const isHighlighted = highlightedChats.has(chat.id);
                     chatElement.className = `chat-item ${chat.id === currentChatId ? 'active' : ''} ${isHighlighted ? 'highlighted' : ''}`;
                     chatElement.dataset.chatId = chat.id;
+                    chatElement.dataset.userId = chat.userObject ? chat.userObject.id : '';
                     
                     const avatarContent = chat.isGroup 
                         ? '<i class="fas fa-users"></i>'
@@ -3404,6 +4240,7 @@
                 
                 const userElement = document.createElement('div');
                 userElement.className = 'user-item';
+                userElement.dataset.userId = user.id;
 
                 userElement.innerHTML = `
                     <div class="avatar-wrapper">
@@ -3475,6 +4312,7 @@
 
         async function openChat(userId, user) {
             if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
+            if (_typingUnsub) { _typingUnsub(); _typingUnsub = null; }
 
             currentChatUser = { id: userId, ...user };
             
@@ -3484,6 +4322,9 @@
                 return;
             }
             currentChatId = chatId;
+            
+            // Set up typing indicator listener
+            setupTypingListener(chatId);
             
             // Mark chat-related notifications as read
             markChatNotificationsAsRead(currentChatId);
@@ -3533,7 +4374,7 @@
             bindSendHandlerForConversation(userId, currentChatId);
         }
 
-        // === UPDATED: Render conversation with reply UI and avatars for groups ===
+        // === UPDATED: Render conversation with reply UI, avatars for groups, and reactions ===
         function renderConversation(snapshot) {
             chatMessages.innerHTML = '';
             
@@ -3641,6 +4482,11 @@
                                 ${ticksHtml}
                             </div>
                         `;
+                    }
+                    
+                    // NEW: Add reactions to message if they exist
+                    if (m.reactions && m.reactions.length > 0) {
+                        renderMessageReactions(messageDiv, m.reactions);
                     }
                     
                     // NEW: Add click handler for reply preview to scroll to original message
@@ -4116,7 +4962,7 @@
             editProfileModal.style.display = 'none';
         });
 
-        saveProfileBtn.addEventListener('click', () => {
+        saveProfileBtn.addEventListener('click', async () => {
             const newName = editName.value;
             let newBio = editBio.value;
             const words = newBio.trim().split(/\s+/).filter(word => word.length > 0);
@@ -4126,7 +4972,7 @@
             profileName.textContent = newName;
             profileBio.textContent = newBio;
             if (currentUser) {
-                updateUserProfile(currentUser.uid, newName, newBio);
+                await updateUserProfile(currentUser.uid, newName, newBio);
             }
             editProfileModal.style.display = 'none';
         });
@@ -4255,10 +5101,14 @@
 
         function openGroupChat(groupData) {
             if (_convoUnsub) { _convoUnsub(); _convoUnsub = null; }
+            if (_typingUnsub) { _typingUnsub(); _typingUnsub = null; }
 
             currentChatUser = groupData;
             currentChatId = groupData.id;
 
+            // Set up typing indicator listener
+            setupTypingListener(currentChatId);
+            
             // Mark chat-related notifications as read
             markChatNotificationsAsRead(currentChatId);
             
@@ -4387,6 +5237,7 @@
             if (_followersUnsub) { _followersUnsub(); _followersUnsub = null; }
             if (_notificationsUnsub) { _notificationsUnsub(); _notificationsUnsub = null; }
             if (_allNotificationsUnsub) { _allNotificationsUnsub(); _allNotificationsUnsub = null; }
+            if (_typingUnsub) { _typingUnsub(); _typingUnsub = null; }
 
             signOut(auth).then(() => {
                 currentUser = null;
@@ -4397,6 +5248,7 @@
                 followers = [];
                 unreadMessages = {};
                 highlightedChats.clear();
+                chats = [];
                 loginScreen.style.display = 'flex';
                 appContainer.style.display = 'none';
                 updateTabNotification(0); // NEW: Reset tab notification on logout
