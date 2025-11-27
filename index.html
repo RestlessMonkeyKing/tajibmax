@@ -67,6 +67,34 @@
             overflow-x: hidden;
         }
 
+        /* === NEW: T Button Styles === */
+        .t-button {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            z-index: 1000;
+        }
+
+        .t-button:hover {
+            transform: scale(1.05);
+        }
+
+        .t-button .t-icon {
+            font-size: 24px;
+            font-weight: 700;
+            transition: var(--transition);
+        }
+
         /* === NEW: Expanded Profile Modal Styles === */
         .expanded-profile-modal {
             display: none;
@@ -2110,6 +2138,11 @@
                 flex-shrink: 0;
             }
 
+            .t-button {
+                width: 60px;
+                flex-shrink: 0;
+            }
+
             .theme-dropdown,
             .notification-dropdown {
                 width: 280px;
@@ -2161,6 +2194,11 @@
 
     <div class="app-container" id="appContainer">
         <div class="top-right-controls">
+            <!-- NEW: T Button -->
+            <div class="t-button" id="tButton">
+                <span class="t-icon">T</span>
+            </div>
+
             <!-- Fixed Notification Bell -->
             <div class="notification-bell" id="notificationBell">
                 <i class="fas fa-bell bell-icon"></i>
@@ -2569,6 +2607,14 @@
     </div>
 
     <script type="module">
+        // === NEW: T Button Functionality ===
+        const tButton = document.getElementById('tButton');
+        
+        tButton.addEventListener('click', () => {
+            // Redirect to another website
+            window.open('https://example.com', '_blank');
+        });
+
         // === NEW: Browser tab notification functionality ===
         let originalTitle = document.title;
         let notificationCount = 0;
