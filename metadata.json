@@ -1,0 +1,8 @@
+{
+  "name": "Connex",
+  "description": "A professional, modern real-time chat application with glassmorphism UI, themes, and robust messaging features.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
